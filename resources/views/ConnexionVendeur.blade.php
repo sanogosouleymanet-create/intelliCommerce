@@ -3,30 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ asset('css/StyleAcceuil.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/StyleConnexion.css') }}">
     <title>Connexion</title>
 </head>
 <body>
      <header>
-            <img src="Mon_logo.png" width="300" Alt="Logo de la plateforme" title="LOGO" class="logo">
-            <nav class="navigation">
-                <a href="{{('welcome')}}">HOME</a>
-                <a href="{{('')}}">ABOUT</a>
-                <a href="{{('')}}">SERVICES</a>
-                <a href="{{('')}}">CONTACT</a>
+            <img src="Logo-Site.png" width="500" alt="Logo de la plateforme" title="LOGO" class="logo">
+            <nav>
+                <ul>
+                    <li><a href="{{('welcome')}}">HOME</a></li>
+                    <li><a href="{{('')}}">ABOUT</a></li>
+                    <li><a href="{{('')}}">SERVICES</a></li>
+                    <li><a href="{{('')}}">CONTACT</a></li>
+                </ul>  
             </nav>
-            <p><em>Bonjour Cher</em> <strong>Commerçant(e)</strong></p>
             
      </header>
          
          <form action ="">
           <fieldset>
-             <legend><h2> SE CONNECTER</h2></legend>
-             <br><label>EMAIL :</label><input type="EMAIL" placeholder = "votre mail" required><br>
-             <br><label>MOT DE PASSE :</label><input type="password" type = "password" placeholder="password" maxlength ="8" pattern= [A-Z]{2}+[1-9]{4}+[a-z]{2} required=""> <br>
-             <br><button type="submit"class="button">Login/Se Connecter</a></button>
-          </fieldset>
+            <div>
+                <label>EMAIL :</label>
+                <input type="EMAIL" placeholder = "votre mail" required><br>        
+            </div>
+            <div>
+                <label>MOT DE PASSE :</label>
+                <input type="password" type = "password" placeholder="password" maxlength ="8" pattern= [A-Z]{2}+[1-9]{4}+[a-z]{2} required="">
+            </div>
+            <div>
+                <input type="submit" class="button" value="Se Connecter"><br>
+            </div>
+             </fieldset>
          </form>  
-         <p>don't have an account?</p><boutton class="button"><a href="{{('formulaireVendeur')}}">CREER UN COMPTE</a></button> 
+         <p>don't have an account?</p>
+         <button class="button"><a href="{{('formulaireVendeur')}}">CREER UN COMPTE</a></button> 
+        
+         <footer>
+            <p>&copy; 2024 IntelliCommerce. All rights reserved.</p>
+        </footer>
 </body>
 </html>
