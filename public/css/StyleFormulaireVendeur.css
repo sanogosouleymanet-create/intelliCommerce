@@ -1,0 +1,157 @@
+body{
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-image: url("/fond-formulaire.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  text-align: center;
+}
+h2{
+    color: white;
+}
+div{
+    margin-bottom: 20px;
+    text-align: center;
+}
+fieldset{
+    background-color: rgba(157, 239, 250, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    width: 400px;
+}
+nav{
+  text-align: center;
+  list-style: none;
+
+}
+nav li{
+    display: inline-block;
+}  
+nav li>a{
+    display: inline-block;
+    color: #01436e;
+    text-decoration: none;
+    margin: 0 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+}
+
+/* Empêche le label de se couper sur 2 lignes */
+label{
+    display: inline-block;
+    min-width: 130px; /* augmente si besoin */
+    white-space: nowrap; /* empêche le retour à la ligne */
+    text-align: left; /* aligne le texte du label vers la gauche */
+    margin-right: 12px;
+}
+
+input{
+    width: 200px;
+}
+
+/* Aligne les boutons : Retour à gauche, Envoyer à droite */
+.form-actions{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    width: 100%;
+    max-width: 480px; /* ajustez si nécessaire */
+    margin-left: auto;
+    margin-right: auto;
+}
+.form-actions .button, .form-actions input[type="submit"]{
+    padding: 10px 16px;
+    min-width: 100px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive : empile sur petits écrans */
+@media (max-width: 420px){
+  .form-actions{
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .form-actions .button, .form-actions input[type="submit"]{
+    width: 100%;
+  }
+}
+.button {
+  min-width: 120px;
+
+  position: relative;
+  cursor: pointer;
+  padding: 12px 17px;
+  border: 0;
+  border-radius: 7px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  background: radial-gradient(
+    ellipse at bottom,
+    rgba(71, 81, 92, 1) 0%,
+    rgba(11, 21, 30, 1) 45%
+  );
+
+  color: rgb(255, 255, 255, 0.66);
+
+  transition: all 1s cubic-bezier(0.15, 0.83, 0.66, 1);
+}
+.button::before {
+  content: "";
+  width: 70%;
+  height: 1px;
+
+  position: absolute;
+  bottom: 0;
+  left: 15%;
+
+  background: rgb(255, 255, 255);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0.2;
+
+  transition: all 1s cubic-bezier(0.15, 0.83, 0.66, 1);
+}
+
+.button:hover {
+  color: rgb(255, 255, 255, 1);
+  transform: scale(1.1) translateY(-3px);
+}
+
+.button:hover::before {
+  opacity: 1;
+} 
+.gauche{
+    width: 30%;
+  float: left;
+}
+.droite{
+    width: 65%;
+  float: right;
+}
+a{
+    text-decoration: none;
+    color: white;
+    transition: transform 0.3s ease;
+}
+a:hover{
+    color: #e1e7eb;
+    transform: scale(1.2);
+}
