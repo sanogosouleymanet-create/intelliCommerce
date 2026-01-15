@@ -54,7 +54,7 @@ label{
     margin-right: 12px;
 }
 
-input{
+.champ-input{
     width: 200px;
 }
 
@@ -72,7 +72,7 @@ input{
 }
 .form-actions .button, .form-actions input[type="submit"]{
     padding: 10px 16px;
-    min-width: 100px;
+    min-width: 120px;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
@@ -138,14 +138,7 @@ input{
 .button:hover::before {
   opacity: 1;
 } 
-.gauche{
-    width: 30%;
-  float: left;
-}
-.droite{
-    width: 65%;
-  float: right;
-}
+
 a{
     text-decoration: none;
     color: white;
