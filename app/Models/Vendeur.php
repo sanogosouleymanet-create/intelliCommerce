@@ -9,6 +9,11 @@ class Vendeur extends Model
 {
     protected $table = 'vendeurs';
     use HasFactory;
+    /**
+     * Disable automatic timestamps (created_at, updated_at)
+     * because the `vendeurs` table does not have these columns.
+     */
+    public $timestamps = false;
     protected $fillable =[
         'idVendeur',
         'Nom',	

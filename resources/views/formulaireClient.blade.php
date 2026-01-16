@@ -2,32 +2,52 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ asset('css/StyleAcceuil.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/StyleFormulaire.css') }}">
     <title>Formulaire</title>
 </head>
 <body>
-     <img src="Mon_logo.png" width="250" Alt="Logo de la plateforme" title="LOGO" class="logo">
-     <h1>Sigin/INSCRIPTION CLIENT</h1>
-     <p> Bienvenue Cher Client(e)</p>
-      
-    <form action="">
+    @include('Header')
+      <h2>Veuillez renseigner les champs suivants</h2>
+    <form action="{{('/formulaireClient')}}" method="post">
+        @csrf
         <fieldset>
-            <legend><h2>Infos Personnels</h2></legend> 
-        <br> <label for="Name">Nom*:</label> <input type="text" placeholder ="Entrez votre Nom/Name" required=""> <br/>
-        <br/> <label>Prénom*:</label> <input type ="text" placeholder = "votre prénom" required=""><br/>
-        <br/> <label>Date de Naissance:</label> <input type= "date" placeholder="jj/mm/aaaa"><br/>
-        <br/> <label>Mail:</label> <input type ="email" placeholder = "votre mail"  pattern="(^[a-z0-9]+)@([a-z0-9])+(\.)([a-z]{2,4})"><br/>
-        <br/> <label>Tel : </label> <input type ="tel" placeholder = "votre numéro de téléphone" maxlength="13" minlength="13"><br/>
-        <br> <label for="adresse">Adresse</label> <input type="text" placeholder ="Entrez votrze adresse"> <br/>
-        <div id ="sex">
-             <input type ="radio" name="sex" value ="Autre" checked="Autre"> Autre <br/>
-            <input type ="radio" name="sex" value ="Homme" > Homme <br/>
-            <input type ="radio" name="sex" value ="Femme" > Femme <br/>
+        <div>
+            <label for="Nom*">Nom* :</label> 
+            <input type="text" id="Nom" class="champ-input" name="nom" placeholder ="Entrez votre Nom/Name" required=""><br>
         </div>
-        <br> <label>Mot de Passe*:</label> <input type = "password" maxlength ="8" pattern= [A-Z]{2}+[1-9]{4}+[a-z]{2} required=""><br/>
+        <div>
+            <label for="Prenom*">Prénom* :</label> 
+            <input type ="text" id="Prenom" class="champ-input" name="prenom" placeholder = "votre prénom" required=""><br/>
+        </div>
+        <div>
+            <label for="datenaissance">Date de Naissance :</label> 
+            <input type= "date" id="datenaissance" class="champ-input" name="datenaissance" placeholder="jj/mm/aaaa"><br/>
+        </div>
+        <div>
+            <label for="mail">Mail:</label> 
+            <input type ="email" id="mail" class="champ-input" name="mail" placeholder = "votre mail"><br/>
+        </div>
+        <div>
+            <label for="TelClient">Tel:</label> 
+            <input type ="text" id="TelClient" class="champ-input" name="tel" pattern="[0-9]+" maxlength="8" placeholder = "votre numéro de téléphone">
+        </div>
+        <div>
+            <label for="Adresse">Adresse :</label> 
+            <input type="text" id="Adresse" class="champ-input" name="adresse" placeholder ="Entrez votre adresse">
+        </div>
+        <div>
+            <label for="MotDePasse">Mot de Passe* :</label> 
+            <input type = "password" id="MotDePasse" class="champ-input" name="motdepasse" placeholder="Entrer un mot de passe" maxlength ="8" pattern= [A-Z]{2}+[1-9]{4}+[a-z]{2} required="">
+        </div>
         </fieldset>
-    </form><br/> 
-    <button type="submit" value= "Suivant">NEXT</button>
+        <div class="form-actions">
+            <a href="{{('/ConnexionClient')}}" class="button retour">Retour</a>
+            <input type="submit" value="Envoyer" class="button envoyer">
+        </div>
+    </form>
+    @include('Footer')
+    @if(isset($message))    
+        <p>{{$message}}</p>
+    @endif
 </body>
 </html>
