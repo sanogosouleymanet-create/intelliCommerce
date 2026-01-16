@@ -7,8 +7,6 @@
     <title>Acceuil</title>
 </head>
 <body>
-    <!-- <img src="Logo-site.png" width="300" Alt="Logo de la plateforme" title="LOGO" class="logo"> -->
-
     <section class="hero">
       <h2 class="section-title">Bienvenue sur IntelliCommerce</h2>
       <p class="lead"><b>Nous facilitons le commerce au Mali : découvrez des produits locaux, vendez en ligne et gérez vos commandes rapidement et en toute sécurité.</b></p>

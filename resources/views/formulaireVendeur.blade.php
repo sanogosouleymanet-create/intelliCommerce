@@ -2,22 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="{{ asset('css/StyleFormulaireVendeur.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/StyleFormulaire.css') }}">
     <title>Formulaire</title>
 </head>
 <body>
-    <header>
-            <img src="Logo-Site.png" width="500" alt="Logo de la plateforme" title="LOGO" class="logo">
-            <nav>
-                <ul>
-                    <li><a href="{{('welcome')}}">HOME</a></li>
-                    <li><a href="{{('')}}">ABOUT</a></li>
-                    <li><a href="{{('')}}">SERVICES</a></li>
-                    <li><a href="{{('')}}">CONTACT</a></li>
-                </ul>  
-            </nav>
-            
-     </header>
+    @include('Header')
       <h2>Veuillez renseigner les champs suivants</h2>
     <form action="{{('/formulaireVendeur')}}" method="post">
         @csrf
@@ -64,8 +53,6 @@
     @if(isset($message))
         <p>{{$message}}</p>
     @endif
-    <footer>
-            <p>&copy; 2024 IntelliCommerce. All rights reserved.</p>
-        </footer>
+    @include('Footer')
     </body>
 </html>
