@@ -83,7 +83,7 @@ Route::post('/ConnexionVendeur', function (Request $request){
 
     if ($vendeur && Hash::check($motdepasse, $vendeur->MotDePasse)) {
         $message = "Connexion réussie";
-        return view('ConnexionVendeur', compact('message'));
+        return view('PageVendeur');
     } else {
         $message = "Email ou mot de passe incorrect.";
         return view('ConnexionVendeur', compact('message'));

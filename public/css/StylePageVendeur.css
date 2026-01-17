@@ -1,0 +1,36 @@
+body{
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    background-image: url("/fond-formulaire.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+header{
+    text-align: left;
+    padding-left: 20px;
+    padding-top: 20px;
+    display: block;
+    width: 100%;
+}
+.nav ul{
+    float: none;
+    margin: 8px 0 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    border: 2px solid white;
+    padding: 6px 10px;
+}
+.logo{
+    display: block;
+    margin: 0;
+    max-width: 200px;
+}
+ .nav{ margin-left: 20px; }
