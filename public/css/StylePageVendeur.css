@@ -17,7 +17,9 @@ header{
     display: block;
     width: 100%;
 }
-.nav ul{
+.nav {
+    padding-left: 20px;
+    background-color: rgba(157, 239, 250, 0.8);
     float: none;
     margin: 8px 0 0 0;
     padding: 0;
@@ -25,8 +27,16 @@ header{
     display: flex;
     gap: 12px;
     align-items: center;
+    border-radius: 15px;
     border: 2px solid white;
     padding: 6px 10px;
+}
+.nav li{
+    margin-top: 0 0 0 0px;
+}
+.nav li>a{
+    text-decoration: none;
+    
 }
 .logo{
     display: block;
@@ -34,3 +44,50 @@ header{
     max-width: 200px;
 }
  .nav{ margin-left: 20px; }
+
+#menuBtn{
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 1001;
+    background: #0d6efd;
+    border-radius: 50%;
+    color: #fff;
+    width: 48px;
+    height: 48px;
+    border: none;
+    box-shadow: 0 6px 18px rgba(13,110,253,0.3)
+}
+#sidebar{
+    border-radius: 10px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    background-color: rgba(157, 239, 250, 0.8);
+    padding-top: 60px;
+
+    transform: translateX(-100%);
+    transition: transform 0.3 ease;
+
+    z-index: 1000;
+}
+#sidebar.active{
+    transform: translateX(0);
+}
+#sidebar ul{
+    list-style: none;
+    padding: 0;
+}
+#sidebar ul li a{
+    display: block;
+    padding: 15px;
+    color: black;
+    text-decoration: none;
+}
+#sidebar ul li a:hover{
+    background-color: white;
+}
