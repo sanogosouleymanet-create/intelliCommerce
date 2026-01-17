@@ -4,7 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProduitController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\VendeurController;
+use App\Http\Controllers\PageVendeurController;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Vendeur;
 use App\Models\Client;
@@ -14,6 +16,9 @@ use App\Models\Administrateur;
 Route::get ('/produits', [ProduitController::class, 'index']);
 Route::get ('/commandes', [CommandeController::class, 'index']);
 Route::get ('/vendeurs', [VendeurController::class, 'index']);
+
+Route::get('/PageVendeur', [PageVendeurController::class, 'index'])->name('PageVendeur')->middleware('auth');
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -74,7 +79,7 @@ Route::post('/formulaireClient', function (Request $request){
 
 Route::get('/ConnexionVendeur', function () {
     return view('ConnexionVendeur');
-});
+})->name('login');
 Route::post('/ConnexionVendeur', function (Request $request){
     $email = $request->email;
     $motdepasse = $request->motdepasse;
@@ -82,13 +87,16 @@ Route::post('/ConnexionVendeur', function (Request $request){
     $vendeur = Vendeur::where('email', $email)->first();
 
     if ($vendeur && Hash::check($motdepasse, $vendeur->MotDePasse)) {
-        $message = "Connexion réussie";
-        return view('PageVendeur');
+        Auth::login($vendeur); // Connexion du vendeur
+        $request->session()->regenerate(); // Régénérer la session pour éviter les attaques de fixation de session
+        return redirect()->route('PageVendeur');
     } else {
         $message = "Email ou mot de passe incorrect.";
-        return view('ConnexionVendeur', compact('message'));
+        return back()->withErrors(['credentials' => $message])->withInput();
     }
 });
+
+
 Route::get('/ConnexionClient', function () {
     return view('ConnexionClient');
 });
