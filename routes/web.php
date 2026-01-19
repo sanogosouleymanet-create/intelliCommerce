@@ -17,7 +17,7 @@ Route::get ('/produits', [ProduitController::class, 'index']);
 Route::get ('/commandes', [CommandeController::class, 'index']);
 Route::get ('/vendeurs', [VendeurController::class, 'index']);
 
-Route::get('/PageVendeur', [PageVendeurController::class, 'index'])->name('PageVendeur')->middleware('auth');
+Route::get('/PageVendeur', [PageVendeurController::class, 'index'])->name('PageVendeur')->middleware('auth:vendeur');
 
 
 Route::get('/', function () {
@@ -28,7 +28,7 @@ Route::get('/formulaireVendeur', function () {
     return view('formulaireVendeur');
 });
 Route::post('/formulaireVendeur', function (Request $request){
-    $message = "Vendeur enregidtré";
+    // Validation basique
     $validated = $request->validate([
         'nom' => 'required|string|max:255',
         'prenom' => 'required|string|max:255',
@@ -46,7 +46,7 @@ Route::post('/formulaireVendeur', function (Request $request){
         'MotDePasse' => Hash::make($request->motdepasse),
         'DateCreation' => now(),
     ]);
-    return view('formulaireVendeur', compact('message'));
+    return view('PageVendeur');
 });
 
 
@@ -80,6 +80,7 @@ Route::post('/formulaireClient', function (Request $request){
 Route::get('/ConnexionVendeur', function () {
     return view('ConnexionVendeur');
 })->name('login');
+
 Route::post('/ConnexionVendeur', function (Request $request){
     $email = $request->email;
     $motdepasse = $request->motdepasse;
@@ -87,7 +88,7 @@ Route::post('/ConnexionVendeur', function (Request $request){
     $vendeur = Vendeur::where('email', $email)->first();
 
     if ($vendeur && Hash::check($motdepasse, $vendeur->MotDePasse)) {
-        Auth::login($vendeur); // Connexion du vendeur
+        Auth::guard('vendeur')->login($vendeur); // Connexion du vendeur via le guard 'vendeur'
         $request->session()->regenerate(); // Régénérer la session pour éviter les attaques de fixation de session
         return redirect()->route('PageVendeur');
     } else {
@@ -122,6 +123,13 @@ Route::post('/ConnexionClient', function (Request $request){
 
 Route::get('/ConnexionAdmin', function () {
     return view('ConnexionAdmin');
+});
+
+Route::post('/deconnexion', function (Request $request) {
+    Auth::guard('vendeur')->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect()->route('login');
 });
 
 Route::get('/welcome', function () {

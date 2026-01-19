@@ -20,6 +20,11 @@ class Produit extends Model
         'Image',
         'Vendeur_idVendeur',
     ];
+    protected $table = 'produits';
+    protected $primaryKey = 'idProduit';
+    public $incrementing = true;
+    protected $keyType = 'int';
+    public $timestamps = false;
     public function vendeur()
     {
         return $this->belongsTo(Vendeur::class, 'Vendeur_idVendeur');
@@ -27,6 +32,6 @@ class Produit extends Model
 
     public function commandes()
     {
-        return $this->belongsToMany(Commande::class, 'Produitcommande')->withPivot('Quantite');
+        return $this->belongsToMany(Commande::class, 'Produitcommande', 'Produit_idProduit', 'Commande_idCommande')->withPivot('Quantite');
     }
 }

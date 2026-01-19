@@ -9,10 +9,13 @@ class Produitcommande extends Model
 {
     use HasFactory;
 
-    protected $fillble = [
+    protected $table = 'Produitcommande';
+    public $timestamps = false;
+
+    protected $fillable = [
         'Produit_idProduit',
         'Commande_idCommande',
-        'Quantite',	
+        'Quantite',
         'PrixUnitaire',
     ];
 }

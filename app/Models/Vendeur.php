@@ -37,10 +37,6 @@ class Vendeur extends Authenticatable
         return $this->hasMany(Message::class);
     }
     
-    public function commandes()
-    {
-        return $this->hasMany(Commande::class);
-    }
     public function getAuthPassword()
     {
         return $this->MotDePasse;
