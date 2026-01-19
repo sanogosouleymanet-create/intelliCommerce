@@ -28,7 +28,7 @@
              </fieldset>
          </form>  
          <p>don't have an account?</p>
-         <button class="button"><a href="{{('formulaireVendeur')}}">CREER UN COMPTE</a></button> 
+         <a class="button" href="{{('formulaireVendeur')}}">CREER UN COMPTE</a>
         @if(isset($message))
             <p>{{$message}}</p>
         @endif
