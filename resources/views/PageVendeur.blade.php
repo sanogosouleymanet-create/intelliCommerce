@@ -1,110 +1,115 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <link rel="Stylesheet" href="{{asset('css/StylePageVendeur.css')}}"/>
-    <link rel="Stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-    <title>Ma PageVendeur</title>
+    <title>Tableau de Bord Vendeur</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/StylePageVendeur.css') }}">
 </head>
 <body>
-    <button id="menuBtn">☰</button>
-    <nav id="sidebar">
-        <ul>
-            <li><a href="{{ url('/produits') }}">Produits ({{ $produitsCount ?? 0 }})</a></li>
-            <li><a href="{{ url('/commandes') }}">Commandes ({{ $commandesCount ?? 0 }})</a></li>
-        </ul>
-    </nav>
 
-    <div class="top-right" role="region" aria-label="Actions utilisateur">
-        <button class="icon notification" id="notifBtn" aria-label="Notifications">
-            <i class="fa-solid fa-bell"></i>
-            <span class="badge" id="notifBadge">{{ $messagesNonLus ?? 0 }}</span>
-        </button>
+<div class="container">
 
-        <div class="profile-wrapper">
-            <button class="icon profil" id="profileBtn" aria-haspopup="true" aria-expanded="false">
-                <img src="{{ asset('css/avatar-placeholder.png') }}" alt="Avatar" class="profile-img"/>
-                <span class="vendeur-name">{{ $vendeur->Nom ?? '' }} {{ $vendeur->Prenom ?? '' }}</span>
-            </button>
-            <div class="profile-menu" id="profileMenu" aria-hidden="true">
-                <a href="{{ url('/profil') }}">Mon profil</a>
-                <a href="{{ url('/parametres') }}">Paramètres</a>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+    <h2 class="logo"><i class="fa-solid fa-store"></i> IntelliCommerce</h2>
+    <ul>
+        <li class="active"><i class="fa-solid fa-chart-line"></i> Tableau de Bord</li>
+        <li><i class="fa-solid fa-box"></i> Produits</li>
+        <li><i class="fa-solid fa-cart-shopping"></i> Commandes</li>
+        <li><i class="fa-solid fa-users"></i> Clients</li>
+        <li><i class="fa-solid fa-chart-pie"></i> Analyses</li>
+        <li><i class="fa-solid fa-gear"></i> Paramètres</li>
+        <li><i class="fa-solid fa-envelope"></i> Messages</li>
+    </ul>
+</aside>
 
-                <form action="{{ url('/deconnexion') }}" method="POST" style="display:inline;">
-                    @csrf
-                    <button type="submit" style="background:none;border:none;padding:0;color:#007bff;cursor:pointer;">Déconnexion</button>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    <main>
-        <section>
-            <h2>Alertes récentes</h2>
-            <ul>
-                @forelse($alertes as $alerte)
-                    <li>{{ $alerte->titre ?? ($alerte->message ?? 'Alerte') }} — <small>{{ $alerte->created_at ?? '' }}</small></li>
-                @empty
-                    <li>Aucune alerte.</li>
-                @endforelse
-            </ul>
-        </section>
+    <!-- CONTENU PRINCIPAL -->
+    <main class="main-content">
 
-        <section>
-            <h2>Commandes récentes</h2>
-            <ul>
-                @forelse($commandesRecentes as $commande)
-                    <li>Commande {{ $commande->idCommande ?? $commande->id ?? 'N/A' }} — {{ $commande->Statut ?? '' }}</li>
-                @empty
-                    <li>Aucune commande récente.</li>
-                @endforelse
-            </ul>
-        </section>
+        <!-- HEADER -->
+        <header class="header">
+            <h1>Tableau de Bord Vendeur</h1>
+            <div class="account">
+    <i class="fa-solid fa-user"></i> Mon Compte
+</div>
 
-        <section>
-            <h2>Messages récents</h2>
-            <ul>
-                @forelse($messagesRecents as $message)
-                    <li>{{ $message->Sujet ?? Str::limit($message->Corps ?? '', 60) }} — {{ $message->created_at ?? '' }}</li>
-                @empty
-                    <li>Aucun message récent.</li>
-                @endforelse
-            </ul>
-        </section>
+        </header>
+
+        <section class="stats">
+    <div class="card">
+    <h3><i class="fa-solid fa-euro-sign"></i> Revenus Totaux</h3>
+    <p class="number">12 500 €</p>
+    <span class="green"><i class="fa-solid fa-arrow-up"></i> +15% ce mois-ci</span>
+</div>
+
+<div class="card">
+    <h3><i class="fa-solid fa-clock"></i> Commandes en Attente</h3>
+    <p class="number">45</p>
+    <span class="green"><i class="fa-solid fa-arrow-up"></i> +15% ce mois-ci</span>
+</div>
+
+<div class="card">
+    <h3><i class="fa-solid fa-chart-simple"></i> Performance du Mois</h3>
+    <p class="number">230</p>
+    <span class="green"><i class="fa-solid fa-arrow-up"></i> +10%</span>
+</div>
+
+</section>
+
+<section class="orders">
+    <h2>Commandes Récentes</h2>
+
+    <table>
+        <tr>
+            <th>N° Commande</th>
+            <th>Date</th>
+            <th>Statut</th>
+        </tr>
+        <tr>
+            <td>#C-00123</td>
+            <td>2023-10-26</td>
+            <td>150,00 €</td>
+        </tr>
+        <tr>
+            <td>Jean Dupont</td>
+            <td>2023-10-26</td>
+            <td>En cours</td>
+        </tr>
+        <tr>
+            <td>Marie Lefebre</td>
+            <td>2023-10-25</td>
+            <td>Livré</td>
+        </tr>
+    </table>
+</section>
+
+<section class="top-products">
+    <h2>Top Produits</h2>
+
+    <div class="product">
+    <span><i class="fa-solid fa-shirt"></i> T-shirt Coton Premium</span>
+    <small>500 vendus</small>
+</div>
+
+<div class="product">
+    <span><i class="fa-solid fa-hat-cowboy"></i> Casquette Stylée</span>
+    <small>320 vendus</small>
+</div>
+
+<div class="product">
+    <span><i class="fa-solid fa-backpack"></i> Sac à Dos Urbain</span>
+    <small>210 vendus</small>
+</div>
+
+</section>
+
+
     </main>
 
-    <script>
-        const menuBtn = document.getElementById("menuBtn");
-        const sidebar = document.getElementById("sidebar");
-        menuBtn.addEventListener("click", () => { sidebar.classList.toggle("active") });
+</div>
 
-        document.addEventListener('DOMContentLoaded', function(){
-            const profileBtn = document.getElementById('profileBtn');
-            const profileMenu = document.getElementById('profileMenu');
-            const notifBtn = document.getElementById('notifBtn');
 
-            profileBtn.addEventListener('click', function(e){
-                e.stopPropagation();
-                const open = profileMenu.classList.toggle('open');
-                profileBtn.setAttribute('aria-expanded', open);
-                profileMenu.setAttribute('aria-hidden', !open);
-            });
-
-            document.addEventListener('click', function(e){
-                if (!profileMenu.contains(e.target) && !profileBtn.contains(e.target)){
-                    profileMenu.classList.remove('open');
-                    profileBtn.setAttribute('aria-expanded', 'false');
-                    profileMenu.setAttribute('aria-hidden', 'true');
-                }
-            });
-
-            notifBtn.addEventListener('click', function(e){
-                e.stopPropagation();
-                const badge = document.getElementById('notifBadge');
-                badge.style.display = 'none';
-            });
-        });
-    </script>
 </body>
 </html>

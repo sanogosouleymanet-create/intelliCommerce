@@ -17,6 +17,12 @@ class Commande extends Model
         'Utilisateurs_id',
     ];
 
+    protected $table = 'commandes';
+    protected $primaryKey = 'idCommande';
+    public $incrementing = true;
+    protected $keyType = 'int';
+    public $timestamps = false;
+
     public function Client()
     {
         return $this->belongsTo(Client::class, 'Client_idClient');
@@ -24,6 +30,6 @@ class Commande extends Model
 
     public function Produit()
     {
-        return $this->belongsToMany(Produit::class, 'Produitcommande')->withPivot('Quantite');
+        return $this->belongsToMany(Produit::class, 'Produitcommande', 'Commande_idCommande', 'Produit_idProduit')->withPivot('Quantite');
     }
 }
