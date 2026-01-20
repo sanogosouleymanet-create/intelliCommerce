@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="{{ asset('css/StyleProduit.css') }}">
+     <!-- Vue: produits/index.blade.php - Liste des produits -->
     <title>Produits</title>
+    <!-- Charge la feuille de style spécifique aux produits -->
+    <link rel="stylesheet" href="{{ asset('css/StyleProduit.css') }}">
 </head>
 <body>
     <h1>Liste des produits</h1>
+    <a class="Ajout" href="#">+</a>
 
     @foreach($produits as $produit)
     <p>
