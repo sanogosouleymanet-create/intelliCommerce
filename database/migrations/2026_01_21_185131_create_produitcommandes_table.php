@@ -6,7 +6,10 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
     {
         Schema::create('Produitcommande', function (Blueprint $table) {
             $table->bigIncrements('id');
@@ -14,11 +17,15 @@ return new class extends Migration
             $table->unsignedBigInteger('Commande_idCommande')->index();
             $table->integer('Quantite')->default(1);
             $table->double('PrixUnitaire')->nullable();
+            $table->timestamp('DateAjout');
         });
     }
 
-    public function down()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
-        Schema::dropIfExists('Produitcommande');
+        Schema::dropIfExists('produitcommandes');
     }
 };

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Client extends Model
 {
     use HasFactory;
+    protected $table = 'clients';
+    protected $primaryKey = 'idClient';
     public $timestamps = false;
     protected $fillable = [
         "idClient",

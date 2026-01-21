@@ -7,19 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ia_alerte extends Model
 {
-     use HasFactory;
+    use HasFactory;
+
+    protected $table = 'ia_alertes';
+    protected $primaryKey = 'idAlerte';
+    public $timestamps = false; // car DateCreation est manuelle
+
     protected $fillable = [
-        'idAlerte',
         'TypeAlerte',
         'Description',
         'DateCreation',
         'NiveauGravité',
-        'Utilisateurs_id',
-        'Administrateur_idAdmi',
+        'idAdmi',
     ];
 
-    public function Admin()
+    public function administrateur()
     {
-        return $this->belongsTo(Administrateur::class, 'Administrateur_idAdmi');
+        return $this->belongsTo(Administrateur::class, 'idAdmi');
     }
 }

@@ -35,7 +35,7 @@ class ProduitController extends Controller
 
     $produits = $query->get();
 
-    return view('produits.index', compact('produits'));
+    return view('produits.index', compact('produits', 'vendeur'));
 }
 
 
@@ -52,7 +52,7 @@ class ProduitController extends Controller
 
         $vendeur = Auth::guard('vendeur')->user();
 
-        $path = $request->file('Image')->store('images', 'public');
+        $path = $request->file('Image')->store('Images', 'public');
 
         // Création d'un produit: le stock est calculé automatiquement (initialisé à 0)
         $produit = Produit::create([
