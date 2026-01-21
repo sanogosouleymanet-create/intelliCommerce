@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ asset('css/StyleProduit.css') }}">
     <title>Produits</title>
 </head>
 <body>
