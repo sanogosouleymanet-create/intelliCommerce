@@ -13,13 +13,16 @@ use App\Models\Vendeur;
 use App\Models\Client;
 use App\Models\Administrateur;
 
-
-Route::get ('/produits', [ProduitController::class, 'index']);
+Route::middleware(['auth:vendeur'])->group(function () {
+    Route::get ('/produits', [ProduitController::class, 'index']);
+    Route::post('/produits', [ProduitController::class, 'AjouterProduit'])->name('produits.AjouterProduit');
+});
 Route::get ('/commandes', [CommandeController::class, 'index']);
 Route::get ('/vendeurs', [VendeurController::class, 'index']);
 
+Route::post('/formulaireVendeur', [VendeurController::class, 'FormulaireVendeur']);
 Route::get('/PageVendeur', [PageVendeurController::class, 'index'])->name('PageVendeur')->middleware('auth:vendeur');
-
+Route::post('/AjouterProduit', [ProduitController::class, 'AjouterProduit']);
 
 Route::get('/', function () {
     return view('welcome');
@@ -28,60 +31,13 @@ Route::get('/', function () {
 Route::get('/formulaireVendeur', function () {
     return view('formulaireVendeur');
 });
-Route::post('/formulaireVendeur', function (Request $request){
-    // Validation basique
-    $validated = $request->validate([
-        'nom' => 'required|string|max:255',
-        'prenom' => 'required|string|max:255',
-        'nomboutique' => 'required|string|max:255',
-        'mail' => 'required|email|max:255',
-        'motdepasse' => 'required|string|min:4|max:8',
-]);
-    $vend = Vendeur::create([
-        'Nom' => $request->nom,
-        'Prenom' => $request->prenom,
-        'Adresse' => $request->adresse,
-        'TelVendeur' => $request->tel,
-        'email' => $request->mail,
-        'NomBoutique' => $request->nomboutique,
-        'MotDePasse' => Hash::make($request->motdepasse),
-        'DateCreation' => now(),
-    ]);
-    // Connecte automatiquement le vendeur créé et redirige vers son tableau de bord
-    Auth::guard('vendeur')->login($vend);
-    $request->session()->regenerate();
-    return redirect()->route('PageVendeur');
-});
+
 
 Route::get('/AjouterProduit', function () {
     return view('produits.AjouterProduit');
 });
 
-// Création d'un produit: le stock est calculé automatiquement (initialisé à 0)
-Route::post('/AjouterProduit', function (Request $request){
-    $validated = $request->validate([
-        'Nom' => 'required|string|max:255',
-        'Description' => 'required|string',
-        'Prix' => 'required|numeric',
-        'Categorie' => 'nullable|string|max:255',
-        'Image' => 'nullable|string|max:1000',
-    ]);
 
-    $vendeur = Auth::guard('vendeur')->user();
-
-    $produit = Produit::create([
-        'Nom' => $request->Nom,
-        'Description' => $request->Description,
-        'Prix' => $request->Prix,
-        'Stock' => 0,
-        'Categorie' => $request->Categorie ?? null,
-        'Image' => $request->Image ?? null,
-        'DateAjout' => now(),
-        'Vendeur_idVendeur' => $vendeur ? $vendeur->idVendeur : null,
-    ]);
-
-    return redirect('/produits');
-});
 
 
 Route::get('/formulaireClient', function () {
