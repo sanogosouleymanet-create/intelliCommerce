@@ -113,8 +113,7 @@ Route::post('/ConnexionClient', function (Request $request){
     $client = Client::whereRaw('LOWER(email) = ?', [$email])->first();
 
     if ($client && Hash::check($motdepasse, $client->MotDePasse)) {
-        $message = "Connexion réussie";
-        return view('ConnexionClient', compact('message'));
+        return view('PagePrincipale');
     } else {
         $message = "Email ou mot de passe incorrect.";
         return view('ConnexionClient', compact('message'));
@@ -134,4 +133,7 @@ Route::post('/deconnexion', function (Request $request) {
 
 Route::get('/welcome', function () {
     return view('Welcome');
+});
+Route::get('/PagePrincipale', function () {
+    return view('PagePrincipale');
 });
