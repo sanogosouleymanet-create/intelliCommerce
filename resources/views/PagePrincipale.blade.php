@@ -45,12 +45,32 @@
                 </div>
             </div>
            </div>
+
            <div class="header-nav">
             <container>
                 <div class="wrapper flexitem">
                     <a href="#" class="trigger desktop-hide"><span class="i ri-menu-2-line"></span></a>
-                    <div class="left">
-                        
+                    <div class="left flexitem">
+                        <div class="logo"><a href="/"><span class="circle"></span>.Boutique</a></div>
+                        <nav class="mobile-hide">
+                            <ul class="flexitem second-links">
+                                <li><a href="#">Home</a></li>
+                                <li><a href="#">Boutique</a></li>
+                                <li><a href="#">Femme 
+                                    <div class="icon-small"><i class="ri-arrow-down-s-line"></i></div>
+                                </a>
+                            </li>
+                                <li><a href="#">Homme
+                                    <div class="icon-small"><i class="ri-arrow-down-s-line"></i></div>
+                                </a></li>
+                                <li><a href="#">Enfant
+                                    <div class="icon-small"><i class="ri-arrow-down-s-line"></i></div>
+                                </a></li>
+                                <li><a href="#">Sports
+                                    <div class="fly-item"><span>New!</span></div>
+                                </a></li>
+                            </ul>
+                        </nav>
                     </div>
                     <div class="right"></div>
                 </div>
