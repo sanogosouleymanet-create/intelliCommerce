@@ -192,6 +192,20 @@ document.addEventListener('DOMContentLoaded', function(){
             const text = await res.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(text, 'text/html');
+            // Copy stylesheet links and inline <style> from fetched document into current head
+            try{
+                const fetchedLinks = doc.querySelectorAll('link[rel="stylesheet"]');
+                fetchedLinks.forEach(function(link){
+                    const hrefAttr = link.getAttribute('href') || '';
+                    try{
+                        const resolved = new URL(hrefAttr, url).href;
+                        const already = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some(function(l){ return l.href === resolved; });
+                        if(!already){ const nl = document.createElement('link'); nl.rel = 'stylesheet'; nl.href = resolved; document.head.appendChild(nl); }
+                    }catch(e){ /* ignore bad URLs */ }
+                });
+                const fetchedStyles = doc.querySelectorAll('style');
+                fetchedStyles.forEach(function(s){ document.head.appendChild(s.cloneNode(true)); });
+            }catch(e){ /* safety */ }
             const newMain = doc.querySelector('.main-content') || doc.querySelector('main');
             if(newMain) main.innerHTML = newMain.innerHTML; else { const body = doc.querySelector('body'); main.innerHTML = body ? body.innerHTML : text; }
             updateActiveFromLocation();
