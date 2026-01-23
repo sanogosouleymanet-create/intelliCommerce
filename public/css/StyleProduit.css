@@ -13,3 +13,68 @@ h1 {
     right: 20px;
     text-align: center;
 }
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+}
+
+/*Modal styles (minimal)*/
+.modal-content{
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    max-width:600px;
+    width:90%;
+    position:relative;
+}
+.modal-content h2
+{
+    margin-top:0
+}
+.close{
+    position:absolute;
+    top:8px;
+    right:8px;
+    border:none;
+    background:transparent;
+    font-size:22px;
+    cursor:pointer;
+}
+.Ajout{
+    font-size:20px;
+    padding:6px 12px;
+    border-radius:6px;
+    cursor:pointer;
+    width:60px;
+    height:60px;
+    border-radius:50%;
+}
+.modal-content label{
+    display:block;
+    margin-top:8px;
+}
+.modal-content input,.modal-content textarea,.modal-content select{
+    width:100%;
+    padding:6px;
+    margin-top:4px;
+}
+
+.bouton-rond{
+    
+    background-color:#030c25;
+    color:white;
+    font-size:24px;
+    text-align:center;
+    line-height:40px;
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    cursor:pointer;
+}
+        
+        
