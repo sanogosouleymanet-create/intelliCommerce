@@ -46,6 +46,10 @@
         <li data-view="messages" class="{{ request()->is('messages') ? 'active' : '' }}">
             <a href="#" data-view="messages"><i class="fa-solid fa-envelope"></i> Messages</a>
         </li>
+        <!-- Deconnexion -->
+        <li>
+            <a href="{{ url('/ConnexionVendeur') }}"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</a>
+        </li>   
     </ul>
 </aside>
 
@@ -144,6 +148,43 @@
     </main>
 
 </div>
+
+    <script>
+document.addEventListener('submit', function(e) {
+
+    if (!e.target || e.target.id !== 'formProduit') return;
+
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+
+    fetch("{{ route('produits.AjouterProduit') }}", {
+        method: "POST",
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+                || document.querySelector('input[name="_token"]').value
+        },
+        body: formData
+    })
+    .then(res => {
+        if (!res.ok) throw res;
+        return res.json();
+    })
+    .then(data => {
+        alert(data.message);
+        document.getElementById('addModal').style.display = 'none';
+
+        // recharge la vue produits
+        location.hash = 'produits';
+        location.reload();
+    })
+    .catch(err => {
+        alert("Erreur lors de l'ajout du produit");
+        console.error(err);
+    });
+});
+</script>
 
 
 </body>

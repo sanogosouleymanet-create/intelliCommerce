@@ -8,7 +8,19 @@
     <link rel="stylesheet" href="{{ asset('css/StyleProduit.css') }}">
 </head>
 <body>
-    <h1>Liste des produits</h1>
+    <header class="header">
+            <h1>Liste des produits</h1>
+            <div class="account">
+                <i class="fa-solid fa-user"></i>
+                {{-- Affiche le prénom et le nom du vendeur si présents, sinon affiche "Mon Compte" --}}
+                @if(isset($vendeur->Prenom) || isset($vendeur->Nom))
+                    {{ trim(($vendeur->Prenom ?? '') . ' ' . ($vendeur->Nom ?? '')) }}
+                @else
+                    Mon Compte
+                @endif
+            </div>
+        </header>
+    
 
     <!-- Bouton d'ouverture du modal d'ajout (onclick inline pour fonctionner lors de chargement AJAX) -->
     <button id="openAdd" class="Ajout" onclick="document.getElementById('addModal').style.display='flex';document.getElementById('addModal').setAttribute('aria-hidden','false');">+</button>
@@ -18,7 +30,7 @@
         <div class="modal-content">
             <button type="button" class="close" id="closeAdd" onclick="document.getElementById('addModal').style.display='none';document.getElementById('addModal').setAttribute('aria-hidden','true');">×</button>
             <h2>Ajouter un Produit</h2>
-            <form action="{{ url('AjouterProduit') }}" method="POST" enctype="multipart/form-data">
+            <form id="formProduit" enctype="multipart/form-data">
                 @csrf
                 <div>
                     <label for="Nom">Nom du Produit:</label>
@@ -39,6 +51,7 @@
                         <option value="" disabled selected>Sélectionner une catégorie</option>
                         <option value="Electronique">Électronique</option>
                         <option value="Vetements">Vêtements</option>
+                        <option value="Chaussures">Chaussures</option>
                         <option value="Aliment">Aliment</option>
                         <option value="Livres">Livres</option>
                         <option value="Autres">Autres</option>
@@ -54,10 +67,52 @@
             </form>
         </div>
     </div>
+    <!-- Formulaire de recherche, filtre et tri -->
+        <form method="GET" action="{{ url('produits') }}" class="filtres">
+            <div  class="produits-filtres">
+                <!--Recherche par nom-->
+                <input type="text" name="recherche" placeholder="Rechercher un produit" class="search-input" value="{{ request('recherche') }}">
+                <!--Filtre par catégorie-->
+                <select name="categorie" class="filter-select">
+                    <option value="">Toutes les catégories</option>
+                    <option value="Electronique" {{ request('categorie') == 'Electronique' ? 'selected' : '' }}>Électronique</option>
+                    <option value="Vetements" {{ request('categorie') == 'Vetements' ? 'selected' : '' }}>Vêtements</option>
+                    <option value="Chaussures" {{ request('categorie') == 'Chaussures' ? 'selected' : '' }}>Chaussures</option>
+                    <option value="Aliment" {{ request('categorie') == 'Aliment' ? 'selected' : '' }}>Aliment</option>
+                    <option value="Livres" {{ request('categorie') == 'Livres' ? 'selected' : '' }}>Livres</option>
+                    <option value="Autres" {{ request('categorie') == 'Autres' ? 'selected' : '' }}>Autres</option>
+                </select>
 
-    @foreach($produits as $produit)
-        <p>{{ $produit->Nom }} - {{ $produit->Prix }} FCFA</p>
-    @endforeach    
+                <!---Trier par prix-->
+                <select name="tri_prix" class="filter-select">
+                    <option value="">Trier par prix</option>
+                    <option value="asc" {{ request('tri_prix') == 'asc' ? 'selected' : '' }}>Prix croissant</option>
+                    <option value="desc" {{ request('tri_prix') == 'desc' ? 'selected' : '' }}>Prix décroissant</option>
+                    <option value="recente" {{ request('tri_prix') == 'recente' ? 'selected' : '' }}>Produits récents</option>
+                </select>
+                <button type="submit" class="filter-btn">Filtrer</button>
+            </div>
+        </form>
 
-</body>
+    <!-- Affichage de la liste des produits -->
+        @foreach($produits as $produit)
+        <div class="produit">
+                <img src="{{ $produit->Image ? asset('storage/' . $produit->Image) : asset('images/placeholder.png') }}" alt="Image du produit" class="produit-image">
+                <br/>
+                {{-- Nom du produit --}}
+                    {{ $produit->Nom }}
+                <br/>
+                {{-- Prix du produit --}}
+                <strong>Prix: {{ number_format($produit->Prix, 0, ',', ' ') }} FCFA</strong>
+                <br/>   
+                {{-- Stock disponible, affiche un tiret si inconnu --}}
+                <small>Stock: {{ $produit->Stock ?? '—' }}</small>
+        </div>
+        @endforeach 
+
+        
+
+
+
+    </body>
 </html>
