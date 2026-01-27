@@ -17,5 +17,16 @@ class Produitcommande extends Model
         'Commande_idCommande',
         'Quantite',
         'PrixUnitaire',
+        'DateAjout',
     ];
+
+    public function produit()
+    {
+        return $this->belongsTo(Produit::class, 'Produit_idProduit');
+    }
+
+    public function commande()
+    {
+        return $this->belongsTo(Commande::class, 'Commande_idCommande');
+    }
 }

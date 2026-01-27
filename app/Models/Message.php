@@ -9,22 +9,26 @@ class Message extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'idMessage';
+
     protected $fillable = [
-        'idMessage',
         'Contenu',
         'DateEnvoi',
         'Statut',
-        'id_expediteur',
         'Client_idClient',
         'Vendeur_idVendeur',
     ];
+
+    public $timestamps = false; // car on utilise DateEnvoi
 
     public function client()
     {
         return $this->belongsTo(Client::class, 'Client_idClient');
     }
+
     public function vendeur()
     {
         return $this->belongsTo(Vendeur::class, 'Vendeur_idVendeur');
     }
 }
+
