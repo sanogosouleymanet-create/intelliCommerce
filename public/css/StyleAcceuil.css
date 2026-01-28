@@ -180,3 +180,6 @@ nav{
     filter: hue-rotate(360deg);
   }
 }
+.clear{
+  clear: both;
+}

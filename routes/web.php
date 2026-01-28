@@ -25,7 +25,7 @@ Route::get('/PageVendeur', [PageVendeurController::class, 'index'])->name('PageV
 Route::post('/AjouterProduit', [ProduitController::class, 'AjouterProduit']);
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('PagePrincipale');
 });
 
 Route::get('/formulaireVendeur', function () {
@@ -121,9 +121,9 @@ Route::post('/deconnexion', function (Request $request) {
     return redirect()->route('login');
 });
 
-Route::get('/welcome', function () {
+/*Route::get('/welcome', function () {
     return view('Welcome');
-});
+});*/
 Route::get('/PagePrincipale', function () {
     return view('PagePrincipale');
 });

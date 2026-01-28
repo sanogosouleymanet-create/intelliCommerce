@@ -19,26 +19,15 @@
                             <li><a href="#">Contact</a></li>
                         </ul>
                     </div>
-                    <div class="rigth">
+                    <div class="right">
                         <ul class="flexitem main-links">
                             <li class="main-links">
-                                <li><a href="#">S'inscrire</a></li>
-                                <li><a href="#">Mon Compte</a></li>
-                                <li><a href="#">Suivi de la commande</a></li>
-                                <li><a href="#">FCFA <span class="icon-small"><i class="ri-arrow-down-wide-line"></i></span></a>
-                                    <ul>
-                                        <li><a href="#">Franc CFA</a></li>
-                                        <li><a href="#">Euro</a></li>
-                                        <li><a href="#">Dollar</a></li>
-                                    </ul>
-                                </li>
-                                <li><a href="#">Langue <span class="icon-small"><i class="ri-arrow-down-wide-line"></i></span></a>
-                                                                    <ul>
-                                                                        <li><a href="#">Français</a></li>
-                                                                        <li><a href="#">Anglais</a></li>
-                                                                        <li><a href="#">Espagnol</a></li>
-                                                                    </ul>
-                                 </li>
+                               <li><select onchange="if(this.value) window.location.href=this.value">
+                                    <option value="" disabled selected>S'inscrire/Se Connecter</option>
+                                    <option value="/ConnexionClient">Client</option>
+                                    <option value="/ConnexionVendeur">Vendeur</option>
+                                 </select>
+                               </li> 
                             </li>
                         </ul>
                     </div>
