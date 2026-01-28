@@ -19,6 +19,9 @@
         <a href="{{('/ConnexionVendeur')}}"><button class="gradient-button"><span class="gradient-text">Vendeur</span></button></a><br><br>
         <a href="{{('/ConnexionClient')}}"><button class="gradient-button"><span class="gradient-text">Client</span></button></a>
       </nav> 
-      @include('Footer')      
+      <div class="clear">
+        @include('Footer')
+      </div>
+            
       </body>
 </html>

@@ -35,7 +35,7 @@ class ProduitController extends Controller
 
     $produits = $query->get();
 
-    return view('produits.index', compact('produits'));
+    return view('produits.index', compact('produits', 'vendeur'));
 }
 
 
