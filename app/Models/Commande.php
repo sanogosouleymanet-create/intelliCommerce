@@ -13,7 +13,7 @@ class Commande extends Model
         'idCommande',
         'DateCommande',
         'Statut',
-        'MontantTotal',
+        'MontanTotal',
         'Utilisateurs_id',
     ];
 

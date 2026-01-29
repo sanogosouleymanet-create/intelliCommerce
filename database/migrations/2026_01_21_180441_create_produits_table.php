@@ -20,7 +20,7 @@ return new class extends Migration
         $table->integer('Stock');
         $table->string('Categorie', 45);
         $table->timestamp('DateAjout'); // TIMESTAMP
-        $table->binary('Image');
+        $table->string('Image', 255);
 
         $table->unsignedBigInteger('Vendeur_idVendeur');
 

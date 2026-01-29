@@ -44,6 +44,10 @@
                     <label for="Prix">Prix du Produit (FCFA):</label>
                     <input type="number" id="Prix" name="Prix" required>
                 </div>
+                <div>
+                    <label for="Stock">Stock initial:</label>
+                    <input type="number" id="Stock" name="Stock" value="0" min="0" required>
+                </div>
                 <!-- Le stock est calculé automatiquement lors de la création -->
                 <div>
                     <label for="Categorie">Catégorie du Produit:</label>
@@ -68,8 +72,9 @@
         </div>
     </div>
     <!-- Formulaire de recherche, filtre et tri -->
-        <form method="GET" action="{{ url('produits') }}" class="filtres">
-            <div  class="produits-filtres">
+        <form id="filterForm" method="GET" action="{{ url('produits') }}" class="filtres">
+            <section class="orders-header">
+                <div  class="produits-filtres">
                 <!--Recherche par nom-->
                 <input type="text" name="recherche" placeholder="Rechercher un produit" class="search-input" value="{{ request('recherche') }}">
                 <!--Filtre par catégorie-->
@@ -92,23 +97,54 @@
                 </select>
                 <button type="submit" class="filter-btn">Filtrer</button>
             </div>
+            </section>
+            
         </form>
 
     <!-- Affichage de la liste des produits -->
-        @foreach($produits as $produit)
-        <div class="produit">
-                <img src="{{ $produit->Image ? asset('storage/' . $produit->Image) : asset('images/placeholder.png') }}" alt="Image du produit" class="produit-image">
-                <br/>
-                {{-- Nom du produit --}}
-                    {{ $produit->Nom }}
-                <br/>
-                {{-- Prix du produit --}}
-                <strong>Prix: {{ number_format($produit->Prix, 0, ',', ' ') }} FCFA</strong>
-                <br/>   
-                {{-- Stock disponible, affiche un tiret si inconnu --}}
-                <small>Stock: {{ $produit->Stock ?? '—' }}</small>
+    <div id="product-list" style="position:relative;">
+        <div id="loading" class="loading-overlay" style="display:none;">
+            <div class="spinner"></div>
         </div>
-        @endforeach 
+        @include('produits._list')
+    </div>
+
+    <script>
+        (function(){
+            const form = document.getElementById('filterForm');
+            if(!form) return;
+            form.addEventListener('submit', async function(e){
+                e.preventDefault();
+                const params = new URLSearchParams(new FormData(form));
+                // URL shown in the browser (without partial param)
+                const publicUrl = form.action + (params.toString() ? ('?' + params.toString()) : '');
+                // URL requested to the server to receive only the partial HTML
+                const fetchUrl = form.action + (params.toString() ? ('?' + params.toString() + '&partial=1') : '?partial=1');
+                try{
+                    const container = document.getElementById('product-list');
+                    const loader = container ? container.querySelector('#loading') : null;
+                    if(loader) loader.style.display = 'flex';
+                    const res = await fetch(fetchUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+                    if(res.ok){
+                        const html = await res.text();
+                        if(container){ container.innerHTML = html; }
+                        // update URL (visible) without reload and without the partial flag
+                        history.replaceState(null, '', publicUrl);
+                    } else {
+                        // fallback to full navigation (loads full view)
+                        window.location.href = publicUrl;
+                    }
+                } catch(err){
+                    // on network error fallback to full page load
+                    window.location.href = publicUrl;
+                } finally{
+                    const container2 = document.getElementById('product-list');
+                    const loader2 = container2 ? container2.querySelector('#loading') : null;
+                    if(loader2) loader2.style.display = 'none';
+                }
+            });
+        })();
+    </script>
 
         
 
