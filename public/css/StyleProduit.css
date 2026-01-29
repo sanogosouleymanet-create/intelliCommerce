@@ -108,6 +108,13 @@ h1 {
     /*object-fit: cover;*/
     margin-bottom: 10px;
 }
+.produit-image-show{
+    position: center;
+    width: 100%;
+    height: 100%;
+    /*object-fit: cover;*/
+    margin-bottom: 10px;
+}
 
 /* Conteneur principal */
 .produits-filtres {
@@ -234,3 +241,19 @@ h1 {
 
 
 
+form#editForm{ 
+    max-width:600px; 
+    background:rgba(255,255,255,0.03); 
+    padding:16px; border-radius:8px; 
+}
+form#editForm label{ 
+    display:block; 
+    margin-top:8px; 
+    color:#dbeafe; 
+}
+form#editForm input{ 
+    width:100%; 
+    padding:8px; 
+    border-radius:6px; 
+    border:1px solid rgba(255,255,255,0.06); 
+}

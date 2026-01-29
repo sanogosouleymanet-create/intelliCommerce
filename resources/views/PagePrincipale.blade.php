@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <link rel ="stylesheet" href="css/StylePagePrincipale.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.8.0/fonts/remixicon.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <title>Site Intelli-Commerce</title>
 </head>
 <body>
@@ -22,12 +23,38 @@
                     <div class="right">
                         <ul class="flexitem main-links">
                             <li class="main-links">
-                               <li><select onchange="if(this.value) window.location.href=this.value">
-                                    <option value="" disabled selected>S'inscrire/Se Connecter</option>
-                                    <option value="/ConnexionClient">Client</option>
-                                    <option value="/ConnexionVendeur">Vendeur</option>
-                                 </select>
-                               </li> 
+                                @php
+                                    $admin = Auth::guard('administrateur')->user();
+                                    $vendeur = Auth::guard('vendeur')->user();
+                                    $client = Auth::guard('client')->user();
+                                @endphp
+                                @if($admin || $vendeur || $client)
+                                    @php
+                                        $user = $admin ?? $vendeur ?? $client;
+                                        $displayName = trim($user->Nom . ' ' . ($user->Prenom ?? ''));
+                                        if($admin) {
+                                            $profileUrl = route('admin.dashboard');
+                                        } elseif($vendeur) {
+                                            $profileUrl = route('PageVendeur');
+                                        } else {
+                                            $profileUrl = route('PageClient');
+                                        }
+                                    @endphp
+                                    <div style="display:flex;align-items:center;gap:12px">
+                                        <button type="button" onclick="location.href='{{ $profileUrl }}'" style="display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#2b7cff;cursor:pointer">
+                                            <i class="fa-solid fa-user"></i>
+                                            <span>{{ $displayName }}</span>
+                                        </button>
+                                    </div>
+                                @else
+                                    <!--<li><select onchange="if(this.value) window.location.href=this.value">
+                                        <option value="" disabled selected>S'inscrire/Se Connecter</option>
+                                        <option value="/ConnexionClient">Client</option>
+                                        <option value="/ConnexionVendeur">Vendeur</option>
+                                        <option value="/Connexion">Connexion</option>
+                                     </select></li>-->
+                                     <button onclick="window.location.href='/Connexion'" style="margin-left:10px;padding:6px 10px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#2b7cff;cursor:pointer">S'inscrire/Se Connecter</button>
+                                @endif
                             </li>
                         </ul>
                     </div>

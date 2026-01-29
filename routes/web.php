@@ -7,6 +7,7 @@ use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\VendeurController;
 use App\Http\Controllers\PageVendeurController;
 use App\Http\Controllers\AnalysesController;
+use App\Http\Controllers\AdministrateurController;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -18,7 +19,8 @@ Route::middleware(['auth:vendeur'])->group(function () {
     Route::get ('/produits', [ProduitController::class, 'index']);
     Route::post('/produits', [ProduitController::class, 'AjouterProduit'])->name('produits.AjouterProduit');
     Route::get('/produits/{id}', [ProduitController::class, 'show'])->name('produits.show');
-    Route::post('/produits/{id}', [ProduitController::class, 'update'])->name('produits.update');
+    // Accept both POST (legacy) and PUT for updates
+    Route::match(['post','put'], '/produits/{id}', [ProduitController::class, 'update'])->name('produits.update');
     Route::post('/produits/{id}/delete', [ProduitController::class, 'destroy'])->name('produits.destroy');
 });
 Route::get ('/commandes', [CommandeController::class, 'index']);
@@ -77,47 +79,33 @@ Route::post('/formulaireClient', function (Request $request){
     return view('formulaireClient', compact('message'));
 });
 
-Route::get('/ConnexionVendeur', function () {
-    return view('ConnexionVendeur');
-})->name('login');
+// Unified Connexion page
+Route::get('/Connexion', [App\Http\Controllers\AuthController::class, 'showLogin'])->name('connexion');
+Route::post('/Connexion', [App\Http\Controllers\AuthController::class, 'login'])->name('connexion.post');
 
-Route::post('/ConnexionVendeur', function (Request $request){
-    $email = $request->email;
-    $motdepasse = $request->motdepasse;
+// Backwards compatible routes redirecting to unified Connexion
+Route::get('/ConnexionVendeur', function () { return redirect()->route('connexion'); });
+Route::post('/ConnexionVendeur', function (Request $request) { return redirect()->route('connexion.post'); });
 
-    $vendeur = Vendeur::where('email', $email)->first();
+// Unified logout route
+Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 
-    if ($vendeur && Hash::check($motdepasse, $vendeur->MotDePasse)) {
-        Auth::guard('vendeur')->login($vendeur); // Connexion du vendeur via le guard 'vendeur'
-        $request->session()->regenerate(); // Régénérer la session pour éviter les attaques de fixation de session
-        return redirect()->route('PageVendeur');
-    } else {
-        $message = "Email ou mot de passe incorrect.";
-        return back()->withErrors(['credentials' => $message])->withInput();
-    }
-});
+Route::get('/ConnexionClient', function () { return redirect()->route('connexion'); });
+Route::post('/ConnexionClient', function (Request $request) { return redirect()->route('connexion.post'); });
 
+// Client page (protected) — named PageClient
+Route::get('/PageClient', function () {
+    $client = Auth::guard('client')->user();
+    return view('PageClient', compact('client'));
+})->middleware('auth:client')->name('PageClient');
 
-Route::get('/ConnexionClient', function () {
-    return view('ConnexionClient');
-});
-Route::post('/ConnexionClient', function (Request $request){
-    $validated = $request->validate([
-        'email' => 'required|email',
-        'motdepasse' => 'required|string',
-    ]);
+// Admin authentication and dashboard
+Route::get('/admin/login', [AdministrateurController::class, 'showLogin'])->name('admin.login');
+Route::post('/admin/login', [AdministrateurController::class, 'login'])->name('admin.login.post');
+Route::post('/admin/logout', [AdministrateurController::class, 'logout'])->name('admin.logout');
 
-    $email = trim(strtolower($request->email));
-    $motdepasse = $request->motdepasse;
-
-    $client = Client::whereRaw('LOWER(email) = ?', [$email])->first();
-
-    if ($client && Hash::check($motdepasse, $client->MotDePasse)) {
-        return view('PagePrincipale');
-    } else {
-        $message = "Email ou mot de passe incorrect.";
-        return view('ConnexionClient', compact('message'));
-    }
+Route::prefix('admin')->middleware('auth:administrateur')->group(function () {
+    Route::get('/', [AdministrateurController::class, 'dashboard'])->name('admin.dashboard');
 });
 
 Route::get('/ConnexionAdmin', function () {
