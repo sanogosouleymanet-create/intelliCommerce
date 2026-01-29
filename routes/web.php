@@ -6,6 +6,7 @@ use App\Models\Produit;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\VendeurController;
 use App\Http\Controllers\PageVendeurController;
+use App\Http\Controllers\AnalysesController;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -16,9 +17,18 @@ use App\Models\Administrateur;
 Route::middleware(['auth:vendeur'])->group(function () {
     Route::get ('/produits', [ProduitController::class, 'index']);
     Route::post('/produits', [ProduitController::class, 'AjouterProduit'])->name('produits.AjouterProduit');
+    Route::get('/produits/{id}', [ProduitController::class, 'show'])->name('produits.show');
+    Route::post('/produits/{id}', [ProduitController::class, 'update'])->name('produits.update');
+    Route::post('/produits/{id}/delete', [ProduitController::class, 'destroy'])->name('produits.destroy');
 });
 Route::get ('/commandes', [CommandeController::class, 'index']);
 Route::get ('/vendeurs', [VendeurController::class, 'index']);
+// Clients list (simple controller-less route returning a view)
+Route::get('/clients', function () {
+    $vendeur = Auth::guard('vendeur')->user();
+    $clients = Client::all();
+    return view('clients.index', compact('clients', 'vendeur'));
+});
 
 Route::post('/formulaireVendeur', [VendeurController::class, 'FormulaireVendeur']);
 Route::get('/PageVendeur', [PageVendeurController::class, 'index'])->name('PageVendeur')->middleware('auth:vendeur');
@@ -126,4 +136,16 @@ Route::post('/deconnexion', function (Request $request) {
 });*/
 Route::get('/PagePrincipale', function () {
     return view('PagePrincipale');
+});
+// Additional SPA pages used by PageVendeur sidebar
+Route::get('/analyses', [AnalysesController::class, 'index']);
+
+Route::get('/parametres', [VendeurController::class, 'parametres'])->middleware('auth:vendeur');
+Route::post('/parametres', [VendeurController::class, 'updateSettings'])->middleware('auth:vendeur');
+
+Route::get('/messages', function () {
+    $vendeur = Auth::guard('vendeur')->user();
+    // The messages table uses `DateEnvoi` (no timestamps), so order by that column
+    $messages = $vendeur ? $vendeur->messages()->latest('DateEnvoi')->get() : collect();
+    return view('messages.index', compact('messages', 'vendeur'));
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Produit;
+use Illuminate\Support\Facades\Storage;
 
 class ProduitController extends Controller
 {
@@ -29,11 +30,17 @@ class ProduitController extends Controller
         $query->orderBy('Prix', 'asc');
     } elseif($request->tri_prix == 'desc'){
         $query->orderBy('Prix', 'desc');
-    }elseif($request->tri_prix == 'recent'){
+    }elseif($request->tri_prix == 'recente'){
         $query->orderBy('DateAjout', 'desc');
     }
 
     $produits = $query->get();
+
+    // If requested explicitly for partial HTML (used by AJAX), return only the rendered product list
+    if ($request->query('partial') == '1') {
+        $html = view('produits._list', compact('produits'))->render();
+        return response($html);
+    }
 
     return view('produits.index', compact('produits', 'vendeur'));
 }
@@ -46,6 +53,7 @@ class ProduitController extends Controller
             'Nom' => 'required|string|max:255',
             'Description' => 'required|string',
             'Prix' => 'required|numeric',
+            'Stock' => 'required|integer|min:0',
             'Categorie' => 'nullable|string|max:255',
             'Image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
         ]);
@@ -54,12 +62,12 @@ class ProduitController extends Controller
 
         $path = $request->file('Image')->store('Images', 'public');
 
-        // Création d'un produit: le stock est calculé automatiquement (initialisé à 0)
+        // Création d'un produit: utiliser le stock initial fourni par le vendeur
         $produit = Produit::create([
             'Nom' => $request->Nom,
             'Description' => $request->Description,
             'Prix' => $request->Prix,
-            'Stock' => 0,
+            'Stock' => (int) ($request->Stock ?? 0),
             'Categorie' => $request->Categorie ?? null,
             'Image' => $path,
             'DateAjout' => now(),
@@ -72,6 +80,60 @@ class ProduitController extends Controller
                 'message' => 'Produit ajouté avec succès',
             ]);
 
+    }
+
+    // Show product details
+    public function show($id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        $produit = Produit::where('idProduit', $id)->where('Vendeur_idVendeur', $vendeur->idVendeur)->firstOrFail();
+        return view('produits.show', compact('produit', 'vendeur'));
+    }
+
+    // Update product (POST form with _method=PUT or direct POST)
+    public function update(Request $request, $id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        $produit = Produit::where('idProduit', $id)->where('Vendeur_idVendeur', $vendeur->idVendeur)->firstOrFail();
+
+        $validated = $request->validate([
+            'Nom' => 'required|string|max:255',
+            'Description' => 'required|string',
+            'Prix' => 'required|numeric',
+            'Stock' => 'required|integer|min:0',
+            'Categorie' => 'nullable|string|max:255',
+            'Image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        if ($request->hasFile('Image')) {
+            // remove old image if exists
+            if ($produit->Image) {
+                Storage::disk('public')->delete($produit->Image);
+            }
+            $path = $request->file('Image')->store('Images', 'public');
+            $produit->Image = $path;
+        }
+
+        $produit->Nom = $request->Nom;
+        $produit->Description = $request->Description;
+        $produit->Prix = $request->Prix;
+        $produit->Stock = (int) $request->Stock;
+        $produit->Categorie = $request->Categorie ?? null;
+        $produit->save();
+
+        return response()->json(['success' => true, 'message' => 'Produit mis à jour', 'produit' => $produit]);
+    }
+
+    // Delete product
+    public function destroy(Request $request, $id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        $produit = Produit::where('idProduit', $id)->where('Vendeur_idVendeur', $vendeur->idVendeur)->firstOrFail();
+        if ($produit->Image) {
+            Storage::disk('public')->delete($produit->Image);
+        }
+        $produit->delete();
+        return response()->json(['success' => true, 'message' => 'Produit supprimé']);
     }
 
 

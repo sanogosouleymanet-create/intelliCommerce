@@ -42,4 +42,40 @@ class VendeurController extends Controller
 
             return redirect()->route('PageVendeur');
     }
+
+    public function parametres()
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        return view('parametres.index', compact('vendeur'));
+    }
+
+    public function updateSettings(Request $request)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) {
+            return response()->json(['success' => false, 'message' => 'Non autorisé'], 401);
+        }
+
+        $validated = $request->validate([
+            'NomBoutique' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255|unique:vendeurs,email,' . $vendeur->idVendeur . ',idVendeur',
+            'Nom' => 'nullable|string|max:255',
+            'Prenom' => 'nullable|string|max:255',
+            'Adresse' => 'nullable|string|max:500',
+            'TelVendeur' => 'nullable|string|max:50',
+        ]);
+
+        $vendeur->fill([
+            'NomBoutique' => $validated['NomBoutique'] ?? $vendeur->NomBoutique,
+            'email' => $validated['email'] ?? $vendeur->email,
+            'Nom' => $validated['Nom'] ?? $vendeur->Nom,
+            'Prenom' => $validated['Prenom'] ?? $vendeur->Prenom,
+            'Adresse' => $validated['Adresse'] ?? $vendeur->Adresse,
+            'TelVendeur' => $validated['TelVendeur'] ?? $vendeur->TelVendeur,
+        ]);
+
+        $vendeur->save();
+
+        return response()->json(['success' => true, 'message' => 'Paramètres mis à jour', 'vendeur' => $vendeur]);
+    }
 }

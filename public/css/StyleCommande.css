@@ -4,9 +4,165 @@
     align-items: center;
     margin-bottom: 30px;
 }
+
 .account {
     background: white;
     padding: 10px 15px;
     border-radius: 8px;
     cursor: pointer;
+}
+
+/* Orders page styles */
+.orders-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+}
+.orders-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+.orders-summary{ 
+    display:flex; 
+    gap:12px; 
+    margin:16px 0; 
+}
+.summary-card{ 
+    background:#0b2340; 
+    color:#fff; 
+    padding:12px 16px; 
+    border-radius:8px; 
+    min-width:120px; 
+}
+.orders-table{ 
+    width:100%; 
+    border-collapse:collapse; 
+    background:transparent; 
+}
+.orders-table th, .orders-table td{ 
+    padding:12px 10px; 
+    text-align:left; 
+    border-bottom:1px solid rgba(255,255,255,0.06); 
+    color:#e6eef8; 
+}
+.orders-table th{ 
+    color:#cfe6ff; 
+    font-weight:600; 
+    font-size:13px; 
+}
+.order-badge{ 
+    padding:6px 10px; 
+    border-radius:999px; 
+    font-size:13px; 
+    color:#fff; 
+    display:inline-block; 
+}
+.badge-pending{ 
+    background:#f59e0b; 
+}
+.badge-processing{ 
+    background:#3b82f6; 
+}
+.badge-completed{ 
+    background:#10b981; 
+}
+.badge-cancelled{ 
+    background:#ef4444; 
+}
+.btn{ 
+    padding:8px 12px; 
+    border-radius:6px; 
+    background:#1f2937; 
+    color:#fff; 
+    border:none; 
+    cursor:pointer; 
+}
+.btn.secondary{ 
+    background:#374151; 
+}
+.order-row-details{ 
+    background: rgba(255,255,255,0.02); 
+    padding:12px; 
+    border-radius:6px; 
+    margin:8px 0 20px 0; 
+    color:#dbeafe; 
+}
+.small-muted{ 
+    color: rgba(255,255,255,0.6); 
+    font-size:13px; 
+}
+
+@media (max-width:900px){
+    .orders-table thead{ 
+        display:none; 
+    }
+    .orders-table tr{ 
+        display:block; 
+        margin-bottom:12px; 
+        border-bottom: none; 
+    }
+    .orders-table td{ 
+        display:flex; 
+        justify-content:space-between; 
+        padding:8px 6px; 
+    }
+}
+
+.filter-commandes {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    background-color: #ffffff;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
+}
+.search-input {
+    padding: 10px 14px;
+    width: 250px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+.search-input:focus {
+    border-color: #007bff;
+}
+
+/* Select (catégorie, prix, etc.) */
+.filter-select {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: #fff;
+    transition: border-color 0.3s ease;
+}
+
+.filter-select:hover,
+.filter-select:focus {
+    border-color: #007bff;
+}
+.filter-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.filter-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
 }

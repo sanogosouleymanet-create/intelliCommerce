@@ -38,14 +38,15 @@
         <li data-view="analyses" class="{{ request()->is('analyses') ? 'active' : '' }}">
             <a href="#" data-view="analyses"><i class="fa-solid fa-chart-pie"></i> Analyses</a>
         </li>
-        <!-- Lien vers les paramètres du compte (placeholder) -->
-        <li data-view="parametres" class="{{ request()->is('parametres') ? 'active' : '' }}">
-            <a href="#" data-view="parametres"><i class="fa-solid fa-gear"></i> Paramètres</a>
-        </li>
         <!-- Lien vers la messagerie (placeholder) -->
         <li data-view="messages" class="{{ request()->is('messages') ? 'active' : '' }}">
             <a href="#" data-view="messages"><i class="fa-solid fa-envelope"></i> Messages</a>
         </li>
+        <!-- Lien vers les paramètres du compte (placeholder) -->
+        <li data-view="parametres" class="{{ request()->is('parametres') ? 'active' : '' }}">
+            <a href="#" data-view="parametres"><i class="fa-solid fa-gear"></i> Paramètres</a>
+        </li>
+        
         <!-- Deconnexion -->
         <li>
             <a href="{{ url('/ConnexionVendeur') }}"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</a>
@@ -205,9 +206,9 @@ document.addEventListener('DOMContentLoaded', function(){
         produits: '{{ url('/produits') }}',
         commandes: '{{ url('/commandes') }}',
         clients: '{{ url('/clients') }}',
-        analyses: '#',
-        parametres: '#',
-        messages: '#'
+        analyses: '{{ url('/analyses') }}',
+        parametres: '{{ url('/parametres') }}',
+        messages: '{{ url('/messages') }}'
     };
 
     function updateActiveFromLocation(){
@@ -249,6 +250,23 @@ document.addEventListener('DOMContentLoaded', function(){
             }catch(e){ /* safety */ }
             const newMain = doc.querySelector('.main-content') || doc.querySelector('main');
             if(newMain) main.innerHTML = newMain.innerHTML; else { const body = doc.querySelector('body'); main.innerHTML = body ? body.innerHTML : text; }
+
+            // Execute any scripts from the fetched document so injected views initialize correctly
+            try{
+                const fetchedScripts = doc.querySelectorAll('script');
+                fetchedScripts.forEach(function(s){
+                    const ns = document.createElement('script');
+                    if(s.src){
+                        // resolve relative URLs
+                        try{ ns.src = new URL(s.src, url).href; } catch(e){ ns.src = s.src; }
+                        ns.async = false;
+                    } else {
+                        ns.textContent = s.textContent;
+                    }
+                    document.body.appendChild(ns);
+                });
+            }catch(e){ /* ignore script execution errors */ }
+
             updateActiveFromLocation();
         }catch(e){ main.innerHTML = '<div class="card"><p>Erreur réseau lors du chargement.</p></div>'; }
     }
@@ -278,5 +296,76 @@ document.addEventListener('DOMContentLoaded', function(){
     } else {
         updateActiveFromLocation();
     }
+    // Intercept product filter form submits inside main (works for injected content)
+    document.addEventListener('submit', async function(ev){
+        if(!ev.target || ev.target.id !== 'filterForm') return;
+        ev.preventDefault();
+        const form = ev.target;
+        const params = new URLSearchParams(new FormData(form));
+        const publicUrl = form.action + (params.toString() ? ('?' + params.toString()) : '');
+        const fetchUrl = form.action + (params.toString() ? ('?' + params.toString() + '&partial=1') : '?partial=1');
+        try{
+            const main = document.querySelector('.main-content');
+            const productList = main ? main.querySelector('#product-list') : null;
+            const loader = productList ? productList.querySelector('#loading') : null;
+            if(loader) loader.style.display = 'flex';
+            const res = await fetch(fetchUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+            if(!res.ok){ window.location.href = publicUrl; return; }
+            const html = await res.text();
+            if(productList){ productList.innerHTML = html; }
+            // update browser visible URL without navigating (optional)
+            history.replaceState(null, '', publicUrl);
+        }catch(err){
+            window.location.href = publicUrl;
+        }finally{
+            const main2 = document.querySelector('.main-content');
+            const productList2 = main2 ? main2.querySelector('#product-list') : null;
+            const loader2 = productList2 ? productList2.querySelector('#loading') : null;
+            if(loader2) loader2.style.display = 'none';
+        }
+    });
+
+    // Intercept clicks on product links inside injected content
+    document.addEventListener('click', async function(ev){
+        const a = ev.target.closest && ev.target.closest('a');
+        if(!a) return;
+        // only handle links inside the main-content area
+        const main = document.querySelector('.main-content');
+        if(!main || !main.contains(a)) return;
+        const href = a.getAttribute('href') || '';
+        // handle product detail links like /produits/{id}
+        try{
+            const url = new URL(href, window.location.origin);
+            if(url.pathname.startsWith('/produits/')){
+                ev.preventDefault();
+                const res = await fetch(url.href, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+                if(!res.ok){ window.location.href = url.href; return; }
+                const text = await res.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const newMain = doc.querySelector('.main-content') || doc.querySelector('main') || doc.querySelector('body');
+                if(newMain) main.innerHTML = newMain.innerHTML; else main.innerHTML = text;
+                // execute scripts from fetched document
+                try{
+                    const fetchedScripts = doc.querySelectorAll('script');
+                    fetchedScripts.forEach(function(s){
+                        const ns = document.createElement('script');
+                        if(s.src){
+                            try{ ns.src = new URL(s.src, url.href).href; } catch(e){ ns.src = s.src; }
+                            ns.async = false;
+                        } else {
+                            ns.textContent = s.textContent;
+                        }
+                        document.body.appendChild(ns);
+                    });
+                }catch(e){}
+                // update browser URL without full navigation
+                history.pushState(null, '', url.href);
+                // mark produits as active in sidebar
+                sidebar.querySelectorAll('li').forEach(li => li.classList.remove('active'));
+                const prodLi = sidebar.querySelector('li[data-view="produits"]'); if(prodLi) prodLi.classList.add('active');
+            }
+        }catch(e){ /* ignore malformed URLs */ }
+    });
 });
 </script>
