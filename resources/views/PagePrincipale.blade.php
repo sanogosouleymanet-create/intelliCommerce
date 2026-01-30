@@ -2,20 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel ="stylesheet" href="css/StylePagePrincipale.css">
+    <link rel ="stylesheet" href="{{ asset('css/StylePagePrincipale.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.8.0/fonts/remixicon.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <title>Site Intelli-Commerce</title>
 </head>
 <body>
     <div id="page" class="site">
+        <aside class="site-off desktop-hide">
+            <div class="off-canvas">
+                <div class="canvas-head flexitem">
+                    <div class="logo"><a href="/"><span class="circle"></span><img src="Logo-site.png"  alt="logo"></a></div>
+                    <a href="#" class="off-close"><i class="ri-close-line ri-xl"></i></a>
+                </div>
+                <div class="department"></div>
+                <div class="nav"></div>
+                <div class="thetop-nav"></div>
+            </div>
+        </aside>
         <header>
            <div class="header-top mobile-hide">
             <div class="conteiner">
                 <div class="wrapper flexitem">
                     <div class="left">
                         <ul class="flexitem main-links">
-                            <li><a href="#">Accueil</a></li>
+                            <li><a href="/">Accueil</a></li>
                             <li><a href="#">À propos</a></li>
                             <li><a href="#">Contact</a></li>
                         </ul>
@@ -58,9 +69,9 @@
            <div class="header-nav">
             <container>
                 <div class="wrapper flexitem">
-                    <a href="#" class="trigger desktop-hide"></a>
+                    <a href="#" class="trigger desktop-hide"><i class="ri-menu-3-line"></i></a>
                     <div class="left flexitem">
-                        <div class="logo"><a href="/"><span class="circle"></span>.Boutique</a></div>
+                        <div class="logo"><a href="/"><span class="circle"></span><img src="Logo-site.png" width="250" alt="logo"></a></div>
                         <nav class="mobile-hide">
                             <ul class="flexitem second-links">
                                 <li><a href="{{('/welcome')}}">Accueil</a></li>
@@ -193,7 +204,7 @@
            </div>
 
            <div class="header-main mobile-hide">
-           <div class="conteiner">
+             <div class="conteiner">
              <div class="wrapper flexitem">
                     <div class="left">
                         <div class="dpt-cat">
@@ -210,7 +221,7 @@
                                         <a href="#">
                                             <div class="icon-large"><i class="ri-bear-smile-line"></i></div>
                                             Beauté
-                                            <div class="icon-small"><i class="ri-arrow-right-s-ligne"></i></div>
+                                            <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
                                         </a>
                                         <ul>
                                             <li><a href="#">Maquillage</a></li>
@@ -227,15 +238,33 @@
                                         <a href="#">
                                             <div class="icon-large"><i class="ri-bluetooth-connect-line"></i></div>
                                             Électronique
-                                            <div class="icon-small"><i class="ri-arrow-right-s-ligne"></i></div>
+                                            <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
                                         </a>
+                                        <ul>
+                                            <li><a href="#">Camera</a></li>
+                                            <li><a href="#">Téléphone</a></li>
+                                            <li><a href="#">Airpods</a></li>
+                                            <li><a href="#">Ordinateur</a></li>
+                                            <li><a href="#">Télévision</a></li>
+                                            <li><a href="#">Vidéo Projecteurs</a></li>
+                                            <li><a href="">Casque</a></li>
+                                            <li><a href="">Enceinte bluetooth </a></li>
+                                        </ul>
                                     </li>
                                     <li class="has-child fashion">
                                         <a href="#">
                                             <div class="icon-large"><i class="ri-t-shirt-air-line"></i></div>
                                             Mode Femme
-                                            <div class="icon-small"><i class="ri-arrow-right-s-ligne"></i></div>
+                                            <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
                                         </a>
+                                        <ul>
+                                            <li><a href="#">Vêtements</a></li>
+                                            <li><a href="#">Chaussures</a></li>
+                                            <li><a href="#">Bijoux</a></li>
+                                            <li><a href="#">Montres</a></li>
+                                            <li><a href="#">Accessoires</a></li>
+                                            <li><a href="#">Sacs à main</a></li>
+                                        </ul>
                                     </li>
                                     <li class="has-child fashion">
                                         <a href="#">
@@ -257,24 +286,58 @@
                                             Mode Garçon
                                         </a>
                                     </li>
-                                    <li class="has-child fashion">
-                                        <a href="#">
-                                            <div class="icon-large"><i class="ri-heart-pulse-line"></i></div>
-                                            Santé & Maison
-                                        </a>
-                                    </li>
                                     <li class="has-child homekit">
                                         <a href="#">
-                                            <div class="icon-large"><i class="ri-home-8-line"></i></div>
-                                            Maison & Cuisine
-                                            <div class="icon-small"><i class="ri-arrow-right-s-ligne"></i></div>
+                                            <div class="icon-large"><i class="ri-heart-pulse-line"></i></div>
+                                            Cuisine & Maison
+                                             <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
                                         </a>
-                                    </li>
-                                    <li class="has-child fashion">
-                                        <a href="#">
-                                            <div class="icon-large"><i class="ri-android-line"></i></div>
-                                            Fournitures pour animaux
-                                        </a>
+                                        <div class="mega">
+                                            <div class="container">
+                                                <div class="wrapper">
+                                                    <div class="flexcol">
+                                                        <div class="row">
+                                                            <h4><a href="#">Cuisine & Salle à manger</a></h4>
+                                                            <ul>
+                                                                <li><a href="#">Cuisine</a></li>
+                                                                <li><a href="#">Salle à manger</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flexcol">
+                                                        <div class="row">
+                                                            <h4><a href="#">Salon</a></h4>
+                                                            <ul>
+                                                                <li><a href="#">Meubles de salon</a></li>
+                                                                <li><a href="#">Véranda</a></li>
+                                                                <li><a href="#">Salle familiale</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flexcol">
+                                                        <div class="row">
+                                                            <h4><a href="#">Lit & Bain</a></h4>
+                                                            <ul>
+                                                                <li><a href="#">Toilettes</a></li>
+                                                                <li><a href="#">Rangement & Placard</a></li>
+                                                                <li><a href="#">Chambre à coucher</a></li>
+                                                                <li><a href="#">Bébé et Enfant</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flexcol">
+                                                        <div class="row">
+                                                            <h4><a href="#">Utilitaire</a></h4>
+                                                            <ul>
+                                                                <li><a href="#">Lessive</a></li>
+                                                                <li><a href="#">Garage</a></li>
+                                                                <li><a href="#">Vestiaire</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </li>
                                     <li class="has-child fashion">
                                         <a href="#">
@@ -313,6 +376,6 @@
         </footer>
     </div>
 
-    <script src="script.js"></script>
+    <script src="{{ asset('js/script.js') }}"></script>
 </body>
 </html>
