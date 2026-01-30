@@ -1,52 +1,15 @@
 /* Import des styles partagés (PageVendeur) */
-@import url('StylePageVendeur.css');
+@import url('StylePagePrincipale.css');
 
-/* Styles spécifiques à la page Clients */
+/* Styles spécifiques à la page client */
 
-.clients-list .orders-table td, .clients-list .orders-table th{
-    color: #e6eef8;
-}
-.clients-list .btn-view-client{ padding:6px 10px; }
+/* Force link color to black for client area 
+a, a:link, a:visited { color: #000 !important; text-decoration: none; }
+a:hover { color: #000080 !important; }
 
-/*.summary-card{ 
-    background:#ffffff; 
-    padding-bottom: 15px;
-}*/
-
-.clients-filtres {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-
-    background-color: #ffffff;
-    padding: 15px 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    margin-bottom: 25px;
+/* Colorize logo to primary blue #000080 (prefer SVG or mask-based approach for pixel-perfect results) */
+/*img.logo, .logo img {
+    filter: grayscale(1) sepia(1) saturate(6) hue-rotate(210deg) brightness(0.9) contrast(0.95) drop-shadow(0 2px 6px rgba(0,0,0,0.35)) !important;
+    -webkit-filter: grayscale(1) sepia(1) saturate(6) hue-rotate(210deg) brightness(0.9) contrast(0.95) drop-shadow(0 2px 6px rgba(0,0,0,0.35)) !important;
 }
-/* Champ de recherche */
-.search-input {
-    padding: 10px 14px;
-    width: 250px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.3s ease;
-}
-.search-input:focus {
-    border-color: #007bff;
-}
-/* Bouton */
-.btn {
-    padding: 10px 18px;
-    border-radius: 8px;
-    border: none;
-    background-color: #007bff;
-    color: #fff;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
+.logo svg * { fill: #000080 !important; stroke: #000080 !important; }*/
