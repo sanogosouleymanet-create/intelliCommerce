@@ -1,5 +1,7 @@
-/* Styles spécifiques à la page Clients 
-@import url('StylePageVendeur.css');*/
+/* Import des styles partagés (PageVendeur) */
+@import url('StylePageVendeur.css');
+
+/* Styles spécifiques à la page Clients */
 
 .clients-list .orders-table td, .clients-list .orders-table th{
     color: #e6eef8;

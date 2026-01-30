@@ -10,8 +10,7 @@
    <header>
     @include('Header')
     </header>
-     
-      <p><em>Bonjour Cher</em>  <strong>Client(e) !!</strong>  </p>
+
         <form action="{{ url('/Connexion') }}" method="post">
             @csrf
             <fieldset>
@@ -21,7 +20,7 @@
             </div>
             <div>
                 <label>MOT DE PASSE :</label>
-                <input name="motdepasse" type="password" placeholder="password" maxlength="8" required>
+                <input name="motdepasse" type="password" placeholder="password" maxlength="15" required>
             </div>
             <div>
                 <input type="submit" class="button" value="Se Connecter"><br>
@@ -29,7 +28,7 @@
              </fieldset>
          </form>
          <p>Vous n'avez pas de compte ?</p>
-         <button id="createAccount" class="button">CREER UN COMPTE</button>
+         <button id="createAccount" class="button">Créer un compte</button>
 
          <div id="createOptions" style="display:none;margin-top:12px">
             <p>Choisissez le type de compte :</p>

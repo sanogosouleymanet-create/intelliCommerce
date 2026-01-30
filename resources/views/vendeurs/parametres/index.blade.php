@@ -1,11 +1,3 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Paramètres</title>
-    <link rel="stylesheet" href="{{ asset('css/StyleParametres.css') }}">
-</head>
-<body>
 <section class="card">
     <h2>Paramètres du compte</h2>
     <p class="small-muted">Mettez à jour les informations de votre boutique et de contact.</p>
@@ -183,5 +175,36 @@
         });
     })();
 </script>
-</body>
-</html>
+
+<style>
+    /* Styles spécifiques à la page Paramètres */
+@import url('StylePageVendeur.css');
+
+form#settingsForm{ 
+    max-width:600px; 
+    background:rgba(255,255,255,0.03); 
+    padding:16px; border-radius:8px; 
+}
+form#settingsForm label{ 
+    display:block; 
+    margin-top:8px; 
+    color:#dbeafe; 
+}
+form#settingsForm input{ 
+    width:100%; 
+    padding:8px; 
+    border-radius:6px; 
+    border:1px solid rgba(255,255,255,0.06); 
+}
+
+.btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+</style>

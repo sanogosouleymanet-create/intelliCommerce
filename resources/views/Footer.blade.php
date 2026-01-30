@@ -1,3 +1,3 @@
 <footer>
-      <p>&copy; 2024 IntelliCommerce. All rights reserved.</p>
+      <p>&copy; 2026 IntelliCommerce.</p>
 </footer>

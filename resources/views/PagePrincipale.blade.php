@@ -47,12 +47,6 @@
                                         </button>
                                     </div>
                                 @else
-                                    <!--<li><select onchange="if(this.value) window.location.href=this.value">
-                                        <option value="" disabled selected>S'inscrire/Se Connecter</option>
-                                        <option value="/ConnexionClient">Client</option>
-                                        <option value="/ConnexionVendeur">Vendeur</option>
-                                        <option value="/Connexion">Connexion</option>
-                                     </select></li>-->
                                      <button onclick="window.location.href='/Connexion'" style="margin-left:10px;padding:6px 10px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#2b7cff;cursor:pointer">S'inscrire/Se Connecter</button>
                                 @endif
                             </li>
