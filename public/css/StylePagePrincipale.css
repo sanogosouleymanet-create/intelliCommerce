@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Rubik:wght@300;400;500;600;700;800&display=swap');
 
 :root{
-    --primary-color: #9f9ee7;
+    --primary-color: #000080;
     --secondary-color: #f1101c;
-    --secondary-dark-color: #701c4d;
+    --secondary-dark-color: #305CDE;
 
     --white-color: #ffffff;
     --light-bg-color: #f5f5f5;
@@ -27,6 +27,133 @@
     --trans-background: background-color .2s;
     --trans-color: color .3s;
 }
+
+/* --- Ajustements finaux des départements mobile (assurer l'alignement des icônes et des libellés) --- */
+.mobile-departments{
+    margin:0;
+    padding:0;
+}
+.mobile-departments .mobile-item{
+    list-style:none;
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.mobile-departments .mobile-link{
+    display:flex !important;
+    align-items:center !important;
+    gap:0.6rem !important;
+    padding:0.5rem 0.75rem !important;
+    color:var(--dark-color) !important;
+    white-space: nowrap; /* empêcher le retour à la ligne */
+}
+.mobile-departments .mobile-icon{
+    width:36px !important;
+    min-width:36px !important;
+    display:flex !important;
+    justify-content:center !important;
+    align-items:center !important;
+}
+.mobile-departments .mobile-icon *{
+    margin:0 !important;
+    padding:0 !important;
+    display:block !important;
+}
+.mobile-departments .mobile-icon i,
+.mobile-departments .mobile-icon svg{
+    font-size:1.15rem !important;
+    line-height:1 !important;
+    color:var(--dark-color) !important;
+}
+.mobile-departments .mobile-label{
+    flex:1 1 auto !important;
+    font-size:0.95rem !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+}
+.mobile-departments .mobile-chevron{
+    width:22px !important;
+    min-width:22px !important;
+    text-align:right !important;
+    color:var(--light-text-color) !important;
+    flex:0 0 22px !important;
+}
+.mobile-departments .mobile-sub{
+    display:none;
+    padding-left:3.25rem;
+    padding-bottom:0.5rem;
+}
+.mobile-departments .mobile-item.expand > .mobile-sub{
+    display:block;
+}
+
+/* sous-sections groupées à l'intérieur de la méga (mobile) */
+.mobile-departments .mobile-sub .mobile-sub-group {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+.mobile-departments .mobile-sub .mobile-group-link {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:.45rem .6rem;
+    color:var(--dark-color);
+    text-decoration:none;
+}
+.mobile-departments .mobile-sub .mobile-group-link .group-title{
+    font-weight:600;
+}
+.mobile-departments .mobile-sub .mobile-sub-inner{
+    display:none;
+    padding-left:1rem;
+    background:transparent;
+}
+.mobile-departments .mobile-sub .mobile-sub-group.expand > .mobile-sub-inner{
+    display:block;
+}
+.mobile-departments .mobile-sub .mobile-sub-inner li a{
+    display:block;
+    padding:.35rem .6rem;
+}
+.mobile-departments .mobile-sub .mobile-group-link:hover,
+.mobile-departments .mobile-sub .mobile-group-link:focus{
+    color:var(--light-text-color) !important;
+}
+
+/* s'assurer que les liens dans les sous-listes sont compacts */
+.mobile-departments .mobile-sub li a{
+    display:block;
+    padding:0.25rem 0;
+    font-size:0.92rem;
+}
+/* Styles hover / focus du menu mobile (changer la couleur des liens comme sur desktop) */
+.mobile-departments .mobile-link,
+.mobile-departments .mobile-sub a {
+    color: var(--dark-color);
+    transition: color .12s ease, background-color .12s ease;
+    text-decoration: none;
+}
+.mobile-departments .mobile-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between;
+    gap: .5rem !important;
+    padding: .5rem .6rem !important;
+    cursor: pointer;
+}
+.mobile-departments .mobile-link .mobile-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+}
+.mobile-departments .mobile-link:hover,
+.mobile-departments .mobile-link:focus,
+.mobile-departments .mobile-sub a:hover,
+.mobile-departments .mobile-sub a:focus {
+    color: var(--light-text-color) !important;
+}
+
 *,::before,::after{
     box-sizing: border-box;
 }
@@ -34,12 +161,11 @@
 body{
     margin:0;
     font-family: 'Rubix', sans-serif;
-    background-color: var(--white-color);
     color: var(--dark-color);
     line-height: 1.4;
     font-weight: 400;
     font-size: 16px;
-    background-color: rgb(104, 159, 241);
+    background-color: #82C8E5;
 }
 a{
     text-decoration: none;
@@ -139,6 +265,10 @@ h4{
 .mobile-hide{
     display: none;
 }
+/* visible sur mobile, caché sur desktop */
+.desktop-hide{
+    display: block;
+}
 
 .object-cover{
     position: absolute;
@@ -237,17 +367,17 @@ header li > a {
     padding: 0.25em 0;
     list-style: none;
 }
-.header-top .rigth ul ul li a {
+:where(.header-top .thetop-nav) .rigth ul ul li a {
     padding: 0.25em 1em;
 }
-.header-top .rigth ul ul li.current a {
+:where(.header-top .thetop-nav) .rigth ul ul li.current a {
     background-color: var(--border-color);
 }
 .header-top li:hover  ul {
     display: block;
 }
 
-/* Ensure dropdown list items are aligned under their parent link */
+
 .header-top ul ul li{
     margin: 0;
     padding: 0;
@@ -263,7 +393,11 @@ header li > a {
     font-size: 1.5em;
     padding: 0.25em;
     margin-right: 0.5em;
+    z-index: 1101;
+    position: relative;
+    cursor: pointer;
 }
+.trigger i{ font-size:1.4rem; color:var(--dark-color); }
 .logo a {
     font-family: 'Poppins';
     font-size: 1.75em;
@@ -368,14 +502,21 @@ nav .fly.item {
     height: 60px;
     width: 60px;
 }
-.dpt-menu > ul > li > a{
+.dpt-menu > ul > li > a {
     font-size: var(--font-small);
     height: 46px;
     align-items: center;
 }
+.dpt-menu .has-child:hover ul{
+    display: block;
+}
+.dpt-menu .has-child li a:hover {
+    text-decoration: underline;
+}
 
 
 
+/* Header Form recherche*/
 .header-main .right{
     flex: 1;
 }
@@ -415,6 +556,146 @@ form.search button{
 form.search button:hover {
     background-color: var(--dark-color);
 }
+
+/* Menu Off-Canvas (en-tête) */
+
+.site-off {
+    position: fixed;
+    width: 320px;
+    height: var(--percent100);
+    background-color: var(--white-color);
+    overflow: auto;
+    z-index: 1000;
+}
+/* masquer l'off-canvas par défaut (glissement depuis la gauche sur mobile) */
+.site-off {
+    left: -400px !important; /* fallback to ensure hidden */
+    top: 0;
+    transform: translateX(-110%) !important;
+    transition: transform .28s ease, left .28s ease, opacity .2s ease;
+    visibility: hidden !important;
+    opacity: 0;
+}
+.site-off.open {
+    left: 0 !important;
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    opacity: 1;
+}
+/* overlay derrière l'off-canvas */
+.off-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+    z-index: 999;
+}
+.off-overlay.open{
+    opacity: 1;
+    pointer-events: auto;
+}
+off-canvas {
+    width: var(--percent100);
+    height: var(--percent100);
+    touch-action: auto;
+    padding: 1.5em;
+}
+.off-canvas .canvas-head {
+    color: var(--dark-color);
+    justify-content: space-between;
+    padding: 1.5em;
+    margin: -1.5em -1.5em 1.5em -1.5em;
+    background-color: var(--secondary-dark-color);
+    border-bottom-right-radius: 160px 25px;
+}
+.off-canvas .canvas-head .logo{
+    z-index: 10;
+    position: relative;
+}
+.off-canvas .canvas-head .logo .circle{
+    opacity: .75;
+}
+.t-close{
+    font-size: 1.25em;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--percent50);
+    background-color: var(--secondary-dark-color);
+    color: var(--dark-color);
+    transition: var(--trans-background-color);
+}
+.t-close:hover {
+    background-color: var(--white-color);
+    color: var(--secondary-dark-color);
+    opacity: .75;
+}
+.off-canvas .dpt-head{
+    font-size: var(--font-small);
+    padding: 1em;
+    margin-bottom: 1em;
+    text-align: center;
+    background-color: var(--light-bg-color);
+    border-radius: 7px 7px 0 0;
+}
+.off-canvas .has-child > :where(ul, .mega){
+    font-size: var(--font-small);
+    font-weight: var(--fw3);
+    line-height: 28px;
+    padding-left: 3em;
+
+    height: auto;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .3s cubic-bezier(0.215, 0.610, 0.355, 1);
+}
+.off-canvas .expand > :where(ul, .mega){
+    max-height: 2000px;
+    
+}
+.off-canvas .thetop-nav ul, .off-canvas nav > ul {
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: var(--font-small);
+    line-height: 36px;
+    padding-top: 1.25em;
+    margin: 1.25em 0;
+    border-top: 1px solid var(--border-color);
+}
+.off-canvas nav .mega {
+    padding: 0;
+}
+.off-canvas nav .mega .products{
+    display: none;
+}
+.off-canvas .has-child .icon-small{
+    padding: 0.5em;
+    line-height: initial;
+
+}
+.off-canvas .dpt-menu .icon-small i {
+    transform: rotate(90deg);
+}
+.off-canvas .has-child {
+    width: var(--percent100);
+}
+.off-canvas .thetop-nav .right > ul > :where(:nth-child(4),li:nth-child(5)) a {
+    display: none;
+}
+.off-canvas .thetop-nav .right ul ul {
+    display: flex;
+    flex-direction: row;
+}
+.off-canvas .thetop-nav .right ul ul li a {
+    padding: 0.5em;
+    border: 1px solid var(--border-color);
+    line-height: 16px;
+    margin: 0 0.5em 0.5em 0;
+}
+
+
+
     
 
 
@@ -429,6 +710,9 @@ form.search button:hover {
     .mobile-hide{
         display: block;
     }
+    .desktop-hide{
+        display: none;
+    }
     .logo a {
         margin-right: 2em;
     }
@@ -440,7 +724,7 @@ form.search button:hover {
         margin-left: 1em;
         
     }
-    /* Mega Menu */
+    /* Méga-menu */
     nav .mega {
         position: absolute;
         width: var(--percent100);
@@ -475,7 +759,7 @@ form.search button:hover {
         padding: 0;
         list-style: none;
     }
-    /* ensure list items align directly under the section title */
+    /* assurer que les éléments de liste s'alignent directement sous le titre de section */
     nav .mega ul li {
         margin: 0 0 0.5em 0;
         padding: 0;
@@ -506,13 +790,13 @@ form.search button:hover {
      nav .mega .products .text-content {
        line-height: initial;
        display: flex;
-         flex-direction: column;
-        align-items: center;
-        gap: 0.5em;
-        margin-top: 0.5em;
-        position: absolute;
-        bottom: 4em;
-        width: var(--percent100);
+       flex-direction: column;
+       align-items: center;
+       gap: 0.5em;
+       margin-top: 0.5em;
+       position: absolute;
+       bottom: 4em;
+       width: var(--percent100);
     }
     nav .mega .products .text-content h4 {
         font-size: 2em;
@@ -541,4 +825,138 @@ form.search button:hover {
         border-bottom: 1px solid var(--border-color);
     }
 
+    .dpt-menu .has-child > ul, .dpt-menu .mega {
+        position: absolute;
+        top: 0;
+        left: var(--percent100);
+        width: var(--percent100);
+        height: auto;
+        min-height: var(--percent100);
+        padding: 1.5em;
+        font-size: var(--font-small);
+        line-height: 2.5em;
+        border: 1px solid var(--border-color);
+        border-top: 0;
+        display: none;
+        background-position: right bottom;
+        background-repeat: no-repeat;
+        background-size: auto;
+    }
+
+
+    /*affichage du premier sous-menu*/
+    .dpt-menu .mega {
+        display: none;
+    }
+    .dpt-menu .beauty ul{
+        background-image: url("/Fond-beauty.jpg");
+    }
+    .dpt-menu .electronic ul {
+        background-image: url("/Fond-electric.jpg");
+    }
+    .dpt-menu .fashion ul {
+        background-image: url("/Fond-fashon.jpg");
+    }
+    .dpt-menu .homekit .mega {
+        background-image: url("/Fond-cuisine.jpg");
+    }
+    .dpt-menu .has-child > :where(ul, .mega)::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90dg, rgba(225,225,225,1) 0%, rgba(225,225,225,0));
+    }
+     .dpt-menu .mega{
+        width: auto;
+        min-width: var(--percent100);
+        display: none;
+    }
+    .dpt-menu .has-child:hover .mega{
+        display: flex;
+    }
+
+    /* Styles spécifiques pour la méga-menu des départements (colonnes alignées) */
+    .dpt-menu .mega .wrapper {
+        display: flex;
+        gap: 1em; /* réduire l'espace entre colonnes */
+        align-items: flex-start;
+        flex-wrap: nowrap;
+    }
+
+    .dpt-menu .mega .flexcol {
+        flex: 0 0 180px; /* colonnes un peu plus étroites */
+        min-width: 150px;
+        padding: 0 0.25em; /* léger padding interne */
+        margin: 0;
+    }
+
+    .dpt-menu .mega h4 {
+        margin: 0 0 0.35em 0; /* réduire l'espace sous le titre */
+        font-size: 0.85em;
+        text-transform: uppercase;
+        color: var(--dark-color);
+    }
+
+    .dpt-menu .mega ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        line-height: 1.5em; /* serrer les lignes */
+    }
+
+    .dpt-menu .mega ul li {
+        margin: 0 0 0.25em 0; /* moins d'espace entre éléments */
+        padding: 0;
+    }
+
+    .dpt-menu .mega ul li a {
+        color: var(--dark-color);
+        font-size: 0.95em;
+        display: inline-block;
+        padding: 1px 0; /* plus compact */
+    }
+
+    /* adapter la largeur globale du méga-menu pour contenir les colonnes */
+    .dpt-menu .mega {
+        min-width: 560px; /* réduire largeur totale */
+        max-width: 820px;
+        padding: 1em 1.25em; /* réduire padding global */
+        box-shadow: rgba(0 0 0 / 10%) 0px 8px 20px;
+    }
+
+    /* hover des liens de la méga-menu (même effet que les autres menus) */
+    .dpt-menu .mega ul li a {
+        transition: color .18s ease, background .18s ease;
+        cursor: pointer;
+    }
+
+    .dpt-menu .mega ul li a:hover,
+    .dpt-menu .mega ul li a:focus {
+        color: var(--light-text-color);
+        text-decoration: none;
+    }
+
+    /* Fix: positionner et afficher correctement les sous-menus des éléments .has-child */
+    .dpt-menu .has-child > ul {
+        display: none; /* caché par défaut */
+        position: absolute;
+        top: 0;
+        left: 100%; /* s'affiche à droite du parent */
+        min-width: 220px;
+        background-color: var(--white-color);
+        border: 1px solid var(--border-color);
+        padding: 0.5em 0;
+        z-index: 200;
+        box-shadow: rgba(0 0 0 / 8%) 0px 8px 12px;
+    }
+    .dpt-menu .has-child:hover > ul {
+        display: block; /* affiche le <ul> direct au hover (comme la liste femme) */
+    }
+    .dpt-menu .has-child > ul li {
+        white-space: nowrap; /* évite le retour à la ligne */
+        padding: 0 1.25em;
+    }
 }
