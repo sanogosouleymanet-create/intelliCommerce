@@ -103,6 +103,22 @@ class ProduitController extends Controller
         return redirect()->to(route('PageVendeur') . '?product=' . $produit->idProduit);
     }
 
+    // Edit product form (partial)
+    public function edit(Request $request, $id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        $produit = Produit::where('idProduit', $id)->where('Vendeur_idVendeur', $vendeur->idVendeur)->firstOrFail();
+        if ($request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return view('vendeurs.produits.edit', compact('produit', 'vendeur'))->render();
+        }
+        // For direct (non-AJAX) requests, render the edit partial inside the PageVendeur layout
+        return view('PageVendeur', [
+            'partial' => 'vendeurs.produits.edit',
+            'vendeur' => $vendeur,
+            'produit' => $produit,
+        ]);
+    }
+
     // Public-facing product detail (no vendeur auth required)
     public function publicShow($id)
     {

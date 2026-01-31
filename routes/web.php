@@ -22,7 +22,39 @@ use App\Models\Administrateur;
 Route::middleware(['auth:vendeur'])->group(function () {
     Route::get('/vendeur/produits', function(Request $request) {
         $vendeur = Auth::guard('vendeur')->user();
-        $produits = $vendeur->produits;
+        // Build query from the seller's produits relation so we can apply filters
+        $query = $vendeur->produits();
+
+        // Filter by category
+        if ($request->filled('categorie')) {
+            $query->where('Categorie', $request->categorie);
+        }
+
+        // Quick search on name/description/category
+        if ($request->filled('recherche')) {
+            $term = $request->recherche;
+            $query->where(function($q) use ($term) {
+                $q->where('Nom', 'like', '%' . $term . '%')
+                  ->orWhere('Description', 'like', '%' . $term . '%')
+                  ->orWhere('Categorie', 'like', '%' . $term . '%');
+            });
+        }
+
+        // Sorting
+        if ($request->filled('tri_prix')) {
+            if ($request->tri_prix === 'asc') {
+                $query->orderBy('Prix', 'asc');
+            } elseif ($request->tri_prix === 'desc') {
+                $query->orderBy('Prix', 'desc');
+            } elseif ($request->tri_prix === 'recente') {
+                $query->orderBy('DateAjout', 'desc');
+            }
+        } else {
+            $query->orderBy('DateAjout', 'desc');
+        }
+
+        $produits = $query->get();
+
         if ($request->ajax()) {
             return view('vendeurs.produits', compact('vendeur', 'produits'));
         } else {
@@ -98,6 +130,7 @@ Route::middleware(['auth:vendeur'])->group(function () {
 
 Route::middleware(['auth:vendeur'])->group(function () {
     Route::get ('/produits', [ProduitController::class, 'index']);
+    Route::get('/produits/{id}/edit', [ProduitController::class, 'edit'])->name('produits.edit');
     Route::post('/produits', [ProduitController::class, 'AjouterProduit'])->name('produits.AjouterProduit');
     Route::get('/produits/{id}', [ProduitController::class, 'show'])->name('produits.show');
     // Accept both POST (legacy) and PUT for updates
@@ -215,7 +248,7 @@ Route::middleware(['auth:client'])->group(function () {
             return redirect()->route('connexion');
         }
 
-        $data = $request->only(['email', 'TelClient', 'Nom', 'Prenom', 'current_password', 'new_password', 'new_password_confirmation']);
+        $data = $request->only(['email', 'TelClient', 'Nom', 'Prenom', 'Adresse', 'current_password', 'new_password', 'new_password_confirmation']);
         $rules = [
             'email' => 'nullable|email',
             'TelClient' => 'nullable|string|max:30',
@@ -245,7 +278,8 @@ Route::middleware(['auth:client'])->group(function () {
             $client->MotDePasse = \Illuminate\Support\Facades\Hash::make($data['new_password']);
         }
 
-        $client->fill($request->only(['email', 'TelClient', 'Nom', 'Prenom']));
+        // include Adresse if provided
+        $client->fill($request->only(['email', 'TelClient', 'Nom', 'Prenom', 'Adresse']));
         $client->save();
 
         if ($request->ajax()) return response()->json(['success' => true, 'message' => 'Enregistré', 'client' => $client]);
@@ -316,12 +350,7 @@ Route::get('/analyses', [AnalysesController::class, 'index']);
 Route::get('/vendeur/parametres', [VendeurController::class, 'parametres'])->middleware('auth:vendeur');
 Route::post('/vendeur/parametres', [VendeurController::class, 'updateSettings'])->middleware('auth:vendeur');
 
-Route::get('/messages', function () {
-    $vendeur = Auth::guard('vendeur')->user();
-    // The messages table uses `DateEnvoi` (no timestamps), so order by that column
-    $messages = $vendeur ? $vendeur->messages()->latest('DateEnvoi')->get() : collect();
-    return view('messages.index', compact('messages', 'vendeur'));
-});
+// Note: message routes for clients and vendeurs are defined in their respective middleware groups above.
 
 // AJAX helper: mark message as read for authenticated vendeur
 Route::post('/vendeur/messages/{id}/lire', [App\Http\Controllers\MessageController::class, 'markAsRead'])->middleware('auth:vendeur');

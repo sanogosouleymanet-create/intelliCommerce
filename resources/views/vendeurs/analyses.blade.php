@@ -29,7 +29,7 @@
                 <h5>Clients actifs</h5>
                 @php $clientsCount = \App\Models\Client::whereHas('commandes', function($q) use ($vendeur){ $q->whereHas('Produit', function($p) use ($vendeur){ $p->where('Vendeur_idVendeur', $vendeur->idVendeur); }); })->distinct()->count(); @endphp
                 <div class="fs-2 fw-bold">{{ $clientsCount }}</div>
-                <div class="text-muted">clients ayant passé une commande</div>
+                <div class="text-muted">clients actifs</div>
             </div>
         </div>
     </div>

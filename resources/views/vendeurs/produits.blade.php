@@ -3,13 +3,30 @@
     // Variables attendues : $vendeur, $produits
 @endphp
 
+<style>
+     /* Ajustements: élargir la barre de filtres (plein-bleed dans le container)
+         et empêcher le wrapping pour garder les boutons sur la même ligne.
+     */
+    .filters-bar { width: calc(100% + 30px); margin-left: -15px; margin-right: -15px; margin-bottom: 0 !important; padding-bottom: .5rem !important; }
+    /* Remove white card background so the section blends with page background */
+    .filters-bar.card{ background: transparent !important; box-shadow: none !important; border: none !important; padding-bottom: .5rem !important; }
+     .filters-bar .container-inner { max-width: none; margin: 0; }
+     .filters-bar form { max-width: none; margin: 0; width: 100% !important; }
+     .filters-bar input[name="recherche"], .filters-bar .form-control[name="recherche"] { min-width: 140px !important; max-width: 420px !important; }
+     .filters-bar select.form-select { min-width: 110px !important; max-width: 260px !important; }
+     .filters-bar .filters-actions .btn { padding: .35rem .6rem; }
+     /* Keep controls on one line, allow horizontal scroll on very small viewports */
+     .filters-bar form.d-flex { flex-wrap: nowrap; overflow-x: auto; }
+     @media (max-width: 768px){ .filters-bar { width: 100%; margin-left: 0; margin-right: 0; } .filters-bar form { max-width: 100%; } }
+</style>
+
 <section class="container pt-0 pb-3 vendeurs-shop">
     @if(session('error'))
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
     <!-- Filters bar placed above all sections -->
     <div class="filters-bar card p-3 mb-3">
-        <form id="filterForm" method="GET" action="{{ url('/vendeur/produits') }}" class="d-flex align-items-center gap-2 flex-wrap" style="width:100%">
+        <form id="filterForm" method="GET" action="{{ url('/vendeur/produits') }}" class="d-flex align-items-center gap-2" style="width:100%;overflow-x:auto;">
             <input type="text" name="recherche" value="{{ request('recherche') }}" class="form-control" placeholder="Nom, description..." style="min-width:220px;max-width:420px;">
             <select name="categorie" class="form-select" style="min-width:160px;max-width:260px;">
                 <option value="">Toutes</option>
@@ -21,7 +38,7 @@
                 <option value="Autres" {{ request('categorie') == 'Autres' ? 'selected' : '' }}>Autres</option>
             </select>
             <select name="tri_prix" class="form-select" style="min-width:160px;max-width:220px;">
-                <option value="">Par défaut</option>
+                <option value="">Prix</option>
                 <option value="asc" {{ request('tri_prix') == 'asc' ? 'selected' : '' }}>Prix croissant</option>
                 <option value="desc" {{ request('tri_prix') == 'desc' ? 'selected' : '' }}>Prix décroissant</option>
                 <option value="recente" {{ request('tri_prix') == 'recente' ? 'selected' : '' }}>Produits récents</option>
@@ -126,18 +143,36 @@
     const filter = document.getElementById('filterForm');
     filter?.addEventListener('submit', async function(e){
         e.preventDefault();
+        console.log('filterForm submit', { action: filter?.action });
         const params = new URLSearchParams(new FormData(filter));
         const fetchUrl = filter.action + (params.toString() ? ('?' + params.toString() + '&partial=1') : '?partial=1');
         try{
             const res = await fetch(fetchUrl, { headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin' });
-            if(!res.ok){ window.location.href = filter.action + (params.toString() ? ('?' + params.toString()) : ''); return; }
+            if(!res.ok){
+                console.warn('Filter fetch returned not ok', res.status);
+                // fallback to normal GET submission
+                filter.submit();
+                return;
+            }
             const html = await res.text();
             const tmp = document.createElement('div'); tmp.innerHTML = html;
             const inner = tmp.querySelector('#product-list') || tmp;
-            const container = document.getElementById('product-list'); if(container){ container.innerHTML = inner.innerHTML; }
+            const container = document.getElementById('product-list');
+            if(container && inner){
+                container.innerHTML = inner.innerHTML;
+                console.log('Filter: updated product-list via AJAX');
+            } else {
+                console.warn('Filter: response did not contain #product-list, falling back');
+                filter.submit();
+                return;
+            }
             // update visible URL without partial flag
             const publicUrl = filter.action + (params.toString() ? ('?' + params.toString()) : ''); history.replaceState(null,'', publicUrl);
-        }catch(e){ window.location.href = filter.action; }
+        }catch(err){
+            console.error('Filter fetch error', err);
+            // fallback to standard submit so filtering still works
+            filter.submit();
+        }
     });
 
     // product link interception to fetch details via AJAX when available

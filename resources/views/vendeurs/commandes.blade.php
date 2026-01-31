@@ -3,19 +3,31 @@
     // Variables attendues : $vendeur, $commandes
 @endphp
 
+<style>
+    /* Search area styling for commandes view: transparent input, visible button, nudged right */
+    .vendeurs-orders > .card.p-3.mb-3 { position: relative; background: transparent !important; box-shadow: none !important; border: none !important; }
+    .vendeurs-orders .input-group { gap: .5rem; display: inline-flex; align-items: center; background: transparent !important; padding: 0 !important; transform: translateX(24px); }
+    .vendeurs-orders .input-group .form-control { border-radius: 0 !important; background: transparent !important; border: 1px solid rgba(0,0,0,0.12) !important; box-shadow: none !important; color: #000; }
+    .vendeurs-orders .input-group .btn { border-radius: .25rem; padding: .375rem .6rem; border: 1px solid #0d6efd; background-color: #0d6efd; color: #fff; box-shadow: none; }
+    .vendeurs-orders .input-group .form-select { min-width:160px; }
+</style>
+
 <section class="container vendeurs-orders">
     <div class="card p-3 mb-3">
         <div class="d-flex align-items-center">
-            <h4 class="mb-0">Commandes</h4>
+            
             <div class="ms-auto d-flex gap-2">
-                <input id="searchOrders" placeholder="Rechercher par #commande ou nom client" class="form-control form-control-sm" style="min-width:240px">
-                <select id="filterStatut" class="form-select form-select-sm" style="min-width:160px">
+                <div class="input-group" style="max-width:520px">
+                    <input id="searchOrders" placeholder="Rechercher par commande ou nom client" class="form-control form-control-sm" style="min-width:240px">
+                    <button id="btnSearchOrders" class="btn btn-sm btn-primary">Rechercher</button>
+                    <select id="filterStatut" class="form-select form-select-sm ms-2">
                     <option value="">Tous les statuts</option>
                     <option value="En attente">En attente</option>
                     <option value="En cours">En cours</option>
                     <option value="Livrée">Livrée</option>
                     <option value="Annulée">Annulée</option>
                 </select>
+                </div>
             </div>
         </div>
     </div>
@@ -96,6 +108,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
     search?.addEventListener('input', applyFilters);
     filter?.addEventListener('change', applyFilters);
+    // Button click and Enter key trigger search
+    document.getElementById('btnSearchOrders')?.addEventListener('click', function(e){ e.preventDefault(); applyFilters(); });
+    search?.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); applyFilters(); } });
 
     // Toggle details
     document.querySelectorAll('.btn-view').forEach(btn => btn.addEventListener('click', function(){
