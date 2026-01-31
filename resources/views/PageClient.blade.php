@@ -112,6 +112,12 @@
                                 <a href="/messages" class="btn btn-sm btn-outline-secondary mb-2" data-client-nav>Messages</a>
                                 <a href="/parametres" class="btn btn-sm btn-outline-secondary" data-client-nav>Paramètres</a>
                             </div>
+                            <div class="mt-3 d-flex justify-content-center">
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Déconnexion</button>
+                                </form>
+                            </div>
                         </div>
                     </aside>
 

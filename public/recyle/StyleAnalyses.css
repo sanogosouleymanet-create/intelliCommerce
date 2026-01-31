@@ -1,5 +1,5 @@
 /* Styles spécifiques à la page Analyses */
-@import url('StylePageVendeur.css');
+@import url('StyleVendeurProduits.css');
 
 .cards-grid{ display:flex; gap:12px; margin-top:12px; }
 .summary-card{ background:#07263b; color:#fff; padding:12px; border-radius:8px; }

@@ -38,7 +38,7 @@ class ProduitController extends Controller
     if ($request->ajax()) {
         return view('vendeurs.produits._list', compact('produits', 'vendeur'))->render();
     }
-    return view('vendeurs.produits.index', compact('produits', 'vendeur'));
+    return view('vendeurs.produits', compact('produits', 'vendeur'));
 }
 
 
@@ -59,22 +59,33 @@ class ProduitController extends Controller
         $path = $request->file('Image')->store('Images', 'public');
 
         // Création d'un produit: utiliser le stock initial fourni par le vendeur
-        $produit = Produit::create([
-            'Nom' => $request->Nom,
-            'Description' => $request->Description,
-            'Prix' => $request->Prix,
-            'Stock' => (int) ($request->Stock ?? 0),
-            'Categorie' => $request->Categorie ?? null,
-            'Image' => $path,
-            'DateAjout' => now(),
-            'Vendeur_idVendeur' => $vendeur?->idVendeur,
-        ]);
+        try {
+            $produit = Produit::create([
+                'Nom' => $request->Nom,
+                'Description' => $request->Description,
+                'Prix' => $request->Prix,
+                'Stock' => (int) ($request->Stock ?? 0),
+                'Categorie' => $request->Categorie ?? null,
+                'Image' => $path,
+                'DateAjout' => now(),
+                'Vendeur_idVendeur' => $vendeur?->idVendeur,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('AjouterProduit failed: ' . $e->getMessage());
+            if ($request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json(['success' => false, 'message' => 'Impossible d\'ajouter le produit'], 500);
+            }
+            return redirect()->back()->with('error', 'Impossible d\'ajouter le produit.');
+        }
 
-        return 
-            response()->json([
+        if ($request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
                 'success' => true,
                 'message' => 'Produit ajouté avec succès',
             ]);
+        }
+
+        return redirect('/vendeur/produits');
 
     }
 

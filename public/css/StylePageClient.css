@@ -1,6 +1,6 @@
 /* Import des styles partagés (PageVendeur) */
 @import url('StylePagePrincipale.css');
-
+@import url('StyleProduit.css');
 /* Styles spécifiques à la page client */
 
 /* Force link color to black for client area 
@@ -13,3 +13,5 @@ a:hover { color: #000080 !important; }
     -webkit-filter: grayscale(1) sepia(1) saturate(6) hue-rotate(210deg) brightness(0.9) contrast(0.95) drop-shadow(0 2px 6px rgba(0,0,0,0.35)) !important;
 }
 .logo svg * { fill: #000080 !important; stroke: #000080 !important; }*/
+
+

@@ -154,7 +154,7 @@
     })();
 </script>
 
-<style>
+<!--<style>
     .header {
     display: flex;
     justify-content: space-between;
@@ -415,4 +415,4 @@ form#editForm input{
     border-radius:6px; 
     border:1px solid rgba(255,255,255,0.06); 
 }
-</style>
+</style>-->

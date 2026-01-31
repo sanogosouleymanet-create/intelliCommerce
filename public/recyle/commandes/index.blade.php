@@ -1,15 +1,3 @@
-<header class="header">
-    <h1>Commandes</h1>
-    <div class="account">
-        <i class="fa-solid fa-user"></i>
-        @if(isset($vendeur->Prenom) || isset($vendeur->Nom))
-            {{ trim(($vendeur->Prenom ?? '') . ' ' . ($vendeur->Nom ?? '')) }}
-        @else
-            Mon Compte
-        @endif
-    </div>
-</header>
-
 <section class="orders-header">
     <div class="filter-commandes">
         <div class="orders-actions">

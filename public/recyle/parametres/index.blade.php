@@ -178,7 +178,7 @@
 
 <style>
     /* Styles spécifiques à la page Paramètres */
-@import url('StylePageVendeur.css');
+@import url('StyleVendeurProduits.css');
 
 form#settingsForm{ 
     max-width:600px; 

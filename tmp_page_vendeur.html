@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/StyleConnexion.css">
+    <title>Connexion</title>
+</head>
+<body>
+   <header>
+    <img src="Logo-Site.png" width="500" style="color: red;" alt="Logo de la plateforme" title="LOGO" class="logo">
+            <nav>
+                <ul>
+                    <li><a href="PagePrincipale">HOME</a></li>
+                    <li><a href="">ABOUT</a></li>
+                    <li><a href="">SERVICES</a></li>
+                    <li><a href="">CONTACT</a></li>
+                </ul>  
+            </nav>    </header>
+
+        <form action="http://127.0.0.1:8000/Connexion" method="post">
+            <input type="hidden" name="_token" value="Zje6sk5mpjH4EVaWYom36ljFIVVlBWc2WOHYTECj" autocomplete="off">            <fieldset>
+        <div>
+                <label>EMAIL :</label>
+                <input name="email" type="email" placeholder="votre mail" required><br>
+            </div>
+            <div>
+                <label>MOT DE PASSE :</label>
+                <input name="motdepasse" type="password" placeholder="password" maxlength="15" required>
+            </div>
+            <div>
+                <input type="submit" class="button" value="Se Connecter"><br>
+            </div>
+             </fieldset>
+         </form>
+         <p>Vous n'avez pas de compte ?</p>
+         <button id="createAccount" class="button">Créer un compte</button>
+
+         <div id="createOptions" style="display:none;margin-top:12px">
+            <p>Choisissez le type de compte :</p>
+            <a class="button" href="http://127.0.0.1:8000/formulaireClient">Client</a>
+            <a class="button" href="http://127.0.0.1:8000/formulaireVendeur">Vendeur</a>
+            <button id="cancelCreate" class="button">Annuler</button>
+         </div>
+
+         
+         <script>
+            document.getElementById('createAccount')?.addEventListener('click', function(){
+                document.getElementById('createOptions').style.display = 'block';
+            });
+            document.getElementById('cancelCreate')?.addEventListener('click', function(){
+                document.getElementById('createOptions').style.display = 'none';
+            });
+         </script>
+    <footer>
+      <p>&copy; 2026 IntelliCommerce.</p>
+</footer></body>
+</html>
