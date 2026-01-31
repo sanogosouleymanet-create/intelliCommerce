@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Client extends Model
+class Client extends Authenticatable
 {
     use HasFactory;
+    use Notifiable;
+
     protected $table = 'clients';
     protected $primaryKey = 'idClient';
     public $timestamps = false;
@@ -22,6 +25,7 @@ class Client extends Model
         "MotDePasse",
         "DateCreation",
     ];
+
     public function commandes()
     {
         return $this->hasMany(Commande::class);
@@ -29,5 +33,10 @@ class Client extends Model
     public function message()
     {
         return $this->hasMany(Message::class);
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->MotDePasse;
     }
 }

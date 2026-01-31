@@ -49,7 +49,12 @@
         
         <!-- Deconnexion -->
         <li>
-            <a href="{{ url('/ConnexionVendeur') }}"><i class="fa-solid fa-right-from-bracket"></i> Déconnexion</a>
+            <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+                @csrf
+                <button type="submit" style="background:none;border:none;padding:0;color:inherit;cursor:pointer">
+                    <i class="fa-solid fa-right-from-bracket"></i> Déconnexion
+                </button>
+            </form>
         </li>   
     </ul>
 </aside>
