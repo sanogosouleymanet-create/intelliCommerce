@@ -663,6 +663,24 @@ off-canvas {
     margin: 1.25em 0;
     border-top: 1px solid var(--border-color);
 }
+
+/* centrer verticalement les éléments de navigation copiés par le script (off-canvas) */
+.off-canvas nav > ul li > a,
+.off-canvas .nav li > a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    width: 100%;
+    color: var(--dark-color);
+}
+
+.off-canvas nav > ul li > a .icon-large,
+.off-canvas nav > ul li > a .icon-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
 .off-canvas nav .mega {
     padding: 0;
 }
