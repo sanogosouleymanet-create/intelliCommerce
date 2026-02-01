@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel ="stylesheet" href="{{ asset('css/StylePagePrincipale.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/StyleVendeurProduits.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/StylePageClient.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.8.0/fonts/remixicon.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -19,7 +19,7 @@
     </style>
 </head>
 <body>
-    <div id="page" class="site">
+    <div id="page" class="site client-shop">
         <!-- Header copied from PagePrincipale for consistency -->
         <header>
            <div class="header-top mobile-hide">
@@ -49,7 +49,7 @@
                                         }
                                     @endphp
                                     <div style="display:flex;align-items:center;gap:12px">
-                                        <button type="button" onclick="location.href='{{ $profileUrl }}'" style="display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#2b7cff;cursor:pointer">
+                                        <button type="button" onclick="location.href='{{ $profileUrl }}'" style="display:inline-flex;align-items:center;gap:8px;padding:0px 15px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#2b7cff;cursor:pointer">
                                             <i class="fa-solid fa-user"></i>
                                             <span>{{ $displayName }}</span>
                                     </div>
@@ -235,7 +235,9 @@
                 (async function(){
                     try{
                         const res = await fetch(href, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
-                        const html = await res.text();
+                        let html = await res.text();
+                        // Remplacer les imports vers le style vendeur par le style client
+                        html = html.replace(/StyleVendeurProduits\.css/g, 'StylePageClient.css');
                         const tmp = document.createElement('div'); tmp.innerHTML = html;
                         const target = document.querySelector('main .container .row section.col-md-9');
                         if(target){
@@ -263,7 +265,9 @@
                 (async function(){
                     try{
                         const res = await fetch(location.pathname + location.search, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
-                        const html = await res.text();
+                        let html = await res.text();
+                        // Remplacer les imports vers le style vendeur par le style client
+                        html = html.replace(/StyleVendeurProduits\.css/g, 'StylePageClient.css');
                         const tmp = document.createElement('div'); tmp.innerHTML = html;
                         const target = document.querySelector('main .container .row section.col-md-9');
                         if(target){

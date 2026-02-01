@@ -202,6 +202,9 @@ Route::post('/ConnexionVendeur', function (Request $request) { return redirect()
 // Unified logout route
 Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 
+// Redirect /dashboard to /admin/dashboard for admin users
+Route::get('/dashboard', function () { return redirect('/admin/dashboard'); })->middleware('auth');
+
 Route::get('/ConnexionClient', function () { return redirect()->route('connexion'); });
 Route::post('/ConnexionClient', function (Request $request) { return redirect()->route('connexion.post'); });
 
@@ -266,7 +269,6 @@ Route::middleware(['auth:client'])->group(function () {
 
         // If user is changing password, require and validate password fields
         if ($request->filled('new_password')) {
-            $rules['current_password'] = 'required|string';
             $rules['new_password'] = 'required|string|min:8|confirmed';
         }
 
@@ -315,8 +317,19 @@ Route::post('/admin/logout', [AdministrateurController::class, 'logout'])->name(
 Route::prefix('admin')->middleware('auth:administrateur')->group(function () {
     Route::get('/', [AdministrateurController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/produits', [AdministrateurController::class, 'produits'])->name('admin.produits');
+    // Admin product detail (AJAX-friendly partial)
+    Route::get('/produits/{id}', [AdministrateurController::class, 'showProduit'])->name('admin.produits.show');
+    Route::post('/produits/{id}/delete', [AdministrateurController::class, 'deleteProduit'])->name('admin.produits.delete');
     Route::get('/clients', [AdministrateurController::class, 'clients'])->name('admin.clients');
+    Route::get('/clients/{id}', [AdministrateurController::class, 'showClient'])->name('admin.clients.show');
+    Route::post('/clients/{id}/delete', [AdministrateurController::class, 'deleteClient'])->name('admin.clients.delete');
+    Route::get('/messages', [AdministrateurController::class, 'messages'])->name('admin.messages');
+    // fetch a single conversation (AJAX)
+    Route::get('/messages/conversation/{type}/{id}', [AdministrateurController::class, 'getConversation'])->name('admin.messages.conversation');
+    Route::post('/messages/send', [AdministrateurController::class, 'sendMessage'])->name('admin.messages.send');
     Route::get('/vendeurs', [AdministrateurController::class, 'vendeurs'])->name('admin.vendeurs');
+    Route::get('/vendeurs/{id}', [AdministrateurController::class, 'showVendeur'])->name('admin.vendeurs.show');
+    Route::post('/vendeurs/{id}/delete', [AdministrateurController::class, 'deleteVendeur'])->name('admin.vendeurs.delete');
     Route::get('/ia-alertes', [AdministrateurController::class, 'iaAlerts'])->name('admin.ia_alertes');
 });
 

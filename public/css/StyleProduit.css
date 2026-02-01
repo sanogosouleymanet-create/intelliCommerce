@@ -36,7 +36,7 @@ h1 {
     z-index:1000;
 }
 
-/*Modal styles (minimal)*/
+/* Styles de la modale (minimal) */
 .modal-content{
     background:#fff;
     padding:20px;
@@ -125,10 +125,10 @@ h1 {
     justify-content: center;
     flex-wrap: wrap;
 
-    background-color: #ffffff;
+    background-color: transparent; /* retirer fond blanc */
     padding: 15px 20px;
     border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    box-shadow: none; /* supprimer ombre pour éviter effet de carte blanche */
     margin-bottom: 25px;
 }
 
@@ -154,7 +154,7 @@ h1 {
     border-color: #007bff;
 }
 
-/* Override product-detail price color (remove blue total in details) */
+/* Remplacer la couleur du prix dans le détail du produit (supprime la couleur bleue par défaut) */
 #p-prix,
 .no-color {
     color: inherit !important;

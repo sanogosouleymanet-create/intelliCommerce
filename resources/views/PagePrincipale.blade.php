@@ -30,7 +30,7 @@
                 <div class="wrapper flexitem">
                     <div class="left">
                         <ul class="flexitem main-links">
-                            <li><a href="/">Accueil</a></li>
+                            
                             <li><a href="#">À propos</a></li>
                             <li><a href="#">Contact</a></li>
                         </ul>
@@ -79,7 +79,7 @@
                                         }
                                     @endphp
                                     <div style="display:flex;align-items:center;gap:12px">
-                                        <button type="button" onclick="location.href='{{ $profileUrl }}'" style="display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#2b7cff;cursor:pointer">
+                                        <button type="button" onclick="location.href='{{ $profileUrl }}'" class="login">
                                             <i class="fa-solid fa-user"></i>
                                             <span>{{ $displayName }}</span>
                                     </div>
