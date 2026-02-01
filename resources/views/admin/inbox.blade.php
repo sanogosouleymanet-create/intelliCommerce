@@ -1,7 +1,7 @@
 
-<div class="card" style="display:flex;">
+<div class="card" style="display:flex;height:80vh;overflow:hidden;">
     <!-- Sidebar for conversations -->
-    <div id="conversations-sidebar" style="width:30%;border-right:1px solid #eee;padding:12px;">
+    <div id="conversations-sidebar" style="width:30%;border-right:1px solid #eee;padding:12px;height:100%;overflow-y:auto;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <h4>Conversations</h4>
             <button id="btn-compose" class="btn btn-sm btn-primary">Composer</button>
@@ -11,12 +11,16 @@
         @else
             <ul id="conversations-list" style="list-style:none;padding:0;">
                 @foreach($conversations as $key => $conv)
-                    <li class="conversation-item" data-type="{{ $conv['senderType'] }}" data-id="{{ $conv['sender']->idClient ?? $conv['sender']->idVendeur ?? $conv['sender']->idAdmi }}" style="padding:8px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+                    <li class="conversation-item" data-type="{{ $conv['senderType'] }}" data-id="{{ $conv['sender']->idClient ?? $conv['sender']->idVendeur ?? $conv['sender']->idAdmi }}" data-name="{{ $conv['sender']->Nom }} {{ $conv['sender']->Prenom }}" style="padding:8px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
                         <div style="display:flex;justify-content:space-between;">
                             <strong>{{ $conv['sender']->Nom }} {{ $conv['sender']->Prenom }}</strong>
-                            <small style="color:#6b7280;">{{ \Carbon\Carbon::parse($conv['lastMessageDate'])->format('d/m H:i') }}</small>
+                            <div>
+                                
+                                <button class="btn btn-sm delete-conv" data-type="{{ $conv['senderType'] }}" data-id="{{ $conv['sender']->idClient ?? $conv['sender']->idVendeur ?? $conv['sender']->idAdmi }}" style="margin-left:8px;color:red;" title="Supprimer">&times;</button>
+                            </div>
                         </div>
-                        <div style="color:#6b7280;font-size:0.9rem;">{{ Str::limit($conv['lastMessage']->Contenu ?? '', 50) }}</div>
+                        <small style="color:#6b7280;">{{ \Carbon\Carbon::parse($conv['lastMessageDate'])->format('d/m H:i') }}</small>
+                        <!--<div style="color:#6b7280;font-size:0.9rem;">{{ Str::limit($conv['lastMessage']->Contenu ?? '', 50) }}</div>-->
                         @if($conv['unreadCount'] > 0)
                             <span class="badge badge-danger">{{ $conv['unreadCount'] }}</span>
                         @endif
@@ -27,14 +31,14 @@
     </div>
 
     <!-- Chat area -->
-    <div id="chat-area" style="width:70%;display:flex;flex-direction:column;">
-        <div id="chat-header" style="padding:12px;border-bottom:1px solid #eee;display:none;">
+    <div id="chat-area" style="width:70%;display:flex;flex-direction:column;height:100%;">
+        <div id="chat-header" style="padding:12px;border-bottom:1px solid #eee;display:none;flex-shrink:0;">
             <h5 id="chat-title">Sélectionnez une conversation</h5>
         </div>
-        <div id="messages-container" style="flex:1;padding:12px;display:none;">
+        <div id="messages-container" style="flex:1;padding:12px;display:none;overflow-y:auto;display:flex;flex-direction:column;">
             <!-- Messages will be loaded here -->
         </div>
-        <div id="reply-area" style="padding:12px;border-top:1px solid #eee;display:none;">
+        <div id="reply-area" style="padding:12px;border-top:1px solid #eee;display:none;flex-shrink:0;">
             <div style="display:flex;gap:8px;">
                 <textarea id="reply-input" placeholder="Tapez votre message..." style="flex:1;padding:8px;border:1px solid #ddd;border-radius:4px;resize:none;" rows="2"></textarea>
                 <button id="btn-send-reply" class="btn btn-primary">Envoyer</button>
@@ -138,7 +142,7 @@
         try{ if(window.__admin_prefill){ applyPrefill(window.__admin_prefill); delete window.__admin_prefill; } }catch(e){}
     }
 
-    function loadConversation(type, id) {
+    function loadConversation(type, id, name) {
         fetch(`{{ url('/admin/messages/conversation') }}/${type}/${id}`, {
             headers: {'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest'}
         })
@@ -148,11 +152,13 @@
             container.innerHTML = '';
             messages.forEach(msg => {
                 const msgDiv = document.createElement('div');
-                msgDiv.style.cssText = 'margin-bottom:12px;padding:8px;border-radius:8px;background:#f1f1f1;max-width:70%;word-wrap:break-word;';
-                msgDiv.innerHTML = `<div style="white-space:pre-wrap;">${msg.content}</div><small style="color:#666;">${msg.date}</small>`;
+                const isAdmin = msg.isOutgoing;
+                msgDiv.style.cssText = `margin-bottom:12px;padding:8px;border-radius:8px;max-width:70%;word-wrap:break-word;${isAdmin ? 'margin-left:auto;background:#007bff;color:white;' : 'margin-right:auto;background:#f1f1f1;'}`;
+                msgDiv.innerHTML = `<div style="white-space:pre-wrap;">${msg.content}</div><small style="color:${isAdmin ? '#e0e0e0' : '#666'};">${msg.date}</small><button class="btn btn-sm delete-msg" data-id="${msg.id}" style="margin-left:8px;color:red;" title="Supprimer">&times;</button>`;
                 container.appendChild(msgDiv);
             });
             container.scrollTop = container.scrollHeight;
+            document.getElementById('chat-title').textContent = name;
             document.getElementById('chat-header').style.display = 'block';
             document.getElementById('messages-container').style.display = 'block';
             document.getElementById('reply-area').style.display = 'block';
@@ -186,7 +192,8 @@
         if (item) {
             const type = item.dataset.type;
             const id = item.dataset.id;
-            loadConversation(type, id);
+            const name = item.dataset.name;
+            loadConversation(type, id, name);
         }
     });
 
@@ -196,6 +203,44 @@
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             sendReply();
+        }
+    });
+
+    // Delete message
+    document.getElementById('messages-container').addEventListener('click', function(e){
+        if (e.target.classList.contains('delete-msg')) {
+            const id = e.target.dataset.id;
+            if (confirm('Supprimer ce message ?')) {
+                fetch(`{{ url('/admin/messages') }}/${id}`, {
+                    method: 'DELETE',
+                    headers: {'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest'}
+                })
+                .then(res => res.json())
+                .then(() => {
+                    if (currentConversation) {
+                        loadConversation(currentConversation.type, currentConversation.id);
+                    }
+                })
+                .catch(e => alert('Erreur lors de la suppression'));
+            }
+        }
+    });
+
+    // Delete conversation
+    document.getElementById('conversations-list').addEventListener('click', function(e){
+        if (e.target.classList.contains('delete-conv')) {
+            e.stopPropagation();
+            const type = e.target.dataset.type;
+            const id = e.target.dataset.id;
+            if (confirm('Supprimer cette conversation ?')) {
+                fetch(`{{ url('/admin/messages/conversation') }}/${type}/${id}`, {
+                    method: 'DELETE',
+                    headers: {'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest'}
+                })
+                .then(res => res.json())
+                .then(() => location.reload())
+                .catch(e => alert('Erreur lors de la suppression'));
+            }
         }
     });
 

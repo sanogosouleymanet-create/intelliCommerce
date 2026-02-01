@@ -398,9 +398,13 @@ Route::prefix('admin')->middleware('auth:administrateur')->group(function () {
     // fetch a single conversation (AJAX)
     Route::get('/messages/conversation/{type}/{id}', [AdministrateurController::class, 'getConversation'])->name('admin.messages.conversation');
     Route::post('/messages/send', [AdministrateurController::class, 'sendMessage'])->name('admin.messages.send');
+    Route::delete('/messages/{id}', [AdministrateurController::class, 'deleteMessage'])->name('admin.messages.delete');
+    Route::delete('/messages/conversation/{type}/{id}', [AdministrateurController::class, 'deleteConversation'])->name('admin.messages.conversation.delete');
     Route::get('/vendeurs', [AdministrateurController::class, 'vendeurs'])->name('admin.vendeurs');
     Route::get('/vendeurs/{id}', [AdministrateurController::class, 'showVendeur'])->name('admin.vendeurs.show');
     Route::post('/vendeurs/{id}/delete', [AdministrateurController::class, 'deleteVendeur'])->name('admin.vendeurs.delete');
+    Route::get('/parametres', [AdministrateurController::class, 'parametres'])->name('admin.parametres');
+    Route::post('/parametres', [AdministrateurController::class, 'updateSettings'])->name('admin.parametres.update');
     Route::get('/ia-alertes', [AdministrateurController::class, 'iaAlerts'])->name('admin.ia_alertes');
 });
 
