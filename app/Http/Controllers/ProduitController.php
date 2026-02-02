@@ -35,14 +35,10 @@ class ProduitController extends Controller
     }
 
     $produits = $query->get();
-
-    // If requested explicitly for partial HTML (used by AJAX), return only the rendered product list
-    if ($request->query('partial') == '1') {
-        $html = view('produits._list', compact('produits'))->render();
-        return response($html);
+    if ($request->ajax()) {
+        return view('vendeurs.produits._list', compact('produits', 'vendeur'))->render();
     }
-
-    return view('produits.index', compact('produits', 'vendeur'));
+    return view('vendeurs.produits.index', compact('produits', 'vendeur'));
 }
 
 
@@ -83,11 +79,17 @@ class ProduitController extends Controller
     }
 
     // Show product details
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $vendeur = Auth::guard('vendeur')->user();
         $produit = Produit::where('idProduit', $id)->where('Vendeur_idVendeur', $vendeur->idVendeur)->firstOrFail();
-        return view('produits.show', compact('produit', 'vendeur'));
+        if ($request->ajax()) {
+            // return the partial used by the PageVendeur SPA
+            return view('vendeurs.produits.show', compact('produit', 'vendeur'))->render();
+        }
+        // If this is a top-level (non-AJAX) request, redirect into the SPA so the fragment
+        // is displayed inside PageVendeur and not as a bare HTML fragment.
+        return redirect()->to(route('PageVendeur') . '?product=' . $produit->idProduit);
     }
 
     // Public-facing product detail (no vendeur auth required)

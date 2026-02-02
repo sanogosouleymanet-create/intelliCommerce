@@ -5,13 +5,9 @@
     font-family: Arial, sans-serif;
 }
 
+
 body {
-    background-image: url("/fond-formulaire.png");
-    background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-    /*background: #f2f5f9;*/
+    background-color: rgb(104, 159, 241);
 }
 
 .container {

@@ -28,24 +28,48 @@ class AuthController extends Controller
 
         // Priority: administrateur -> vendeur -> client
         $admin = Administrateur::whereRaw('LOWER(email) = ?', [$email])->first();
-        if ($admin && Hash::check($password, $admin->MotDePasse)) {
-            Auth::guard('administrateur')->login($admin);
-            $request->session()->regenerate();
-            return redirect('/PagePrincipale');
+        if ($admin) {
+            $stored = $admin->MotDePasse;
+            $isHashed = $stored && (preg_match('/^\$2[aby]\$|^\$argon2/', $stored) === 1);
+            if (Hash::check($password, $stored) || (!$isHashed && $stored === $password)) {
+                if (!$isHashed && $stored === $password) {
+                    $admin->MotDePasse = Hash::make($password);
+                    $admin->save();
+                }
+                Auth::guard('administrateur')->login($admin);
+                $request->session()->regenerate();
+                return redirect('/PagePrincipale');
+            }
         }
 
         $vendeur = Vendeur::whereRaw('LOWER(email) = ?', [$email])->first();
-        if ($vendeur && Hash::check($password, $vendeur->MotDePasse)) {
-            Auth::guard('vendeur')->login($vendeur);
-            $request->session()->regenerate();
-            return redirect('/PagePrincipale');
+        if ($vendeur) {
+            $stored = $vendeur->MotDePasse;
+            $isHashed = $stored && (preg_match('/^\$2[aby]\$|^\$argon2/', $stored) === 1);
+            if (Hash::check($password, $stored) || (!$isHashed && $stored === $password)) {
+                if (!$isHashed && $stored === $password) {
+                    $vendeur->MotDePasse = Hash::make($password);
+                    $vendeur->save();
+                }
+                Auth::guard('vendeur')->login($vendeur);
+                $request->session()->regenerate();
+                return redirect('/PagePrincipale');
+            }
         }
 
         $client = Client::whereRaw('LOWER(email) = ?', [$email])->first();
-        if ($client && Hash::check($password, $client->MotDePasse)) {
-            Auth::guard('client')->login($client);
-            $request->session()->regenerate();
-            return redirect('/PagePrincipale');
+        if ($client) {
+            $stored = $client->MotDePasse;
+            $isHashed = $stored && (preg_match('/^\$2[aby]\$|^\$argon2/', $stored) === 1);
+            if (Hash::check($password, $stored) || (!$isHashed && $stored === $password)) {
+                if (!$isHashed && $stored === $password) {
+                    $client->MotDePasse = Hash::make($password);
+                    $client->save();
+                }
+                Auth::guard('client')->login($client);
+                $request->session()->regenerate();
+                return redirect('/PagePrincipale');
+            }
         }
 
         return back()->withErrors(['credentials' => 'Email ou mot de passe incorrect'])->withInput();

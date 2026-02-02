@@ -6,10 +6,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Vendeur;
 use App\Models\Ia_alerte;
+use App\Models\Produit;
 
 class PageVendeurController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
         $vendeur = Auth::guard('vendeur')->user();
         if(!$vendeur){
@@ -34,6 +35,37 @@ class PageVendeurController extends Controller
         } else {
             $messagesNonLus = $vendeur->messages()->count();
             $messagesRecents = $vendeur->messages()->orderBy('DateEnvoi', 'desc')->take(5)->get();
+        }
+
+        // Detect AJAX/partial requests robustly (X-Requested-With or X-Partial custom header or JSON expectations)
+        $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest' || $request->header('X-Partial') === 'true' || $request->ajax() || $request->wantsJson();
+
+        // If a product query param is provided, show that product detail inside the SPA
+        if ($request->filled('product')) {
+            $prodId = $request->query('product');
+            $produit = Produit::where('idProduit', $prodId)->where('Vendeur_idVendeur', $vendeur->idVendeur)->first();
+            if ($produit) {
+                if ($isAjax) {
+                    return view('vendeurs.produits.show', compact('produit', 'vendeur'))->render();
+                }
+                return view('PageVendeur', [
+                    'partial' => 'vendeurs.produits.show',
+                    'vendeur' => $vendeur,
+                    'produit' => $produit,
+                ]);
+            }
+            // if product not found, fallthrough to normal dashboard
+        }
+
+        if ($isAjax) {
+            return view('vendeurs.dashboard', [
+                'vendeur' => $vendeur,
+                'produitsCount' => $produitsCount,
+                'commandesCount' => $commandesQuery->count(),
+                'messagesNonLus' => $messagesNonLus,
+                'commandesRecentes' => $commandesQuery->orderBy('DateCommande', 'desc')->take(5)->get(),
+                'messagesRecents' => $messagesRecents,
+            ]);
         }
 
         return view('PageVendeur', [

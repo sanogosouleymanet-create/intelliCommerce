@@ -1,3 +1,4 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -5,6 +6,7 @@ use App\Http\Controllers\ProduitController;
 use App\Models\Produit;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\VendeurController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PageVendeurController;
 use App\Http\Controllers\AnalysesController;
 use App\Http\Controllers\AdministrateurController;
@@ -14,6 +16,85 @@ use Illuminate\Http\Request;
 use App\Models\Vendeur;
 use App\Models\Client;
 use App\Models\Administrateur;
+
+
+// Routes SPA pour PageVendeur (injection partielle)
+Route::middleware(['auth:vendeur'])->group(function () {
+    Route::get('/vendeur/produits', function(Request $request) {
+        $vendeur = Auth::guard('vendeur')->user();
+        $produits = $vendeur->produits;
+        if ($request->ajax()) {
+            return view('vendeurs.produits.index', compact('vendeur', 'produits'));
+        } else {
+            return view('PageVendeur', [
+                'partial' => 'vendeurs.produits.index',
+                'vendeur' => $vendeur,
+                'produits' => $produits
+            ]);
+        }
+    });
+    Route::get('/vendeur/commandes', function(Request $request) {
+        $vendeur = Auth::guard('vendeur')->user();
+        $commandes = $vendeur->commandes ?? [];
+        if ($request->ajax()) {
+            return view('vendeurs.commandes.index', compact('vendeur', 'commandes'));
+        } else {
+            return view('PageVendeur', [
+                'partial' => 'vendeurs.commandes.index',
+                'vendeur' => $vendeur,
+                'commandes' => $commandes
+            ]);
+        }
+    });
+    Route::get('/vendeur/clients', function(Request $request) {
+        $vendeur = Auth::guard('vendeur')->user();
+        $clients = $vendeur->clients ?? [];
+        if ($request->ajax()) {
+            return view('vendeurs.clients.index', compact('vendeur', 'clients'));
+        } else {
+            return view('PageVendeur', [
+                'partial' => 'vendeurs.clients.index',
+                'vendeur' => $vendeur,
+                'clients' => $clients
+            ]);
+        }
+    });
+    Route::get('/vendeur/analyses', function(Request $request) {
+        $vendeur = Auth::guard('vendeur')->user();
+        if ($request->ajax()) {
+            return app(\App\Http\Controllers\AnalysesController::class)->index($request);
+        } else {
+            return view('PageVendeur', [
+                'partial' => 'vendeurs.analyses.index',
+                'vendeur' => $vendeur
+            ]);
+        }
+    });
+    Route::get('/vendeur/messages', function(Request $request) {
+        $vendeur = Auth::guard('vendeur')->user();
+        $messages = $vendeur->messages ?? [];
+        if ($request->ajax()) {
+            return view('vendeurs.messages.index', compact('vendeur', 'messages'));
+        } else {
+            return view('PageVendeur', [
+                'partial' => 'vendeurs.messages.index',
+                'vendeur' => $vendeur,
+                'messages' => $messages
+            ]);
+        }
+    });
+    Route::get('/vendeur/parametres', function(Request $request) {
+        $vendeur = Auth::guard('vendeur')->user();
+        if ($request->ajax()) {
+            return app(\App\Http\Controllers\VendeurController::class)->parametres($request);
+        } else {
+            return view('PageVendeur', [
+                'partial' => 'vendeurs.parametres.index',
+                'vendeur' => $vendeur
+            ]);
+        }
+    });
+});
 
 Route::middleware(['auth:vendeur'])->group(function () {
     Route::get ('/produits', [ProduitController::class, 'index']);
@@ -59,40 +140,21 @@ Route::get('/', function (Request $request) {
 Route::get('/formulaireVendeur', function () {
     return view('formulaireVendeur');
 });
-
-
+Route::post('/formulaireVendeur', [VendeurController::class, 'FormulaireVendeur']);
 Route::get('/AjouterProduit', function () {
     return view('produits.AjouterProduit');
 });
-
-
-
+Route::get('/PageVendeur', [PageVendeurController::class, 'index'])->name('PageVendeur')->middleware('auth:vendeur');
+Route::post('/AjouterProduit', [ProduitController::class, 'AjouterProduit']);
 
 Route::get('/formulaireClient', function () {
     return view('formulaireClient');
 });
-Route::post('/formulaireClient', function (Request $request){
-    // Validation basique
-    $message = "Client enregistré avec succès.";
-    $validated = $request->validate([
-        'nom' => 'required|string|max:255',
-        'prenom' => 'required|string|max:255',
-        'mail' => 'required|email|max:255',
-        'motdepasse' => 'required|string|min:4|max:8',
-         
+Route::post('/formulaireClient', [ClientController::class, 'FormulaireClient']);
 
-    ]);
-        $client = Client::create([
-                    'Nom' => $request->nom,
-                    'Prenom' => $request->prenom,
-                    'DateDeNaissance' => $request->datenaissance ?? null,
-                    'Adresse' => $request->adresse,
-                    'TelClient' => $request->tel,
-                    'email' => $request->mail,
-                    'MotDePasse' => Hash::make($request->motdepasse),
-                    'DateCreation' => now(),
-        ]);
-    return view('formulaireClient', compact('message'));
+
+Route::get('/', function () {
+    return view('PagePrincipale');
 });
 
 // Unified Connexion page
@@ -110,10 +172,42 @@ Route::get('/ConnexionClient', function () { return redirect()->route('connexion
 Route::post('/ConnexionClient', function (Request $request) { return redirect()->route('connexion.post'); });
 
 // Client page (protected) — named PageClient
-Route::get('/PageClient', function () {
+Route::get('/PageClient', function (Request $request) {
     $client = Auth::guard('client')->user();
+    if ($request->ajax()) {
+        return view('clients.profile', compact('client'));
+    }
     return view('PageClient', compact('client'));
 })->middleware('auth:client')->name('PageClient');
+
+// Client SPA routes (protected) — return partial for AJAX requests
+Route::middleware(['auth:client'])->group(function () {
+    Route::get('/commandes', function(Request $request){
+        $client = Auth::guard('client')->user();
+        $commandes = $client ? $client->commandes()->orderBy('DateCommande','desc')->get() : collect();
+        if ($request->ajax()) {
+            return view('clients.commandes', compact('client', 'commandes'));
+        }
+        return view('PageClient', ['partial' => 'clients.commandes', 'client' => $client, 'commandes' => $commandes]);
+    });
+
+    Route::get('/messages', function(Request $request){
+        $client = Auth::guard('client')->user();
+        $messages = $client ? $client->message()->orderBy('DateEnvoi','desc')->get() : collect();
+        if ($request->ajax()) {
+            return view('clients.messages', compact('client', 'messages'));
+        }
+        return view('PageClient', ['partial' => 'clients.messages', 'client' => $client, 'messages' => $messages]);
+    });
+
+    Route::get('/parametres', function(Request $request){
+        $client = Auth::guard('client')->user();
+        if ($request->ajax()) {
+            return view('clients.parametres', compact('client'));
+        }
+        return view('PageClient', ['partial' => 'clients.parametres', 'client' => $client]);
+    });
+});
 
 // Admin authentication and dashboard
 Route::get('/admin/login', [AdministrateurController::class, 'showLogin'])->name('admin.login');
@@ -122,6 +216,10 @@ Route::post('/admin/logout', [AdministrateurController::class, 'logout'])->name(
 
 Route::prefix('admin')->middleware('auth:administrateur')->group(function () {
     Route::get('/', [AdministrateurController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/produits', [AdministrateurController::class, 'produits'])->name('admin.produits');
+    Route::get('/clients', [AdministrateurController::class, 'clients'])->name('admin.clients');
+    Route::get('/vendeurs', [AdministrateurController::class, 'vendeurs'])->name('admin.vendeurs');
+    Route::get('/ia-alertes', [AdministrateurController::class, 'iaAlerts'])->name('admin.ia_alertes');
 });
 
 Route::get('/ConnexionAdmin', function () {

@@ -1,4 +1,4 @@
-<img src="Logo-Site.png" width="500" alt="Logo de la plateforme" title="LOGO" class="logo">
+<img src="Logo-Site.png" width="500" style="color: red;" alt="Logo de la plateforme" title="LOGO" class="logo">
             <nav>
                 <ul>
                     <li><a href="{{('PagePrincipale')}}">HOME</a></li>

@@ -9,9 +9,12 @@ use App\Models\Vendeur;
 
 class VendeurController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $vendeurs = Vendeur::all();
+        if ($request->ajax()) {
+            return view('vendeurs._main', compact('vendeurs'))->render();
+        }
         return view('vendeurs.index', compact('vendeurs'));
     }
 
@@ -40,13 +43,13 @@ class VendeurController extends Controller
             Auth::guard('vendeur')->login($vend);
             $request->session()->regenerate();
 
-            return redirect()->route('PageVendeur');
+            return redirect('/PagePrincipale');
     }
 
     public function parametres()
     {
         $vendeur = Auth::guard('vendeur')->user();
-        return view('parametres.index', compact('vendeur'));
+        return view('vendeurs.parametres.index', compact('vendeur'));
     }
 
     public function updateSettings(Request $request)
