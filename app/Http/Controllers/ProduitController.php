@@ -90,6 +90,25 @@ class ProduitController extends Controller
         return view('produits.show', compact('produit', 'vendeur'));
     }
 
+    // Public-facing product detail (no vendeur auth required)
+    public function publicShow($id)
+    {
+        $produit = Produit::where('idProduit', $id)->firstOrFail();
+        $vendeur = null;
+        try {
+            $vendeurModel = '\\App\\Models\\Vendeur';
+            $vendeur = $vendeurModel::find($produit->Vendeur_idVendeur);
+        } catch (\Throwable $e) {
+            $vendeur = null;
+        }
+        // If this is an AJAX request, return only the fragment so it can be injected in-page
+        if (request()->ajax() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
+            return view('produits._public_fragment', compact('produit', 'vendeur'));
+        }
+
+        return view('produits.show_public', compact('produit', 'vendeur'));
+    }
+
     // Update product (POST form with _method=PUT or direct POST)
     public function update(Request $request, $id)
     {

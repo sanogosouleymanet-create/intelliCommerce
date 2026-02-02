@@ -36,8 +36,24 @@ Route::post('/formulaireVendeur', [VendeurController::class, 'FormulaireVendeur'
 Route::get('/PageVendeur', [PageVendeurController::class, 'index'])->name('PageVendeur')->middleware('auth:vendeur');
 Route::post('/AjouterProduit', [ProduitController::class, 'AjouterProduit']);
 
-Route::get('/', function () {
-    return view('PagePrincipale');
+Route::get('/', function (Request $request) {
+    $query = Produit::query();
+    // Filtrer par catégorie si fourni
+    if ($request->filled('categorie')) {
+        $query->where('Categorie', $request->categorie);
+    }
+    // Filtrer par recherche rapide (nom ou description)
+    if ($request->filled('recherche')) {
+        $term = $request->recherche;
+        $query->where(function($q) use ($term) {
+            $q->where('Nom', 'like', '%' . $term . '%')
+              ->orWhere('Description', 'like', '%' . $term . '%')
+              ->orWhere('Categorie', 'like', '%' . $term . '%');
+        });
+    }
+
+    $produits = $query->orderBy('DateAjout', 'desc')->get();
+    return view('PagePrincipale', compact('produits'));
 });
 
 Route::get('/formulaireVendeur', function () {
@@ -122,9 +138,24 @@ Route::post('/deconnexion', function (Request $request) {
 /*Route::get('/welcome', function () {
     return view('Welcome');
 });*/
-Route::get('/PagePrincipale', function () {
-    return view('PagePrincipale');
+Route::get('/PagePrincipale', function (Request $request) {
+    $query = Produit::query();
+    if ($request->filled('categorie')) {
+        $query->where('Categorie', $request->categorie);
+    }
+    if ($request->filled('recherche')) {
+        $term = $request->recherche;
+        $query->where(function($q) use ($term) {
+            $q->where('Nom', 'like', '%' . $term . '%')
+              ->orWhere('Description', 'like', '%' . $term . '%')
+              ->orWhere('Categorie', 'like', '%' . $term . '%');
+        });
+    }
+    $produits = $query->orderBy('DateAjout', 'desc')->get();
+    return view('PagePrincipale', compact('produits'));
 });
+// Public product detail route (accessible sans authentification vendeur)
+Route::get('/produit/{id}', [ProduitController::class, 'publicShow'])->name('produit.public');
 // Additional SPA pages used by PageVendeur sidebar
 Route::get('/analyses', [AnalysesController::class, 'index']);
 
