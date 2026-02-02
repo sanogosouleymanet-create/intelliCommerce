@@ -15,7 +15,7 @@ return new class extends Migration
         $table->id('idProduit'); // AUTO_INCREMENT
 
         $table->string('Nom', 45);
-        $table->string('Description', 45);
+        $table->string('Description', 800);
         $table->double('Prix');
         $table->integer('Stock');
         $table->string('Categorie', 45);

@@ -34,6 +34,6 @@ class AnalysesController extends Controller
             return ['nom' => $prod?->Nom ?? 'Produit #'.$p->Produit_idProduit, 'ventes' => (int)$p->total];
         });
 
-        return view('analyses.index', compact('vendeur','produitsCount','commandesCount','ventes30','topProducts'));
+        return view('vendeurs.analyses.index', compact('vendeur','produitsCount','commandesCount','ventes30','topProducts'));
     }
 }

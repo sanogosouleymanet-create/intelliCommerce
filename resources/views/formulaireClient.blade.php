@@ -41,7 +41,7 @@
         </div>
         </fieldset>
         <div class="form-actions">
-            <a href="{{('/ConnexionClient')}}" class="button retour">Retour</a>
+            <a href="{{('/Connexion')}}" class="button retour">Retour</a>
             <input type="submit" value="Envoyer" class="button envoyer">
         </div>
     </form>
