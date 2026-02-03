@@ -153,12 +153,10 @@ Route::get('/formulaireClient', function () {
 Route::post('/formulaireClient', [ClientController::class, 'FormulaireClient']);
 
 
-Route::get('/', function () {
-    return view('PagePrincipale');
-});
-
 // Unified Connexion page
 Route::get('/Connexion', [App\Http\Controllers\AuthController::class, 'showLogin'])->name('connexion');
+// alias for Laravel default middleware that redirects to route('login')
+Route::get('/login', function(){ return redirect()->route('connexion'); })->name('login');
 Route::post('/Connexion', [App\Http\Controllers\AuthController::class, 'login'])->name('connexion.post');
 
 // Backwards compatible routes redirecting to unified Connexion
@@ -174,8 +172,14 @@ Route::post('/ConnexionClient', function (Request $request) { return redirect()-
 // Client page (protected) — named PageClient
 Route::get('/PageClient', function (Request $request) {
     $client = Auth::guard('client')->user();
+    // Support AJAX partials via ?view=dashboard
     if ($request->ajax()) {
-        return view('clients.profile', compact('client'));
+        $view = $request->query('view', 'dashboard');
+        if ($view === 'dashboard') {
+            return view('clients.dashboard', compact('client'));
+        }
+        // default AJAX response for PageClient is dashboard partial
+        return view('clients.dashboard', compact('client'));
     }
     return view('PageClient', compact('client'));
 })->middleware('auth:client')->name('PageClient');
@@ -207,6 +211,63 @@ Route::middleware(['auth:client'])->group(function () {
         }
         return view('PageClient', ['partial' => 'clients.parametres', 'client' => $client]);
     });
+
+    // Client settings POST (supports AJAX)
+    Route::post('/parametres', function(Request $request){
+        $client = Auth::guard('client')->user();
+        if (!$client) {
+            if ($request->ajax()) return response()->json(['success' => false, 'message' => 'Non authentifié'], 401);
+            return redirect()->route('connexion');
+        }
+
+        $data = $request->only(['email', 'TelClient', 'Nom', 'Prenom', 'current_password', 'new_password', 'new_password_confirmation']);
+        $rules = [
+            'email' => 'nullable|email',
+            'TelClient' => 'nullable|string|max:30',
+            'Nom' => 'nullable|string|max:100',
+            'Prenom' => 'nullable|string|max:100',
+        ];
+
+        // If user is changing password, require and validate password fields
+        if ($request->filled('new_password')) {
+            $rules['current_password'] = 'required|string';
+            $rules['new_password'] = 'required|string|min:8|confirmed';
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make($data, $rules);
+
+        if ($validator->fails()) {
+            if ($request->ajax()) return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+            return back()->withErrors($validator)->withInput();
+        }
+
+        // If changing password, verify current password
+        if ($request->filled('new_password')) {
+            if (!\Illuminate\Support\Facades\Hash::check($data['current_password'] ?? '', $client->MotDePasse)) {
+                if ($request->ajax()) return response()->json(['success' => false, 'message' => 'Mot de passe actuel incorrect.'], 422);
+                return back()->withErrors(['current_password' => 'Mot de passe actuel incorrect.']);
+            }
+            $client->MotDePasse = \Illuminate\Support\Facades\Hash::make($data['new_password']);
+        }
+
+        $client->fill($request->only(['email', 'TelClient', 'Nom', 'Prenom']));
+        $client->save();
+
+        if ($request->ajax()) return response()->json(['success' => true, 'message' => 'Enregistré', 'client' => $client]);
+        return redirect()->back()->with('status', 'Paramètres mis à jour');
+
+    })->middleware('auth:client');
+
+    // Verify current password before showing new password fields (AJAX helper)
+    Route::post('/parametres/verify-password', function(Request $request){
+        $client = Auth::guard('client')->user();
+        if (!$client) return response()->json(['success' => false, 'message' => 'Non authentifié'], 401);
+        $request->validate(['current_password' => 'required|string']);
+        if (\Illuminate\Support\Facades\Hash::check($request->current_password, $client->MotDePasse)) {
+            return response()->json(['success' => true]);
+        }
+        return response()->json(['success' => false, 'message' => 'Mot de passe incorrect'], 422);
+    })->middleware('auth:client');
 });
 
 // Admin authentication and dashboard
@@ -257,8 +318,8 @@ Route::get('/produit/{id}', [ProduitController::class, 'publicShow'])->name('pro
 // Additional SPA pages used by PageVendeur sidebar
 Route::get('/analyses', [AnalysesController::class, 'index']);
 
-Route::get('/parametres', [VendeurController::class, 'parametres'])->middleware('auth:vendeur');
-Route::post('/parametres', [VendeurController::class, 'updateSettings'])->middleware('auth:vendeur');
+Route::get('/vendeur/parametres', [VendeurController::class, 'parametres'])->middleware('auth:vendeur');
+Route::post('/vendeur/parametres', [VendeurController::class, 'updateSettings'])->middleware('auth:vendeur');
 
 Route::get('/messages', function () {
     $vendeur = Auth::guard('vendeur')->user();

@@ -142,7 +142,7 @@
             const token = document.querySelector('input[name="_token"]')?.value;
             if (token) data.set('_token', token);
 
-            fetch('/parametres', {
+            fetch('/vendeur/parametres', {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 body: data,
