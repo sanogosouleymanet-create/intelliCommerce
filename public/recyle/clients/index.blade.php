@@ -1,15 +1,3 @@
-<header class="header">
-    <h1>Clients</h1>
-    <div class="account">
-        <i class="fa-solid fa-user"></i>
-        @if(isset($vendeur->Prenom) || isset($vendeur->Nom))
-            {{ trim(($vendeur->Prenom ?? '') . ' ' . ($vendeur->Nom ?? '')) }}
-        @else
-            Mon Compte
-        @endif
-    </div>
-</header>
-
 <section class="orders-header">
     <!--<div>
         <h2>Liste des clients</h2>
@@ -78,7 +66,7 @@
 
 <style>
     /* Styles spécifiques à la page Clients 
-@import url('StylePageVendeur.css');*/
+@import url('StyleVendeurProduits.css');*/
 
 .clients-list .orders-table td, .clients-list .orders-table th{
     color: #e6eef8;

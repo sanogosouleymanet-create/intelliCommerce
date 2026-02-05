@@ -25,10 +25,10 @@ Route::middleware(['auth:vendeur'])->group(function () {
         $vendeur = Auth::guard('vendeur')->user();
         $produits = $vendeur->produits;
         if ($request->ajax()) {
-            return view('vendeurs.produits.index', compact('vendeur', 'produits'));
+            return view('vendeurs.produits', compact('vendeur', 'produits'));
         } else {
             return view('PageVendeur', [
-                'partial' => 'vendeurs.produits.index',
+                'partial' => 'vendeurs.produits',
                 'vendeur' => $vendeur,
                 'produits' => $produits
             ]);
@@ -38,10 +38,10 @@ Route::middleware(['auth:vendeur'])->group(function () {
         $vendeur = Auth::guard('vendeur')->user();
         $commandes = $vendeur->commandes ?? [];
         if ($request->ajax()) {
-            return view('vendeurs.commandes.index', compact('vendeur', 'commandes'));
+            return view('vendeurs.commandes', compact('vendeur', 'commandes'));
         } else {
             return view('PageVendeur', [
-                'partial' => 'vendeurs.commandes.index',
+                'partial' => 'vendeurs.commandes',
                 'vendeur' => $vendeur,
                 'commandes' => $commandes
             ]);
@@ -51,10 +51,10 @@ Route::middleware(['auth:vendeur'])->group(function () {
         $vendeur = Auth::guard('vendeur')->user();
         $clients = $vendeur->clients ?? [];
         if ($request->ajax()) {
-            return view('vendeurs.clients.index', compact('vendeur', 'clients'));
+            return view('vendeurs.clients', compact('vendeur', 'clients'));
         } else {
             return view('PageVendeur', [
-                'partial' => 'vendeurs.clients.index',
+                'partial' => 'vendeurs.clients',
                 'vendeur' => $vendeur,
                 'clients' => $clients
             ]);
@@ -66,7 +66,7 @@ Route::middleware(['auth:vendeur'])->group(function () {
             return app(\App\Http\Controllers\AnalysesController::class)->index($request);
         } else {
             return view('PageVendeur', [
-                'partial' => 'vendeurs.analyses.index',
+                'partial' => 'vendeurs.analyses',
                 'vendeur' => $vendeur
             ]);
         }
@@ -75,10 +75,10 @@ Route::middleware(['auth:vendeur'])->group(function () {
         $vendeur = Auth::guard('vendeur')->user();
         $messages = $vendeur->messages ?? [];
         if ($request->ajax()) {
-            return view('vendeurs.messages.index', compact('vendeur', 'messages'));
+            return view('vendeurs.messages', compact('vendeur', 'messages'));
         } else {
             return view('PageVendeur', [
-                'partial' => 'vendeurs.messages.index',
+                'partial' => 'vendeurs.messages',
                 'vendeur' => $vendeur,
                 'messages' => $messages
             ]);
@@ -90,7 +90,7 @@ Route::middleware(['auth:vendeur'])->group(function () {
             return app(\App\Http\Controllers\VendeurController::class)->parametres($request);
         } else {
             return view('PageVendeur', [
-                'partial' => 'vendeurs.parametres.index',
+                'partial' => 'vendeurs.parametres',
                 'vendeur' => $vendeur
             ]);
         }
@@ -143,11 +143,6 @@ Route::get('/formulaireVendeur', function () {
     return view('formulaireVendeur');
 });
 Route::post('/formulaireVendeur', [VendeurController::class, 'FormulaireVendeur']);
-Route::get('/AjouterProduit', function () {
-    return view('produits.AjouterProduit');
-});
-Route::get('/PageVendeur', [PageVendeurController::class, 'index'])->name('PageVendeur')->middleware('auth:vendeur');
-Route::post('/AjouterProduit', [ProduitController::class, 'AjouterProduit']);
 
 Route::get('/formulaireClient', function () {
     return view('formulaireClient');
@@ -334,3 +329,6 @@ Route::get('/messages', function () {
     $messages = $vendeur ? $vendeur->messages()->latest('DateEnvoi')->get() : collect();
     return view('messages.index', compact('messages', 'vendeur'));
 });
+
+// AJAX helper: mark message as read for authenticated vendeur
+Route::post('/vendeur/messages/{id}/lire', [App\Http\Controllers\MessageController::class, 'markAsRead'])->middleware('auth:vendeur');

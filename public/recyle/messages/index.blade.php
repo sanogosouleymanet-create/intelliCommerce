@@ -1,14 +1,3 @@
-<header class="header">
-    <h1>Messages</h1>
-    <div class="account">
-        <i class="fa-solid fa-user"></i>
-        @if(isset($vendeur->Prenom) || isset($vendeur->Nom))
-            {{ trim(($vendeur->Prenom ?? '') . ' ' . ($vendeur->Nom ?? '')) }}
-        @else
-            Mon Compte
-        @endif
-    </div>
-</header>
 <section class="card">
     @if($messages->count())
         <ul class="messages-list">

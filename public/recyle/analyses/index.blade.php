@@ -1,15 +1,3 @@
-<header class="header">
-    <h1>Analyses</h1>
-    <div class="account">
-        <i class="fa-solid fa-user"></i>
-        @if(isset($vendeur->Prenom) || isset($vendeur->Nom))
-            {{ trim(($vendeur->Prenom ?? '') . ' ' . ($vendeur->Nom ?? '')) }}
-        @else
-            Mon Compte
-        @endif
-    </div>
-</header>
-
 <section class="card">
     <p class="small-muted">Vue récapitulative des performances de la boutique.</p>
 
@@ -41,7 +29,7 @@
 
 <style>
     /* Styles spécifiques à la page Analyses */
-@import url('StylePageVendeur.css');
+@import url('StyleVendeurProduits.css');
 
 .cards-grid{ display:flex; gap:12px; margin-top:12px; }
 .summary-card{ background:#07263b; color:#fff; padding:12px; border-radius:8px; }
