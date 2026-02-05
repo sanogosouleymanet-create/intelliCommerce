@@ -46,10 +46,22 @@ class VendeurController extends Controller
             return redirect('/PagePrincipale');
     }
 
-    public function parametres()
+    public function parametres(Request $request)
     {
         $vendeur = Auth::guard('vendeur')->user();
-        return view('vendeurs.parametres.index', compact('vendeur'));
+
+        // Detect AJAX/partial requests and return only the partial when appropriate
+        $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest' || $request->ajax() || $request->wantsJson();
+
+        if ($isAjax) {
+            return view('vendeurs.parametres', compact('vendeur'));
+        }
+
+        // Full page request -> render PageVendeur with the parametres partial
+        return view('PageVendeur', [
+            'partial' => 'vendeurs.parametres',
+            'vendeur' => $vendeur,
+        ]);
     }
 
     public function updateSettings(Request $request)

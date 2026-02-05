@@ -1,20 +1,5 @@
-<header class="header">
-    <h1>Liste des produits</h1>
-    <div class="account">
-        <i class="fa-solid fa-user"></i>
-        @if(isset($vendeur->Prenom) || isset($vendeur->Nom))
-            {{ trim(($vendeur->Prenom ?? '') . ' ' . ($vendeur->Nom ?? '')) }}
-        @else
-            Mon Compte
-        @endif
-    </div>
-</header>
-
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-    // Si cette vue est rendue dans le contexte de PageVendeur (URL initiale = PageVendeur),
-    // on répare l'URL de la barre d'adresse pour pointer vers /vendeur/produits afin que
-    // le rafraîchissement du navigateur recharge la bonne route et que les handlers AJAX fonctionnent.
+<script>(function(){
+    // Run immediately (and also safe to re-run when injected via AJAX)
     try{
         const pageVendeurPath = '{{ route("PageVendeur") }}';
         const produitsPath = '{{ url("/vendeur/produits") }}';
@@ -25,11 +10,10 @@ document.addEventListener('DOMContentLoaded', function(){
         // ignore si les helpers Blade ne sont pas disponibles côté client
         console.debug('No route repair needed', e);
     }
-});
-</script>
+})();</script>
 
 <!-- Bouton d'ouverture du modal d'ajout (onclick inline pour fonctionner lors de chargement AJAX) -->
-<button id="openAdd" class="Ajout" onclick="document.getElementById('addModal').style.display='flex';document.getElementById('addModal').setAttribute('aria-hidden','false');">+</button>
+<button id="openAdd" class="btn btn-primary Ajout" onclick="document.getElementById('addModal').style.display='flex';document.getElementById('addModal').setAttribute('aria-hidden','false');" aria-label="Ajouter un produit">+</button>
 
 <!-- Modal d'ajout de produit -->
 <div id="addModal" class="modal" aria-hidden="true" style="display:none;" onclick="if(event.target===this){this.style.display='none';this.setAttribute('aria-hidden','true');}">
@@ -131,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     const container = document.getElementById('product-list');
                     const loader = container ? container.querySelector('#loading') : null;
                     if(loader) loader.style.display = 'flex';
-                    const res = await fetch(fetchUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+                    const res = await fetch(fetchUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin'});
                     if(res.ok){
                         const html = await res.text();
                         if(container){
@@ -169,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     const fetchUrl = base + (qs ? (qs + '&partial=1') : '?partial=1');
                     (async function(){
                         try{
-                            const res = await fetch(fetchUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+                            const res = await fetch(fetchUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin'});
                             if(res.ok){
                                 const html = await res.text();
                                 const container = document.getElementById('product-list');
@@ -199,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 const loader = container ? container.querySelector('#loading') : null;
                 if(loader) loader.style.display = 'flex';
                 try{
-                    const res = await fetch(fetchUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+                    const res = await fetch(fetchUrl, {headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin'});
                     if(res.ok){
                         const html = await res.text();
                         if(container){
@@ -258,14 +242,14 @@ document.addEventListener('DOMContentLoaded', function(){
                 if(!anchor) return;
                 e.preventDefault();
                 const url = anchor.href;
-                fetch(url, { headers: {'X-Requested-With': 'XMLHttpRequest'} })
+                fetch(url, { headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin' })
                     .then(res => { if(!res.ok){ window.location.href = url; throw new Error('nav'); } return res.text(); })
                     .then(html => {
                         // If PageVendeur.replaceMainContent exists, use it so scripts are executed
                         if(typeof replaceMainContent === 'function'){
                             replaceMainContent(html);
                         } else {
-                            const main = document.querySelector('.main-content');
+                            const main = document.querySelector('#main-content') || document.querySelector('main .container .row section.col-md-9');
                             if(main){
                                 const tmp = document.createElement('div'); tmp.innerHTML = html;
                                 const inner = tmp.querySelector('#product-list') ? tmp.querySelector('#product-list') : tmp;
@@ -293,7 +277,8 @@ document.addEventListener('DOMContentLoaded', function(){
                     const res = await fetch(addForm.action || '/produits', {
                         method: 'POST',
                         body: fd,
-                        headers: {'X-Requested-With': 'XMLHttpRequest'}
+                        headers: {'X-Requested-With': 'XMLHttpRequest'},
+                        credentials: 'same-origin'
                     });
                     if(res.ok){
                         const data = await res.json();
@@ -302,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function(){
                         if(modal){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); }
                         addForm.reset();
                         // refresh partial list
-                        const listRes = await fetch(window.location.pathname + (window.location.search ? (window.location.search + '&partial=1') : '?partial=1'), {headers:{'X-Requested-With':'XMLHttpRequest'}});
+                        const listRes = await fetch(window.location.pathname + (window.location.search ? (window.location.search + '&partial=1') : '?partial=1'), {headers:{'X-Requested-With':'XMLHttpRequest'}, credentials: 'same-origin'});
                         if(listRes.ok){
                             const html = await listRes.text();
                             const container = document.getElementById('product-list');
@@ -334,265 +319,3 @@ document.addEventListener('DOMContentLoaded', function(){
             });
         })();
     </script>
- <style>
-    .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-}
-.account {
-    background: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-h1 {
-    color: white;
-}
-.Ajout {
-    font-size: 24px;
-    text-decoration: none;
-    background-color: #030c25;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 50%;
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    text-align: center;
-    z-index: 1000;
-}
-.modal{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.5);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:1000;
-}
-
-/*Modal styles (minimal)*/
-.modal-content{
-    background:#fff;
-    padding:20px;
-    border-radius:8px;
-    max-width:600px;
-    width:90%;
-    position:relative;
-}
-.modal-content h2
-{
-    margin-top:0
-}
-.close{
-    position:absolute;
-    top:8px;
-    right:8px;
-    border:none;
-    background:transparent;
-    font-size:22px;
-    cursor:pointer;
-}
-.Ajout{
-    font-size:20px;
-    padding:6px 12px;
-    border-radius:6px;
-    cursor:pointer;
-    width:60px;
-    height:60px;
-    border-radius:50%;
-}
-.modal-content label{
-    display:block;
-    margin-top:8px;
-}
-.modal-content input,.modal-content textarea,.modal-content select{
-    width:100%;
-    padding:6px;
-    margin-top:4px;
-}
-
-.bouton-rond{
-    
-    background-color:#030c25;
-    color:white;
-    font-size:24px;
-    text-align:center;
-    line-height:40px;
-    position:fixed;
-    bottom:20px;
-    right:20px;
-    cursor:pointer;
-}
-.produit{
-    background-color: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) ;
-    display: inline-block;
-    width: 300px;
-    height: 250px;
-    text-align: center;
-    
-    border-radius: 8px;
-    padding: 15px;
-    margin: 15px;
-    color: black;
-}   
-.produit-image {
-    position: center;
-    width: 200px;
-    height: 120px;
-    /*object-fit: cover;*/
-    margin-bottom: 10px;
-}
-.produit-image-show{
-    position: center;
-    width: 225px;
-    height: 225px;
-    /*object-fit: cover;*/
-    margin-bottom: 10px;
-}
-
-/* Conteneur principal */
-.produits-filtres {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-
-    background-color: #ffffff;
-    padding: 15px 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    margin-bottom: 25px;
-}
-
-.orders-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:12px;
-}
-
-/* Champ de recherche */
-.search-input {
-    padding: 10px 14px;
-    width: 250px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.3s ease;
-}
-
-.search-input:focus {
-    border-color: #007bff;
-}
-
-/* Select (catégorie, prix, etc.) */
-.filter-select {
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-    cursor: pointer;
-    background-color: #fff;
-    transition: border-color 0.3s ease;
-}
-
-.filter-select:hover,
-.filter-select:focus {
-    border-color: #007bff;
-}
-
-/* Bouton */
-.filter-btn {
-    padding: 10px 18px;
-    border-radius: 8px;
-    border: none;
-    background-color: #007bff;
-    color: #fff;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.filter-btn:hover {
-    background-color: #0056b3;
-    transform: translateY(-1px);
-}
-
-.btn-retirer {
-    padding: 10px 18px;
-    border-radius: 8px;
-    border: none;
-    
-    background-color: rgba(223, 21, 21, 0.897);
-    color: #fff;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-.btn-retirer:hover {
-    background-color: darkred;
-    transform: translateY(-1px);
-}
-
-
-@media (max-width: 768px) {
-    .produits-filtres {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .search-input,
-    .filter-select,
-    .filter-btn {
-        width: 100%;
-    }
-}
-
-/* Loading overlay and spinner */
-.loading-overlay{
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background: rgba(0,0,0,0.35);
-    z-index: 1000;
-}
-.loading-overlay .spinner{
-    width:40px;
-    height:40px;
-    border-radius:50%;
-    border:4px solid rgba(255,255,255,0.2);
-    border-top-color: #ffffff;
-    animation: spin 1s linear infinite;
-}
-@keyframes spin{
-    from{ transform: rotate(0deg); }
-    to{ transform: rotate(360deg); }
-}
-
-
-
-form#editForm{ 
-    max-width:600px; 
-    background:rgba(255,255,255,0.03); 
-    padding:16px; border-radius:8px; 
-}
-form#editForm label{ 
-    display:block; 
-    margin-top:8px; 
-    color:#dbeafe; 
-}
-form#editForm input{ 
-    width:100%; 
-    padding:8px; 
-    border-radius:6px; 
-    border:1px solid rgba(255,255,255,0.06); 
-}
- </style>
