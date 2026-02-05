@@ -1,32 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>window.isClientAuthenticated = @json(auth()->guard('client')->check());</script>
     <link rel ="stylesheet" href="{{ asset('css/StylePagePrincipale.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.8.0/fonts/remixicon.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ENjdO4Dr2bkBIFxQpeoA6VZ6bQZ6Y9o2e2Z1ZlFZC+0h5Y5n3/tf6Yb6Y1Y3pXx+" crossorigin="anonymous">
-    <style>
-        /* Product grid styling to match the provided screenshot */
-        .product-grid { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; padding-left:18px; }
-        .product-card { width:220px; box-shadow:0 2px 6px rgba(0,0,0,0.08); border-radius:6px; overflow:hidden; background:#fff; }
-        .product-card .card-img-top { width:100%; height:180px; object-fit:cover; display:block; }
-        .product-card .card-body { padding:8px 10px; height:140px; display:flex; flex-direction:column; }
-        .product-title { font-size:0.9rem; margin:0; line-height:1.1; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-        .product-price { font-weight:600; color:#1e88e5; }
-        .cart-btn { position:absolute; right:8px; bottom:8px; border-radius:50%; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; background:#fff; border:1px solid #eee; }
-        .product-meta { font-size:0.82rem; color:#666; }
-        @media (max-width:767px) { .product-card { width:100% !important; } .product-grid { gap:12px; } }
-        /* Note: left-side departments panel removed; header panel handled below */
-        /* Ensure header departments inner menu is hidden when collapsed */
-        .header-dpt.collapsed .dpt-menu { display: none !important; }
-        /* Search/category badges */
-        .search-info { display:flex; gap:12px; align-items:center; margin:12px 0 6px 6px; flex-wrap:wrap; }
-        .search-info .badge { background:#e8f4ff; color:#0b66d1; padding:6px 10px; border-radius:16px; font-weight:600; box-shadow:0 1px 0 rgba(0,0,0,0.03); }
-        .search-info .count { color:#333; font-weight:600; margin-left:6px; }
-        /* Megamenu active highlight */
-        a.menu-active, a.menu-active:hover { background:#0b66d1; color:#fff !important; padding:4px 8px; border-radius:4px; }
-    </style>
+    <!-- Styles moved to public/css/StylePagePrincipale.css -->
     <title>Site Intelli-Commerce</title>
 </head>
 <body>
@@ -57,10 +39,33 @@
                         <ul class="flexitem main-links">
                             <li class="main-links">
                                 @php
-                                    $admin = Auth::guard('administrateur')->user();
-                                    $vendeur = Auth::guard('vendeur')->user();
-                                    $client = Auth::guard('client')->user();
-                                @endphp
+                                        $admin = Auth::guard('administrateur')->user();
+                                        $vendeur = Auth::guard('vendeur')->user();
+                                        $client = Auth::guard('client')->user();
+
+                                        // compute cart count/total per user or guest (same logic as CartController::cartKey)
+                                        $cartCount = 0;
+                                        $cartTotal = 0;
+                                        if(auth()->guard('client')->check()){
+                                            $cartKey = 'cart_client_' . auth()->guard('client')->id();
+                                        } elseif(auth()->guard('vendeur')->check()){
+                                            $cartKey = 'cart_vendeur_' . auth()->guard('vendeur')->id();
+                                        } elseif(auth()->guard('administrateur')->check()){
+                                            $cartKey = 'cart_admin_' . auth()->guard('administrateur')->id();
+                                        } else {
+                                            $cartKey = 'cart_guest_' . session()->getId();
+                                        }
+                                        $cart = session($cartKey, []);
+                                        if(is_array($cart) && !empty($cart)){
+                                            $cartCount = array_sum($cart);
+                                            $prodIds = array_keys($cart);
+                                            $prods = \App\Models\Produit::whereIn('idProduit', $prodIds)->get()->keyBy('idProduit');
+                                            foreach($cart as $pid => $q){
+                                                $p = $prods->get($pid);
+                                                if($p) $cartTotal += ($p->Prix ?? 0) * $q;
+                                            }
+                                        }
+                                    @endphp
                                 @if($admin || $vendeur || $client)
                                     @php
                                         $user = $admin ?? $vendeur ?? $client;
@@ -108,16 +113,16 @@
                                                  <div class="row">
                                                      <h4>Vêtements femme</h4>
                                                      <ul>
-                                                         <li><a href="{{ url('/') }}?categorie={{ urlencode('Robes') }}">Robes</a></li>
-                                                         <li><a href="{{ url('/') }}?categorie={{ urlencode('Hauts & T-shirts') }}">Hauts & T-shirts</a></li>
-                                                         <li><a href="{{ url('/') }}?categorie={{ urlencode('Vestes et manteaux') }}">Vestes et manteaux</a></li>
-                                                         <li><a href="{{ url('/') }}?categorie={{ urlencode('Pantalons & capris') }}">Pantalons & capris</a></li>
-                                                         <li><a href="{{ url('/') }}?categorie={{ urlencode('Pulls') }}">Pulls</a></li>
-                                                         <li><a href="{{ url('/') }}?categorie={{ urlencode('Costumes') }}">Costumes</a></li>
-                                                         <li><a href="{{ url('/') }}?categorie={{ urlencode('Sweats à capuche & sweatshirts') }}">Sweats à capuche & sweatshirts</a></li>
-                                                         <li><a href="{{ url('/') }}?categorie={{ urlencode('Pyjamas & peignoirs') }}">Pyjamas & peignoirs</a></li>
-                                                         <li><a href="{{ url('/') }}?categorie={{ urlencode('Shorts') }}">Shorts</a></li>
-                                                         <li><a href="{{ url('/') }}?categorie={{ urlencode('Maillots de bain') }}">Maillots de bain</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Robes') }}">Robes</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Hauts & T-shirts') }}">Hauts & T-shirts</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Vestes et manteaux') }}">Vestes et manteaux</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Pantalons & capris') }}">Pantalons & capris</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Pulls') }}">Pulls</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Costumes') }}">Costumes</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Sweats à capuche & sweatshirts') }}">Sweats à capuche & sweatshirts</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Pyjamas & peignoirs') }}">Pyjamas & peignoirs</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Shorts') }}">Shorts</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Maillots de bain') }}">Maillots de bain</a></li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -125,13 +130,13 @@
                                                 <div class="row">
                                                     <h4>Bijoux</h4>
                                                     <ul>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Accessoires') }}">Accessoires</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Sacs & pochettes') }}">Sacs & pochettes</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Colliers') }}">Colliers</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Bagues') }}">Bagues</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Boucles d\'oreilles') }}">Boucles d'oreilles</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Bracelets') }}">Bracelets</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Bijoux de corps') }}">Bijoux de corps</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Accessoires') }}">Accessoires</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Sacs & pochettes') }}">Sacs & pochettes</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Colliers') }}">Colliers</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Bagues') }}">Bagues</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Boucles d\'oreilles') }}">Boucles d'oreilles</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Bracelets') }}">Bracelets</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Bijoux de corps') }}">Bijoux de corps</a></li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -139,15 +144,15 @@
                                                 <div class="row">
                                                     <h4>Beauté</h4>
                                                     <ul>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Accessoires de bain') }}">Accessoires de bain</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Soins de la peau') }}">Soins de la peau</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Kits spa & cadeaux') }}">Kits spa & cadeaux</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Maquillage & cosmétiques') }}">Maquillage & cosmétiques</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Huiles essentielles') }}">Huiles essentielles</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Savons & bombes de bain') }}">Savons & bombes de bain</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Soins capillaires') }}">Soins capillaires</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Masques pour le visage') }}">Masques pour le visage</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Parfums') }}">Parfums</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Accessoires de bain') }}">Accessoires de bain</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Soins de la peau') }}">Soins de la peau</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Kits spa & cadeaux') }}">Kits spa & cadeaux</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Maquillage & cosmétiques') }}">Maquillage & cosmétiques</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Huiles essentielles') }}">Huiles essentielles</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Savons & bombes de bain') }}">Savons & bombes de bain</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Soins capillaires') }}">Soins capillaires</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Masques pour le visage') }}">Masques pour le visage</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Parfums') }}">Parfums</a></li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -155,18 +160,18 @@
                                                 <div class="row">
                                                     <h4>Meilleures marques</h4>
                                                     <ul class="Women-brands">
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Nike') }}">Nike</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Louis Vuitton') }}">Louis Vuitton</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Chanel') }}">Chanel</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Dior') }}">Dior</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Gucci') }}">Gucci</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Prada') }}">Prada</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Hermès') }}">Hermès</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Rolex') }}">Rolex</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Cartier') }}">Cartier</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Givenchy') }}">Givenchy</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('Sara') }}">Sara</a></li>
-                                                        <li><a href="{{ url('/') }}?categorie={{ urlencode('H&M') }}">H&M</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Nike') }}">Nike</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Louis Vuitton') }}">Louis Vuitton</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Chanel') }}">Chanel</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Dior') }}">Dior</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Gucci') }}">Gucci</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Prada') }}">Prada</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Hermès') }}">Hermès</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Rolex') }}">Rolex</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Cartier') }}">Cartier</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Givenchy') }}">Givenchy</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Sara') }}">Sara</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('H&M') }}">H&M</a></li>
                                                     </ul>
                                                     <a href="#" class="view-all">Voir toutes les marques <i class="ri-arrow-right-line"></i></a>
                                                 </div>
@@ -205,18 +210,12 @@
                         <ul class="flexitem second-links">
                             <li class="mobile-hide"><a href="#">
                                 <div class="icon-large"><i class="ri-heart-line"></i></div>
-                                <div class="fly-item"><span class="item-number">0</span></div>
+                                <div class="fly-item"><span class="item-number">{{ $cartCount }}</span></div>
                             </a></li>
                             <li><a href="#" class="iscart">
                                 <div class="icon-large"><i class="ri-shopping-cart-line"></i></div>
-                                    <div class="fly-item"><span class="item-number">0</span></div>
+                                    <div class="fly-item"><span class="item-number">{{ $cartCount }}</span></div>
                                 
-                            </a></li>
-                            <li><a href="#">
-                                <div class="icon-text">
-                                    <div class="mini-text">Total</div>
-                                    <div class="cart-total">0 FCFA</div>
-                                </div>
                             </a></li>  
                         </ul>
                     </div>
@@ -231,7 +230,7 @@
                         <div id="headerDepartments" class="dpt-cat header-dpt collapsed">
                             <div class="dpt-head">
                                 <div class="main-text">Tous les Departements</div>
-                                <div class="mini-text mobile-hide">Total 5000 Produits</div>
+                                <div class="mini-text mobile-hide">Total {{ isset($produits) ? $produits->count() : \App\Models\Produit::count() }} Produits</div>
                                 <a href="#" class="dpt-trigger mobile-hide" aria-expanded="false">
                                     <i class="ri-menu-3-line ri-xl"></i>
                                 </a>
@@ -394,7 +393,7 @@
             <div class="container py-4">
                 <div class="row">
                     <section class="col-12">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+                        <!--<div class="d-flex justify-content-between align-items-center mb-3">
                                 <h2 class="m-0">Nos produits</h2>
                             </div>
                         </div>
@@ -406,10 +405,141 @@
                                 <span class="badge">Recherche: « {{ request('recherche') }} »</span>
                             @endif
                             <span class="count">{{ isset($produits) ? $produits->count() : 0 }} résultat(s)</span>
-                        </div>
+                        </div>-->
 
                         @if(isset($produits) && $produits->count())
-                            <div class="product-grid">
+                            {{-- Section avant la liste des produits : bannière + listes "Les plus vendus" / "Les plus recherchés" --}}
+                            @php
+                                // Top 5 produits les plus vendus via la table pivot Produitcommande
+                                $topVendusIds = [];
+                                if(\Illuminate\Support\Facades\Schema::hasTable('Produitcommande')){
+                                    $topVendusIds = \Illuminate\Support\Facades\DB::table('Produitcommande')
+                                        ->select('Produit_idProduit', \Illuminate\Support\Facades\DB::raw('SUM(Quantite) as total'))
+                                        ->groupBy('Produit_idProduit')
+                                        ->orderByDesc('total')
+                                        ->limit(5)
+                                        ->pluck('Produit_idProduit')
+                                        ->toArray();
+                                }
+                                $topVendus = collect([]);
+                                if(!empty($topVendusIds)){
+                                    $prodMap = \App\Models\Produit::whereIn('idProduit', $topVendusIds)->get()->keyBy('idProduit');
+                                    $topVendus = collect($topVendusIds)->map(function($id) use($prodMap){ return $prodMap->get($id); })->filter();
+                                }
+
+                                // Top recherchés : si une table de logs de recherche existe, l'utiliser
+                                $topRecherches = collect([]);
+                                $searchFallback = false;
+                                if(\Illuminate\Support\Facades\Schema::hasTable('recherches')){
+                                    $topSearchIds = \Illuminate\Support\Facades\DB::table('recherches')
+                                        ->select('produit_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as cnt'))
+                                        ->groupBy('produit_id')
+                                        ->orderByDesc('cnt')
+                                        ->limit(5)
+                                        ->pluck('produit_id')
+                                        ->toArray();
+                                    if(!empty($topSearchIds)){
+                                        $map = \App\Models\Produit::whereIn('idProduit', $topSearchIds)->get()->keyBy('idProduit');
+                                        $topRecherches = collect($topSearchIds)->map(fn($id) => $map->get($id))->filter();
+                                    }
+                                }
+                                if($topRecherches->isEmpty()){
+                                    $topRecherches = $topVendus; // fallback
+                                    $searchFallback = true;
+                                }
+                            @endphp
+
+                            <div id="mainContent">
+                            <div class="pre-products" style="display:flex;gap:18px;align-items:flex-start;margin:12px 6px;">
+                                <div class="hero" style="flex:1;background:#0b66d1;color:#fff;border-radius:8px;padding:20px;min-height:140px;display:flex;flex-direction:column;justify-content:center;">
+                                    <h2 style="margin:0 0 8px 0">Offres du jour</h2>
+                                    <p style="margin:0 0 12px 0;opacity:0.95">Profitez des meilleures offres et réductions sur une sélection de produits populaires.</p>
+                                    <a href="{{ url('/') }}?categorie={{ urlencode('Meilleures ventes') }}" class="btn btn-light" style="width:170px">Voir les offres</a>
+                                </div>
+
+                                <div style="width:340px;display:flex;flex-direction:column;gap:12px;">
+                                    <div class="top-list" style="background:#fff;padding:12px;border-radius:8px;">
+                                        <h5 style="margin:0 0 8px 0">Les plus vendus</h5>
+                                        @if($topVendus->isEmpty())
+                                            <div class="text-muted">Aucun produit vendu récemment.</div>
+                                        @else
+                                            @foreach($topVendus as $p)
+                                                <div class="item" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+                                                    @php
+                                                        $img = trim((string)($p->Image ?? ''));
+                                                        $imgUrl = 'https://via.placeholder.com/80x60?text=No';
+                                                        if($img !== ''){
+                                                            if(preg_match('/^https?:\/\//i', $img)){
+                                                                $imgUrl = $img;
+                                                            } elseif(\Illuminate\Support\Facades\Storage::exists('public/'.$img)){
+                                                                $imgUrl = asset('storage/'.$img);
+                                                            } elseif(file_exists(public_path($img))){
+                                                                $imgUrl = asset($img);
+                                                            } elseif(file_exists(public_path('images/'.basename($img)))){
+                                                                $imgUrl = asset('images/'.basename($img));
+                                                            }
+                                                        }
+                                                    @endphp
+                                                    @php
+                                                        $dataName = e($p->Nom);
+                                                        $dataDesc = e($p->Description ?? '');
+                                                        $dataPrice = number_format($p->Prix,0,',',' ') . ' FCFA';
+                                                        $dataImg = $imgUrl;
+                                                    @endphp
+                                                    <a href="#" class="product-open" data-id="{{ $p->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}"><img src="{{ $imgUrl }}" alt="{{ $p->Nom }}" style="width:64px;height:48px;object-fit:cover;border-radius:4px;"></a>
+                                                    <div style="flex:1;font-size:0.92rem">
+                                                        <a href="#" class="product-open" data-id="{{ $p->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" style="color:#222;font-weight:700">{{ $p->Nom }}</a>
+                                                        <div style="color:#1e88e5;font-weight:700">{{ number_format($p->Prix,0,',',' ') }} FCFA</div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        @endif
+                                    </div>
+
+                                    <div class="top-list" style="background:#fff;padding:12px;border-radius:8px;">
+                                        <h5 style="margin:0 0 8px 0">Les plus recherchés</h5>
+                                        @if($topRecherches->isEmpty())
+                                            <div class="text-muted">Aucune donnée de recherche disponible.</div>
+                                        @else
+                                            @foreach($topRecherches as $p)
+                                                <div class="item" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+                                                    @php
+                                                        $img = trim((string)($p->Image ?? ''));
+                                                        $imgUrl = 'https://via.placeholder.com/80x60?text=No';
+                                                        if($img !== ''){
+                                                            if(preg_match('/^https?:\/\//i', $img)){
+                                                                $imgUrl = $img;
+                                                            } elseif(\Illuminate\Support\Facades\Storage::exists('public/'.$img)){
+                                                                $imgUrl = asset('storage/'.$img);
+                                                            } elseif(file_exists(public_path($img))){
+                                                                $imgUrl = asset($img);
+                                                            } elseif(file_exists(public_path('images/'.basename($img)))){
+                                                                $imgUrl = asset('images/'.basename($img));
+                                                            }
+                                                        }
+                                                    @endphp
+                                                    @php
+                                                        $dataName = e($p->Nom);
+                                                        $dataDesc = e($p->Description ?? '');
+                                                        $dataPrice = number_format($p->Prix,0,',',' ') . ' FCFA';
+                                                        $dataImg = $imgUrl;
+                                                    @endphp
+                                                    <a href="#" class="product-open" data-id="{{ $p->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}"><img src="{{ $imgUrl }}" alt="{{ $p->Nom }}" style="width:64px;height:48px;object-fit:cover;border-radius:4px;"></a>
+                                                    <div style="flex:1;font-size:0.92rem">
+                                                        <a href="#" class="product-open" data-id="{{ $p->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" style="color:#222;font-weight:700">{{ $p->Nom }}</a>
+                                                        <div style="color:#1e88e5;font-weight:700">{{ number_format($p->Prix,0,',',' ') }} FCFA</div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        @endif
+                                        @if(!empty($searchFallback) && $searchFallback)
+                                            <div class="text-muted" style="font-size:0.82rem">(Données de recherche indisponibles — affichage des plus vendus)</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                                <div class="product-grid">
                                 @foreach($produits as $produit)
                                     <div class="product-card card">
                                         <div class="position-relative">
@@ -441,18 +571,48 @@
                                             </button>
                                         </div>
                                         <div class="card-body">
-                                            <h6 class="product-title">{{ $produit->Nom }}</h6>
+                                            @php
+                                                $dataName = e($produit->Nom);
+                                                $dataDesc = e($produit->Description ?? '');
+                                                $dataPrice = number_format($produit->Prix, 0, ',', ' ') . ' FCFA';
+                                                $dataImg = $imgUrl;
+                                                $vendeur = $produit->vendeur ?? null;
+                                                $vendorName = e($vendeur->NomBoutique ?? ($vendeur->Nom . ' ' . ($vendeur->Prenom ?? '')));
+                                                $vendorAddress = e($vendeur->Adresse ?? '');
+                                                // produits similaires (même catégorie)
+                                                $similar = \App\Models\Produit::where('Categorie', $produit->Categorie)
+                                                    ->where('idProduit', '!=', $produit->idProduit)
+                                                    ->limit(4)
+                                                    ->get(['idProduit','Nom','Prix','Image'])
+                                                    ->map(function($s){
+                                                        $img = trim((string)($s->Image ?? ''));
+                                                        $imgUrl = 'https://via.placeholder.com/120x90?text=No';
+                                                        if($img !== ''){
+                                                            if(preg_match('/^https?:\/\//i', $img)){
+                                                                $imgUrl = $img;
+                                                            } elseif(\Illuminate\Support\Facades\Storage::exists('public/'.$img)){
+                                                                $imgUrl = asset('storage/'.$img);
+                                                            } elseif(file_exists(public_path($img))){
+                                                                $imgUrl = asset($img);
+                                                            } elseif(file_exists(public_path('images/'.basename($img)))){
+                                                                $imgUrl = asset('images/'.basename($img));
+                                                            }
+                                                        }
+                                                        return ['id' => $s->idProduit, 'name' => $s->Nom, 'price' => number_format($s->Prix,0,',',' ') . ' FCFA', 'img' => $imgUrl];
+                                                    })->toArray();
+                                                $dataSimilar = e(json_encode($similar));
+                                            @endphp
+                                            <h6 class="product-title"><a href="#" class="product-open" data-id="{{ $produit->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" data-vendor-name="{{ $vendorName }}" data-vendor-address="{{ $vendorAddress }}" data-stock="{{ $produit->Stock ?? 0 }}" data-category="{{ $produit->Categorie ?? '' }}" data-similar='@json($similar)'>{{ $produit->Nom }}</a></h6>
                                             <p class="product-meta mb-2">{{ \Illuminate\Support\Str::limit($produit->Description, 60) }}</p>
                                             <div class="mt-auto d-flex justify-content-between align-items-center">
                                                 <div class="product-price">{{ number_format($produit->Prix, 0, ',', ' ') }} FCFA</div>
-                                                <a href="/produit/{{ $produit->idProduit }}" class="btn btn-sm btn-outline-secondary">Voir</a>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary product-open" data-id="{{ $produit->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" data-vendor-name="{{ $vendorName }}" data-vendor-address="{{ $vendorAddress }}" data-stock="{{ $produit->Stock ?? 0 }}" data-category="{{ $produit->Categorie ?? '' }}" data-similar='@json($similar)'>Voir</button>
                                             </div>
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
-
-                            <!-- Pagination removed: affichage continu des produits -->
+                            </div> 
                         @else
                             <div class="alert alert-info">Aucun produit trouvé.</div>
                         @endif
@@ -461,7 +621,7 @@
             </div>
         </main>
         <footer>
-
+        
         </footer>
     </div>
 
@@ -482,5 +642,153 @@
             }
         })();
     </script>
+    <script>
+        // Remplacer #mainContent par une vue détail produit (sans navigation)
+        (function(){
+            // history stack: each entry { html, scroll }
+            let savedStack = [];
+            function renderDetail(data){
+                // parse similar products if provided as JSON string
+                let similar = [];
+                try{ if(data.similar) similar = JSON.parse(data.similar); }catch(e){ similar = []; }
+                const similarHtml = similar.length ? `<div style="margin-top:12px">
+                        <h5 style="margin:8px 0">Produits similaires</h5>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap">${similar.map(s => `
+                            <div style="width:140px;background:#fff;border-radius:6px;padding:6px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                                <a href="#" class="product-open" data-id="${s.id}" data-name="${s.name.replace(/\"/g,'') }" data-desc="" data-price="${s.price}" data-img="${s.img}">
+                                    <img src="${s.img}" alt="${s.name}" style="width:100%;height:78px;object-fit:cover;border-radius:4px;">
+                                    <div style="font-size:0.85rem;color:#222;font-weight:700;margin-top:6px">${s.name}</div>
+                                    <div style="color:#1e88e5;font-weight:700">${s.price}</div>
+                                </a>
+                                <div style="margin-top:6px;text-align:center">
+                                    <button class="btn btn-sm btn-outline-primary add-to-cart-similar" data-id="${s.id}" style="padding:6px 8px;border-radius:6px">Ajouter</button>
+                                </div>
+                            </div>`).join('')}</div></div>` : '';
+
+                // details block: prix, stock, catégorie, boutique
+                const detailsHtml = `<div style="margin-top:8px;padding:12px;border-radius:6px;background:#86d0df;color:#000">
+                        <div style="font-weight:700">Prix: <span style="font-weight:400">${data.price||''}</span></div>
+                        <div style="font-weight:700;margin-top:6px">Stock: <span style="font-weight:400">${data.stock||''}</span></div>
+                        <div style="font-weight:700;margin-top:6px">Catégorie: <span style="font-weight:400">${data.category||''}</span></div>
+                        <div style="font-weight:700;margin-top:6px">Boutique: <span style="font-weight:400">${data.vendorName||''}</span></div>
+                    </div>`;
+
+                const html = `
+                    <div class="product-detail" style="display:flex;gap:18px;align-items:flex-start;padding:12px;background:#fff;border-radius:8px;">
+                        <div style="flex:1;max-width:520px;min-width:0">
+                            <img src="${data.img || ''}" alt="${data.name||''}" style="width:100%;height:auto;max-height:520px;object-fit:contain;border-radius:8px;display:block;" />
+                        </div>
+                        <div style="width:360px;display:flex;flex-direction:column;gap:12px;">
+                            <h2 style="margin:0">${data.name||''}</h2>
+                            <div style="color:#1e88e5;font-weight:700;font-size:1.1rem">${data.price||''}</div>
+                            ${detailsHtml}
+                            <p style="color:#444;flex:1;white-space:pre-wrap">${data.desc||''}</p>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <button class="btn btn-sm btn-outline-secondary js-back" style="padding:10px 14px;border-radius:8px">← Retour à la liste</button>
+                                <button class="btn btn-primary" style="padding:10px 14px;border-radius:8px"><i class="fa fa-cart-plus" aria-hidden="true"></i>&nbsp;Ajouter au panier</button>
+                            </div>
+                        </div>
+                    </div>
+                    ${similarHtml ? `<div class="similar-full" style="margin-top:18px;padding:12px;background:transparent;border-radius:6px">${similarHtml}</div>` : ''}
+                `;
+                const container = document.getElementById('mainContent');
+                if(!container) return;
+                // push current view onto stack so we can return to it
+                savedStack.push({ html: container.innerHTML, scroll: window.scrollY || window.pageYOffset || 0 });
+                container.innerHTML = html;
+                // push history state so refresh/back behavior is preserved
+                try{ history.pushState({ produitId: data.id || null }, '', data.id ? ('?produit=' + encodeURIComponent(data.id)) : window.location.pathname); }catch(e){}
+            }
+            function restoreMain(){
+                const container = document.getElementById('mainContent');
+                if(!container) return;
+                if(savedStack.length){
+                    const entry = savedStack.pop();
+                    container.innerHTML = entry.html;
+                    if(typeof entry.scroll === 'number'){
+                        window.scrollTo({ top: entry.scroll, left: 0, behavior: 'auto' });
+                    }
+                }
+            }
+            document.addEventListener('click', function(e){
+                const btn = e.target.closest('.product-open');
+                if(btn){
+                    e.preventDefault();
+                    const data = {
+                        id: btn.dataset.id,
+                        name: btn.dataset.name || '',
+                        desc: btn.dataset.desc || '',
+                        price: btn.dataset.price || '',
+                        img: btn.dataset.img || '',
+                        vendorName: btn.dataset.vendorName || '',
+                        vendorAddress: btn.dataset.vendorAddress || '',
+                        stock: btn.dataset.stock || '',
+                        category: btn.dataset.category || '',
+                        similar: btn.dataset.similar || ''
+                    };
+
+                    // If important details are missing (vendor, stock or similar), fetch server fragment
+                    const needsAjax = !(data.vendorName || data.vendorAddress) || data.stock === '' || !data.similar;
+                    if(needsAjax && data.id){
+                        const url = '/produit/' + encodeURIComponent(data.id);
+                        const container = document.getElementById('mainContent');
+                        if(!container){ renderDetail(data); return; }
+                        // push current view so closing the fragment returns here
+                        savedStack.push({ html: container.innerHTML, scroll: window.scrollY || window.pageYOffset || 0 });
+                        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                            .then(resp => resp.text())
+                            .then(html => {
+                                container.innerHTML = html;
+                                try{ history.pushState({ produitId: data.id || null }, '', '?produit=' + encodeURIComponent(data.id)); }catch(e){}
+                            })
+                            .catch(err => { console.error('Fetch produit fragment failed', err); renderDetail(data); });
+                        return;
+                    }
+
+                    renderDetail(data);
+                    return;
+                }
+                if(e.target.closest('.js-back')){
+                    e.preventDefault();
+                    // navigate back in history; popstate handler will restore the view
+                    if(history.state && history.state.produitId) history.back(); else restoreMain();
+                    return;
+                }
+
+                // Add to cart on similar product or fragment
+                const addBtn = e.target.closest('.add-to-cart-similar, .add-to-cart-fragment');
+                if(addBtn){
+                    e.preventDefault();
+                    const id = addBtn.dataset.id;
+                    // dispatch event to add product to cart; do not change button state here
+                    document.dispatchEvent(new CustomEvent('product-added-to-cart', { detail: { id } }));
+                    return;
+                }
+            });
+        })();
+    </script>
 </body>
+    <div id="toast-container" style="position:fixed;right:16px;bottom:16px;z-index:2000;display:flex;flex-direction:column;gap:8px"></div>
+    <!-- Mini-cart modal -->
+    <div id="mini-cart-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:2000;align-items:center;justify-content:flex-end;padding:24px;">
+        <div id="mini-cart-modal" style="width:720px;max-width:96%;max-height:92vh;overflow:auto;background:#fff;border-radius:12px;margin-left:8px;box-shadow:0 12px 40px rgba(0,0,0,0.35);border:1px solid rgba(0,0,0,0.05);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #f1f1f1;background:linear-gradient(90deg,#f7fafc,#ffffff);border-top-left-radius:12px;border-top-right-radius:12px">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6H4V4h2v2zM20 6h-2V4h2v2zM6 20H4v-2h2v2zM20 20h-2v-2h2v2z" fill="#0b66d1"/></svg>
+                    <strong style="font-size:1.05rem">Mon panier</strong>
+                </div>
+                <button id="mini-cart-close" aria-label="Fermer le panier" style="border:0;background:transparent;font-size:18px;padding:6px 8px;cursor:pointer">✕</button>
+            </div>
+            <div id="mini-cart-body" style="padding:14px;display:block;">
+                <div style="text-align:center;color:#666;padding:28px 6px">Chargement…</div>
+            </div>
+            <div style="padding:14px;border-top:1px solid #f7f7f7;display:flex;justify-content:space-between;align-items:center;background:#fafafa;border-bottom-left-radius:12px;border-bottom-right-radius:12px">
+                <div style="display:flex;gap:8px;align-items:center">
+                    <a href="/cart" class="shiny-button">Voir le panier</a>
+                </div>
+                <!-- footer total element (kept hidden so JS can update it safely) -->
+                <div id="mini-cart-footer-total" style="display:none;font-weight:700;color:#0b66d1;">0 FCFA</div>
+            </div>
+        </div>
+    </div>
 </html>

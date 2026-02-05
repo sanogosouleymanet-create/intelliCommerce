@@ -15,7 +15,7 @@
         <div style="flex:1;">
             <h3>{{ $produit->Nom }}</h3>
             <p>{{ $produit->Description }}</p>
-            <p><strong>Prix: </strong>{{ number_format($produit->Prix,0,',',' ') }} FCFA</p>
+            <p><strong>Prix: </strong><span id="p-prix">{{ number_format($produit->Prix,0,',',' ') }} FCFA</span></p>
             <p><strong>Stock: </strong>{{ $produit->Stock }}</p>
             <p><strong>Catégorie: </strong>{{ $produit->Categorie }}</p>
             @if($vendeur)

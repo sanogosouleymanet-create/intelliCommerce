@@ -10,11 +10,10 @@ class Commande extends Model
     use HasFactory;
 
     protected $fillable = [
-        'idCommande',
         'DateCommande',
         'Statut',
         'MontanTotal',
-        'Utilisateurs_id',
+        'Client_idClient',
     ];
 
     protected $table = 'commandes';

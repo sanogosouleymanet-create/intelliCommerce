@@ -3,6 +3,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProduitController;
+use App\Http\Controllers\CartController;
 use App\Models\Produit;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\VendeurController;
@@ -105,6 +106,7 @@ Route::middleware(['auth:vendeur'])->group(function () {
     Route::post('/produits/{id}/delete', [ProduitController::class, 'destroy'])->name('produits.destroy');
 });
 Route::get ('/commandes', [CommandeController::class, 'index']);
+Route::post('/passer-commande', [CommandeController::class, 'store'])->name('passer.commande');
 Route::get ('/vendeurs', [VendeurController::class, 'index']);
 // Clients list (simple controller-less route returning a view)
 Route::get('/clients', function () {
@@ -125,11 +127,11 @@ Route::get('/', function (Request $request) {
     }
     // Filtrer par recherche rapide (nom ou description)
     if ($request->filled('recherche')) {
-        $term = $request->recherche;
+        $term = trim($request->recherche);
+        // search in product name or description only (not category)
         $query->where(function($q) use ($term) {
             $q->where('Nom', 'like', '%' . $term . '%')
-              ->orWhere('Description', 'like', '%' . $term . '%')
-              ->orWhere('Categorie', 'like', '%' . $term . '%');
+              ->orWhere('Description', 'like', '%' . $term . '%');
         });
     }
 
@@ -145,6 +147,12 @@ Route::post('/formulaireVendeur', [VendeurController::class, 'FormulaireVendeur'
 Route::get('/formulaireClient', function () {
     return view('formulaireClient');
 });
+
+// Cart routes (session-based)
+Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/formulaireClient', [ClientController::class, 'FormulaireClient']);
 
 
@@ -298,11 +306,10 @@ Route::get('/PagePrincipale', function (Request $request) {
         $query->where('Categorie', $request->categorie);
     }
     if ($request->filled('recherche')) {
-        $term = $request->recherche;
+        $term = trim($request->recherche);
         $query->where(function($q) use ($term) {
             $q->where('Nom', 'like', '%' . $term . '%')
-              ->orWhere('Description', 'like', '%' . $term . '%')
-              ->orWhere('Categorie', 'like', '%' . $term . '%');
+              ->orWhere('Description', 'like', '%' . $term . '%');
         });
     }
     $produits = $query->orderBy('DateAjout', 'desc')->get();
