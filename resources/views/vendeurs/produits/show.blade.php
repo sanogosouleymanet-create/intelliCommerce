@@ -11,7 +11,6 @@
         
         <h3 id="p-nom">{{ $produit->Nom }}</h3>
         <p id="p-desc">{{ $produit->Description }}</p>
-        <p><strong>Prix: </strong><span id="p-prix">{{ number_format($produit->Prix,0,',',' ') }} FCFA</span></p>
         <p><strong>Stock: </strong><span id="p-stock">{{ $produit->Stock }}</span></p>
         <p><strong>Catégorie: </strong><span id="p-categorie">{{ $produit->Categorie }}</span></p>
     </div>

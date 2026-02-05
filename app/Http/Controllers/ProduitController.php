@@ -108,7 +108,9 @@ class ProduitController extends Controller
             return view('produits._public_fragment', compact('produit', 'vendeur'));
         }
 
-        return view('produits.show_public', compact('produit', 'vendeur'));
+        // For non-AJAX public requests, redirect to the homepage with a query parameter
+        // so the main page can load the fragment via AJAX and display the detail inline.
+        return redirect()->to(url('/') . '?produit=' . $produit->idProduit);
     }
 
     // Update product (POST form with _method=PUT or direct POST)
