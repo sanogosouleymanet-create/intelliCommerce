@@ -70,15 +70,31 @@ class VendeurController extends Controller
         if (!$vendeur) {
             return response()->json(['success' => false, 'message' => 'Non autorisé'], 401);
         }
-
-        $validated = $request->validate([
+        // Base rules for profile fields
+        $rules = [
             'NomBoutique' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255|unique:vendeurs,email,' . $vendeur->idVendeur . ',idVendeur',
             'Nom' => 'nullable|string|max:255',
             'Prenom' => 'nullable|string|max:255',
             'Adresse' => 'nullable|string|max:500',
             'TelVendeur' => 'nullable|string|max:50',
-        ]);
+        ];
+
+        // If user is changing password, require and validate password fields
+        if ($request->filled('new_password')) {
+            $rules['current_password'] = 'required|string';
+            $rules['new_password'] = 'required|string|min:8|confirmed';
+        }
+
+        $validated = $request->validate($rules);
+
+        // If changing password, verify current password
+        if ($request->filled('new_password')) {
+            if (!Hash::check($request->current_password ?? '', $vendeur->MotDePasse)) {
+                return response()->json(['success' => false, 'message' => 'Mot de passe actuel incorrect.'], 422);
+            }
+            $vendeur->MotDePasse = Hash::make($request->new_password);
+        }
 
         $vendeur->fill([
             'NomBoutique' => $validated['NomBoutique'] ?? $vendeur->NomBoutique,

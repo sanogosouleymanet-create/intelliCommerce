@@ -59,6 +59,24 @@
                     <input name="Adresse" class="form-control form-control-plaintext" readonly value="{{ $vendeur->Adresse ?? '' }}">
                 </div>
             </div>
+            <div class="card mt-3 p-3">
+                <h5>Changer le mot de passe</h5>
+                <p class="text-muted small">Laissez vide si vous ne souhaitez pas modifier le mot de passe.</p>
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label">Mot de passe actuel</label>
+                        <input type="password" name="current_password" class="form-control form-control-plaintext" readonly>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label">Nouveau mot de passe</label>
+                        <input type="password" name="new_password" class="form-control form-control-plaintext" readonly>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label">Confirmer le mot de passe</label>
+                        <input type="password" name="new_password_confirmation" class="form-control form-control-plaintext" readonly>
+                    </div>
+                </div>
+            </div>
             <div class="text-end mt-3">
                 <button type="button" id="btnEditParam" class="btn btn-outline-primary me-2">Modifier</button>
                 <button id="btnSaveParam" class="btn btn-primary" type="submit" disabled>Enregistrer</button>
@@ -98,9 +116,18 @@ window.CSRF_TOKEN = '{{ csrf_token() }}';
 
     form.addEventListener('submit', async function(e){
         e.preventDefault();
+        // client-side validation for password change
+        const current = form.querySelector('[name="current_password"]')?.value || '';
+        const newPass = form.querySelector('[name="new_password"]')?.value || '';
+        const confirm = form.querySelector('[name="new_password_confirmation"]')?.value || '';
+        if(newPass){
+            if(!current){ if(status) status.innerHTML = '<div class="alert alert-danger">Veuillez renseigner le mot de passe actuel.</div>'; return; }
+            if(newPass.length < 8){ if(status) status.innerHTML = '<div class="alert alert-danger">Le nouveau mot de passe doit contenir au moins 8 caractères.</div>'; return; }
+            if(newPass !== confirm){ if(status) status.innerHTML = '<div class="alert alert-danger">La confirmation ne correspond pas.</div>'; return; }
+        }
         const data = new FormData(form);
         try{
-            const res = await fetch(form.action, { method: 'POST', headers: { 'X-CSRF-TOKEN': window.CSRF_TOKEN }, body: data, credentials: 'same-origin' });
+            const res = await fetch(form.action, { method: 'POST', headers: { 'X-CSRF-TOKEN': window.CSRF_TOKEN, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, body: data, credentials: 'same-origin' });
             if(res.ok){
                 // update initial values and reflect saved state
                 inputs.forEach((i, idx) => initial[idx] = i.value);

@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <link rel ="stylesheet" href="{{ asset('css/StylePagePrincipale.css') }}">
-    <link rel ="stylesheet" href="{{ asset('css/StyleProduit.css') }}">
     <link rel="stylesheet" href="{{ asset('css/StyleVendeurProduits.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.8.0/fonts/remixicon.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
