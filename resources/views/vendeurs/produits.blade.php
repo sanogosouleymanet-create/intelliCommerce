@@ -3,24 +3,9 @@
     // Variables attendues : $vendeur, $produits
 @endphp
 
-<style>
-     /* Ajustements: élargir la barre de filtres (plein-bleed dans le container)
-         et empêcher le wrapping pour garder les boutons sur la même ligne.
-     */
-    .filters-bar { width: calc(100% + 30px); margin-left: -15px; margin-right: -15px; margin-bottom: 0 !important; padding-bottom: .5rem !important; }
-    /* Remove white card background so the section blends with page background */
-    .filters-bar.card{ background: transparent !important; box-shadow: none !important; border: none !important; padding-bottom: .5rem !important; }
-     .filters-bar .container-inner { max-width: none; margin: 0; }
-     .filters-bar form { max-width: none; margin: 0; width: 100% !important; }
-     .filters-bar input[name="recherche"], .filters-bar .form-control[name="recherche"] { min-width: 140px !important; max-width: 420px !important; }
-     .filters-bar select.form-select { min-width: 110px !important; max-width: 260px !important; }
-     .filters-bar .filters-actions .btn { padding: .35rem .6rem; }
-     /* Keep controls on one line, allow horizontal scroll on very small viewports */
-     .filters-bar form.d-flex { flex-wrap: nowrap; overflow-x: auto; }
-     @media (max-width: 768px){ .filters-bar { width: 100%; margin-left: 0; margin-right: 0; } .filters-bar form { max-width: 100%; } }
-</style>
 
-<section class="container pt-0 pb-3 vendeurs-shop">
+
+<section class="container-fluid pt-0 pb-3 vendeurs-shop">
     @if(session('error'))
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
@@ -29,7 +14,7 @@
         <form id="filterForm" method="GET" action="{{ url('/vendeur/produits') }}" class="d-flex align-items-center gap-2" style="width:100%;overflow-x:auto;">
             <input type="text" name="recherche" value="{{ request('recherche') }}" class="form-control" placeholder="Nom, description..." style="min-width:220px;max-width:420px;">
             <select name="categorie" class="form-select" style="min-width:160px;max-width:260px;">
-                <option value="">Toutes</option>
+                <option value="">Toutes les categories</option>
                 <option value="Electronique" {{ request('categorie') == 'Electronique' ? 'selected' : '' }}>Électronique</option>
                 <option value="Vetements" {{ request('categorie') == 'Vetements' ? 'selected' : '' }}>Vêtements</option>
                 <option value="Chaussures" {{ request('categorie') == 'Chaussures' ? 'selected' : '' }}>Chaussures</option>
@@ -55,7 +40,8 @@
         <main class="col-md-9">
             <div id="product-list" class="product-list">
                 @if($produits && $produits->count())
-                    <div class="product-grid row g-3">
+                    <div class="product-grid row g-0">
+
                         @foreach($produits as $produit)
                             <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                                 <div class="product-card card h-100">
@@ -70,9 +56,9 @@
                                                 elseif(file_exists(public_path('images/'.basename($img)))) $imgUrl = asset('images/'.basename($img));
                                             }
                                         @endphp
-                                        <img src="{{ $imgUrl }}" class="card-img-top" alt="{{ $produit->Nom }}">
+                                            <img src="{{ $imgUrl }}" class="card-img-top" alt="{{ $produit->Nom }}" style="height: 140px; object-fit: cover; padding: 2px 2px 2px 4px;">
                                     </div>
-                                    <div class="card-body d-flex flex-column">
+                                    <div class="card-body d-flex flex-column" style="padding-right:6px;padding-left:6px;">
                                         <h6 class="product-title">{{ $produit->Nom }}</h6>
                                         <p class="product-meta small text-muted mb-2">{{ \Illuminate\Support\Str::limit($produit->Description, 80) }}</p>
                                         <div class="mt-auto d-flex justify-content-between align-items-center">

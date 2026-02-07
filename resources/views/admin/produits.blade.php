@@ -26,7 +26,7 @@
 
                 <!---Trier par prix-->
                 <select name="tri_prix" class="filter-select">
-                    <option value="">Trier par prix</option>
+                    <option value="">Tous les prix</option>
                     <option value="asc" {{ request('tri_prix') == 'asc' ? 'selected' : '' }}>Prix croissant</option>
                     <option value="desc" {{ request('tri_prix') == 'desc' ? 'selected' : '' }}>Prix décroissant</option>
                     <option value="recente" {{ request('tri_prix') == 'recente' ? 'selected' : '' }}>Produits récents</option>
@@ -63,7 +63,7 @@
                     <td>{{ $produit->vendeur->Nom ?? '—' }}</td>
                     <td>
                         <button class="btn secondary btn-view-produit">Voir</button>
-                        <button class="btn btn-edit-produit">Modifier</button>
+            
                         <button class="btn danger btn-delete-produit">Supprimer</button>
                     </td>
                 </tr>
@@ -73,9 +73,7 @@
 </section>
 
 <style>
-    h2{
-        color: white;
-    }
+    
 .orders-table th, .orders-table td {
     padding: 12px 10px;
     text-align: left;
@@ -156,48 +154,4 @@
 </style>
 
 </script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const filterForm = document.getElementById('filterForm');
-    const tableBody = document.getElementById('produitsBody');
-    if(filterForm && tableBody) {
-        filterForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(filterForm);
-            const params = new URLSearchParams(formData).toString();
-            fetch(window.location.pathname + '?' + params, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(resp => resp.text())
-            .then(html => {
-                // On attend que le contrôleur retourne juste le <tbody> si AJAX
-                // ou on extrait le tbody du HTML reçu
-                let temp = document.createElement('div');
-                temp.innerHTML = html;
-                let newTbody = temp.querySelector('tbody');
-                if(newTbody) tableBody.innerHTML = newTbody.innerHTML;
-            });
-        });
-    }
-
-    // Suppression dynamique (confirmation)
-    tableBody.addEventListener('click', function(e) {
-        if(e.target.classList.contains('btn-delete-produit')) {
-            const tr = e.target.closest('tr');
-            const id = tr.getAttribute('data-id');
-            if(confirm('Supprimer ce produit ?')) {
-                fetch(`/admin/produits/${id}/delete`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                }).then(resp => {
-                    if(resp.ok) tr.remove();
-                    else alert('Erreur lors de la suppression');
-                });
-            }
-        }
-    });
-});
-</script>
+<!-- Handlers moved to global initializer in admin dashboard: adminInitPartials() -->

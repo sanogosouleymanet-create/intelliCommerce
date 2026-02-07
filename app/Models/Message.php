@@ -17,9 +17,18 @@ class Message extends Model
         'Statut',
         'Client_idClient',
         'Vendeur_idVendeur',
+        'Administrateur_idAdministrateur',
     ];
 
     public $timestamps = false; // car on utilise DateEnvoi
+
+    /**
+     * Type casts for attributes.
+     * Ensure DateEnvoi is treated as a datetime (Carbon instance).
+     */
+    protected $casts = [
+        'DateEnvoi' => 'datetime',
+    ];
 
     public function client()
     {
@@ -29,6 +38,11 @@ class Message extends Model
     public function vendeur()
     {
         return $this->belongsTo(Vendeur::class, 'Vendeur_idVendeur');
+    }
+
+    public function administrateur()
+    {
+        return $this->belongsTo(Administrateur::class, 'Administrateur_idAdministrateur');
     }
 }
 

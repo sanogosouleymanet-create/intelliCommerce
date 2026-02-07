@@ -12,13 +12,14 @@
     cursor: pointer;
 }
 
-/* Orders page styles */
 .orders-header{
     display:flex;
     justify-content:space-between;
     align-items:center;
     gap:12px;
 }
+/* Styles de la page commandes */
+
 .orders-actions{
     display:flex;
     gap:8px;
@@ -117,10 +118,10 @@
     justify-content: center;
     flex-wrap: wrap;
 
-    background-color: #ffffff;
+    background-color: transparent; /* retirer fond blanc */
     padding: 15px 20px;
     border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    box-shadow: none; /* supprimer ombre */
     margin-bottom: 25px;
 }
 .search-input {

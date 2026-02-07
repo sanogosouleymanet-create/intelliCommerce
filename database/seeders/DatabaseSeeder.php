@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             \Database\Seeders\AdministrateurSeeder::class,
+            \Database\Seeders\TestAccountsSeeder::class,
         ]);
     }
 }

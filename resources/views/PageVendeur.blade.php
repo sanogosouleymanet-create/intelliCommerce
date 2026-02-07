@@ -12,13 +12,16 @@
     <style>
         /* small overrides to adapt PagePrincipale style to vendeur dashboard */
         .vendeur-dashboard { padding: 24px 0; }
-        .profile-card { border:1px solid #eee; padding:16px; border-radius:6px; background:#fff; }
+        .profile-card { 
+            border:1px solid #eee; padding:16px; border-radius:6px; background:#fff; }
         .profile-actions { margin-top:12px; }
         /* Active state for sidebar buttons */
         .profile-actions a.active { background:#2b7cff; color:#fff; border-color:#2b7cff; }
         .profile-actions a.active i { color:#fff; }
         .orders-list .order { border-bottom:1px dashed #efefef; padding:12px 0; }
         .recommended { margin-top:18px; }
+        
+        .main-content::-webkit-scrollbar { display: none; } /* Chrome, Safari, Opera */
     </style>
 </head>
 <body>
@@ -29,11 +32,7 @@
             <div class="conteiner">
                 <div class="wrapper flexitem">
                     <div class="left">
-                        <ul class="flexitem main-links">
-                            <li><a href="/">Accueil</a></li>
-                            <li><a href="#">À propos</a></li>
-                            <li><a href="#">Contact</a></li>
-                        </ul>
+                        
                     </div>
                     <div class="right">
                         <ul class="flexitem main-links">
@@ -56,7 +55,7 @@
                                         }
                                     @endphp
                                     <div style="display:flex;align-items:center;gap:12px">
-                                        <button type="button" onclick="location.href='{{ $profileUrl }}'" style="display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#2b7cff;cursor:pointer">
+                                        <button type="button" onclick="location.href='{{ $profileUrl }}'" style="display:inline-flex;align-items:center;gap:8px;padding:0px 15px;border-radius:4px;border:1px solid #ddd;background:#fff;color:#2b7cff;cursor:pointer" >
                                             <i class="fa-solid fa-user"></i>
                                             <span>{{ $displayName }}</span>
                                         </button>
@@ -78,12 +77,9 @@
                         <div class="logo"><a href="/"><span class="circle"></span><img src="{{ asset('Logo-site.png') }}" width="250" alt="logo"></a></div>
                         <nav class="mobile-hide">
                             <ul class="flexitem second-links">
-                                <li><a href="{{('/welcome')}}">Accueil</a></li>
-                                <li><a href="#">Boutique</a></li>
-                                <li class="has-child">
-                                    <a href="#">Femme 
-                                    <div class="icon-small"><i class="ri-arrow-down-s-line"></i></div>
-                                    </a>
+                                <li><a href="/">Accueil</a></li>
+                                <li><a href="#">À propos</a></li>
+                                <li><a href="#">Contact</a></li>
                                 </li>
                             </ul>
                         </nav>
