@@ -172,6 +172,77 @@ Route::get('/', function (Request $request) {
     return view('PagePrincipale', compact('produits'));
 });
 
+// Routes pour les pages statiques
+Route::get('/a-propos', function () {
+    return view('a-propos');
+});
+
+Route::get('/contact', function () {
+    return view('contact');
+});
+
+// Page listant tous les produits les plus vendus
+Route::get('/top-vendus', function(Request $request){
+    // Redirect to the recherches fragment (AJAX fragment endpoint)
+    return redirect('/top-recherches/fragment');
+});
+
+// New route explicitly for top searches
+Route::get('/top-recherches', function(Request $request){
+    // Redirect to the recherches fragment (AJAX fragment endpoint)
+    return redirect('/top-recherches/fragment');
+});
+
+// AJAX fragment for top recherches (product grid only)
+Route::get('/top-recherches/fragment', function(Request $request){
+    $topRecherchesIds = [];
+    if(\Illuminate\Support\Facades\Schema::hasTable('recherches')){
+        $topRecherchesIds = \Illuminate\Support\Facades\DB::table('recherches')
+            ->select('produit_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
+            ->groupBy('produit_id')
+            ->orderByDesc('total')
+            ->pluck('produit_id')
+            ->toArray();
+    }
+    $topRecherches = collect([]);
+    if(!empty($topRecherchesIds)){
+        $prodMap = \App\Models\Produit::whereIn('idProduit', $topRecherchesIds)->get()->keyBy('idProduit');
+        $topRecherches = collect($topRecherchesIds)->map(function($id) use($prodMap){ return $prodMap->get($id); })->filter();
+    }
+    if($topRecherches->isEmpty() && \Illuminate\Support\Facades\Schema::hasTable('Produitcommande')){
+        $topVendusIds = \Illuminate\Support\Facades\DB::table('Produitcommande')
+            ->select('Produit_idProduit', \Illuminate\Support\Facades\DB::raw('SUM(Quantite) as total'))
+            ->groupBy('Produit_idProduit')
+            ->orderByDesc('total')
+            ->pluck('Produit_idProduit')
+            ->toArray();
+        if(!empty($topVendusIds)){
+            $prodMap = \App\Models\Produit::whereIn('idProduit', $topVendusIds)->get()->keyBy('idProduit');
+            $topRecherches = collect($topVendusIds)->map(function($id) use($prodMap){ return $prodMap->get($id); })->filter();
+        }
+    }
+    return view('partials.top_list', ['items' => $topRecherches]);
+});
+
+// Keep legacy top-vendus fragment route too
+Route::get('/top-vendus/fragment', function(Request $request){
+    $topVendusIds = [];
+    if(\Illuminate\Support\Facades\Schema::hasTable('Produitcommande')){
+        $topVendusIds = \Illuminate\Support\Facades\DB::table('Produitcommande')
+            ->select('Produit_idProduit', \Illuminate\Support\Facades\DB::raw('SUM(Quantite) as total'))
+            ->groupBy('Produit_idProduit')
+            ->orderByDesc('total')
+            ->pluck('Produit_idProduit')
+            ->toArray();
+    }
+    $topVendus = collect([]);
+    if(!empty($topVendusIds)){
+        $prodMap = \App\Models\Produit::whereIn('idProduit', $topVendusIds)->get()->keyBy('idProduit');
+        $topVendus = collect($topVendusIds)->map(function($id) use($prodMap){ return $prodMap->get($id); })->filter();
+    }
+    return view('partials.top_list', ['items' => $topVendus]);
+});
+
 Route::get('/formulaireVendeur', function () {
     return view('formulaireVendeur');
 });

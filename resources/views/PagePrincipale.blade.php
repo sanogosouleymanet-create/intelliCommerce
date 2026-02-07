@@ -102,6 +102,8 @@
                             <ul class="flexitem second-links">
                                 <li><a href="{{('/welcome')}}">Accueil</a></li>
                                 <li><a href="#">Boutique</a></li>
+                                <li><a href="/a-propos">À propos</a></li>
+                                <li><a href="/contact">Contact</a></li>
                                 <li class="has-child">
                                     <a href="#">Femme 
                                     <div class="icon-small"><i class="ri-arrow-down-s-line"></i></div>
@@ -459,11 +461,11 @@
 
                                 <div style="width:340px;display:flex;flex-direction:column;gap:12px;">
                                     <div class="top-list" style="background:#fff;padding:12px;border-radius:8px;">
-                                        <h5 style="margin:0 0 8px 0">Les plus vendus</h5>
-                                        @if($topVendus->isEmpty())
-                                            <div class="text-muted">Aucun produit vendu récemment.</div>
+                                        <h5 style="margin:0 0 8px 0">Les plus recherchés</h5>
+                                        @if($topRecherches->isEmpty())
+                                            <div class="text-muted">Aucune donnée de recherche disponible.</div>
                                         @else
-                                            @foreach($topVendus as $p)
+                                            @foreach($topRecherches->take(2) as $p)
                                                 <div class="item" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
                                                     @php
                                                         $img = trim((string)($p->Image ?? ''));
@@ -494,43 +496,17 @@
                                                 </div>
                                             @endforeach
                                         @endif
-                                    </div>
-
-                                    <div class="top-list" style="background:#fff;padding:12px;border-radius:8px;">
-                                        <h5 style="margin:0 0 8px 0">Les plus recherchés</h5>
-                                        @if($topRecherches->isEmpty())
-                                            <div class="text-muted">Aucune donnée de recherche disponible.</div>
-                                        @else
-                                            @foreach($topRecherches as $p)
-                                                <div class="item" style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
-                                                    @php
-                                                        $img = trim((string)($p->Image ?? ''));
-                                                        $imgUrl = 'https://via.placeholder.com/80x60?text=No';
-                                                        if($img !== ''){
-                                                            if(preg_match('/^https?:\/\//i', $img)){
-                                                                $imgUrl = $img;
-                                                            } elseif(\Illuminate\Support\Facades\Storage::exists('public/'.$img)){
-                                                                $imgUrl = asset('storage/'.$img);
-                                                            } elseif(file_exists(public_path($img))){
-                                                                $imgUrl = asset($img);
-                                                            } elseif(file_exists(public_path('images/'.basename($img)))){
-                                                                $imgUrl = asset('images/'.basename($img));
-                                                            }
-                                                        }
-                                                    @endphp
-                                                    @php
-                                                        $dataName = e($p->Nom);
-                                                        $dataDesc = e($p->Description ?? '');
-                                                        $dataPrice = number_format($p->Prix,0,',',' ') . ' FCFA';
-                                                        $dataImg = $imgUrl;
-                                                    @endphp
-                                                    <a href="#" class="product-open" data-id="{{ $p->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}"><img src="{{ $imgUrl }}" alt="{{ $p->Nom }}" style="width:64px;height:48px;object-fit:cover;border-radius:4px;"></a>
-                                                    <div style="flex:1;font-size:0.92rem">
-                                                        <a href="#" class="product-open" data-id="{{ $p->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" style="color:#222;font-weight:700">{{ $p->Nom }}</a>
-                                                        <div style="color:#1e88e5;font-weight:700">{{ number_format($p->Prix,0,',',' ') }} FCFA</div>
-                                                    </div>
+                                        @if($topRecherches->count() > 2)
+                                            <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+                                                <div style="color:#666;font-size:0.9rem">+{{ $topRecherches->count() - 2 }} autres</div>
+                                                <div style="text-align:right">
+                                                    <a href="#" class="btn btn-sm btn-primary js-load-top" data-url="/top-recherches/fragment" data-page="/top-recherches">Voir plus</a>
                                                 </div>
-                                            @endforeach
+                                            </div>
+                                        @else
+                                            <div style="text-align:right;margin-top:8px">
+                                                <a href="#" class="btn btn-sm btn-primary js-load-top" data-url="/top-recherches/fragment" data-page="/top-recherches">Voir plus</a>
+                                            </div>
                                         @endif
                                         @if(!empty($searchFallback) && $searchFallback)
                                             <div class="text-muted" style="font-size:0.82rem">(Données de recherche indisponibles — affichage des plus vendus)</div>
@@ -763,6 +739,49 @@
                     // dispatch event to add product to cart; do not change button state here
                     document.dispatchEvent(new CustomEvent('product-added-to-cart', { detail: { id } }));
                     return;
+                }
+            });
+        })();
+    </script>
+    <script>
+        // Load 'Voir plus' fragment into #mainContent and manage history so Back restores previous content
+        (function(){
+            window.__mainContentStack = window.__mainContentStack || [];
+            document.addEventListener('click', function(e){
+                const btn = e.target.closest('.js-load-top');
+                if(!btn) return;
+                e.preventDefault();
+                const url = btn.dataset.url;
+                const page = btn.dataset.page || (url ? url.replace(/\/fragment\/?$/,'') : null);
+                const container = document.getElementById('mainContent') || document.querySelector('main');
+                if(!url || !container) return;
+                // save current content and scroll
+                window.__mainContentStack.push({ html: container.innerHTML, scroll: window.scrollY || 0 });
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(resp => resp.text())
+                    .then(html => {
+                        container.innerHTML = html;
+                        // push history state so Back can restore
+                        try{ history.pushState({ ajaxFragment: true, page: page }, '', page || url); }catch(e){}
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    })
+                    .catch(err => {
+                        console.error('Chargement top-list failed', err);
+                        // on error restore previous saved content
+                        const prev = window.__mainContentStack.pop();
+                        if(prev && container) container.innerHTML = prev.html;
+                    });
+            });
+
+            window.addEventListener('popstate', function(e){
+                // if popstate corresponds to an AJAX fragment we pushed, restore previous main content
+                if(e.state && e.state.ajaxFragment){
+                    const container = document.getElementById('mainContent') || document.querySelector('main');
+                    const prev = window.__mainContentStack.pop();
+                    if(container && prev){
+                        container.innerHTML = prev.html;
+                        window.scrollTo(prev.scroll || 0, 0);
+                    }
                 }
             });
         })();
