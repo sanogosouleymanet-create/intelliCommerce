@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script>window.isClientAuthenticated = @json(auth()->guard('client')->check());</script>
+    <script>window.isAuthenticated = @json(auth()->guard('client')->check() || auth()->guard('vendeur')->check() || auth()->guard('administrateur')->check());</script>
     <link rel ="stylesheet" href="{{ asset('css/StylePagePrincipale.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.8.0/fonts/remixicon.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -31,8 +32,8 @@
                     <div class="left">
                         <ul class="flexitem main-links">
                             
-                            <li><a href="#">À propos</a></li>
-                            <li><a href="#">Contact</a></li>
+                            <li><a href="/a-propos">À propos</a></li>
+                            <li><a href="/contact">Contact</a></li>
                         </ul>
                     </div>
                     <div class="right">
@@ -100,10 +101,8 @@
                         <div class="logo"><a href="/"><span class="circle"></span><img src="Logo-site.png" width="250" alt="logo"></a></div>
                         <nav class="mobile-hide">
                             <ul class="flexitem second-links">
-                                <li><a href="{{('/welcome')}}">Accueil</a></li>
+                                <li><a href="{{('/')}}">Accueil</a></li>
                                 <li><a href="#">Boutique</a></li>
-                                <li><a href="/a-propos">À propos</a></li>
-                                <li><a href="/contact">Contact</a></li>
                                 <li class="has-child">
                                     <a href="#">Femme 
                                     <div class="icon-small"><i class="ri-arrow-down-s-line"></i></div>
@@ -196,14 +195,149 @@
                                     </div>
                                  </div>
                             </li>
-                                <li><a href="#">Homme
+                                <li class="has-child">
+                                    <a href="#">Homme
                                     <div class="icon-small"><i class="ri-arrow-down-s-line"></i></div>
-                                </a></li>
-                                <li><a href="#">Enfant
+                                    </a>
+                                  <div class="mega">
+                                     <div class="container">
+                                          <div class="wrapper">
+                                             <div class="flexcol">
+                                                 <div class="row">
+                                                     <h4>Vêtements homme</h4>
+                                                     <ul>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Chemises') }}">Chemises</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('T-shirts') }}">T-shirts</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Vestes') }}">Vestes</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Pantalons') }}">Pantalons</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Shorts') }}">Shorts</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Costumes') }}">Costumes</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Sweats') }}">Sweats</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Pyjamas') }}">Pyjamas</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Maillots de bain') }}">Maillots de bain</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="flexcol">
+                                                <div class="row">
+                                                    <h4>Chaussures</h4>
+                                                    <ul>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Baskets') }}">Baskets</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Bottes') }}">Bottes</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Sandales') }}">Sandales</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Mocassins') }}">Mocassins</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="flexcol">
+                                                <div class="row">
+                                                    <h4>Accessoires & Soins</h4>
+                                                    <ul>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Montres') }}">Montres</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Ceintures') }}">Ceintures</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Sacs') }}">Sacs</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Rasage') }}">Rasage</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Parfums') }}">Parfums</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="flexcol">
+                                                <div class="row">
+                                                    <h4>Meilleures marques</h4>
+                                                    <ul class="Women-brands">
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Nike') }}">Nike</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Adidas') }}">Adidas</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Hugo Boss') }}">Hugo Boss</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Tommy Hilfiger') }}">Tommy Hilfiger</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Puma') }}">Puma</a></li>
+                                                    </ul>
+                                                    <a href="#" class="view-all">Voir toutes les marques <i class="ri-arrow-right-line"></i></a>
+                                                </div>
+                                            </div>
+                                            <div class="flexcol products">
+                                                <div class="row">
+                                                    <div class="media">
+                                                        <div class="thumbnail object-cover">
+                                                            <a href="#"><img src="Image2.jpg" alt=""></a>
+                                                        </div>
+                                                </div>
+                                                 <div class="text-content">
+                                                    <h4>Essentiels homme</h4>
+                                                    <a href="" class="primary-button">Commander maintenant</a>
+                                                 </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                 </div>
+                                </li>
+                                <li class="has-child">
+                                    <a href="#">Enfant
                                     <div class="icon-small"><i class="ri-arrow-down-s-line"></i></div>
-                                </a></li>
+                                    </a>
+                                  <div class="mega">
+                                     <div class="container">
+                                          <div class="wrapper">
+                                             <div class="flexcol">
+                                                 <div class="row">
+                                                     <h4>Vêtements Enfant</h4>
+                                                     <ul>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Robes enfant') }}">Robes</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('T-shirts enfant') }}">T-shirts</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Pantalons enfant') }}">Pantalons</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Pyjamas enfant') }}">Pyjamas</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Maillots enfant') }}">Maillots</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="flexcol">
+                                                <div class="row">
+                                                    <h4>Chaussures</h4>
+                                                    <ul>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Chaussures fille') }}">Fille</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Chaussures garçon') }}">Garçon</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="flexcol">
+                                                <div class="row">
+                                                    <h4>Puériculture & Jouets</h4>
+                                                    <ul>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Poussettes') }}">Poussettes</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Sièges auto') }}">Sièges auto</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Jouets') }}">Jouets</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                            <div class="flexcol">
+                                                <div class="row">
+                                                    <h4>Meilleures marques</h4>
+                                                    <ul class="Women-brands">
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Disney') }}">Disney</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Nike enfant') }}">Nike</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Zara Kids') }}">Zara Kids</a></li>
+                                                    </ul>
+                                                    <a href="#" class="view-all">Voir toutes les marques <i class="ri-arrow-right-line"></i></a>
+                                                </div>
+                                            </div>
+                                            <div class="flexcol products">
+                                                <div class="row">
+                                                    <div class="media">
+                                                        <div class="thumbnail object-cover">
+                                                            <a href="#"><img src="Image3.jpg" alt=""></a>
+                                                        </div>
+                                                </div>
+                                                 <div class="text-content">
+                                                    <h4>Coups de coeur enfants</h4>
+                                                    <a href="" class="primary-button">Commander maintenant</a>
+                                                 </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                 </div>
+                                </li>
                                 <li><a href="#">Sports
-                                    <div class="fly-item"><span>Nouveau!</span></div>
                                 </a></li>
                             </ul>
                         </nav>
@@ -231,7 +365,7 @@
                     <div class="left">
                         <div id="headerDepartments" class="dpt-cat header-dpt collapsed">
                             <div class="dpt-head">
-                                <div class="main-text">Tous les Departements</div>
+                                <div class="main-text">Tous les Catégories</div>
                                 <div class="mini-text mobile-hide">Total {{ isset($produits) ? $produits->count() : \App\Models\Produit::count() }} Produits</div>
                                 <a href="#" class="dpt-trigger mobile-hide" aria-expanded="false">
                                     <i class="ri-menu-3-line ri-xl"></i>
@@ -784,6 +918,34 @@
                     }
                 }
             });
+            })();
+    </script>
+    <script>
+        (function(){
+            const dpt = document.getElementById('headerDepartments');
+            const trigger = dpt ? dpt.querySelector('.dpt-trigger') : null;
+
+            // Close the departments menu when clicking outside of it
+            document.addEventListener('click', function(e){
+                if(!dpt) return;
+                // If click is inside the departments menu or on the trigger, do nothing
+                if(dpt.contains(e.target) || (trigger && trigger.contains(e.target))) return;
+                // Otherwise ensure it's collapsed and aria-expanded is false
+                if(!dpt.classList.contains('collapsed')){
+                    dpt.classList.add('collapsed');
+                    if(trigger) trigger.setAttribute('aria-expanded','false');
+                }
+            });
+
+            // Optional: allow Esc key to close the menu
+            document.addEventListener('keydown', function(e){
+                if(e.key === 'Escape' || e.key === 'Esc'){
+                    if(dpt && !dpt.classList.contains('collapsed')){
+                        dpt.classList.add('collapsed');
+                        if(trigger) trigger.setAttribute('aria-expanded','false');
+                    }
+                }
+            });
         })();
     </script>
 </body>
@@ -801,7 +963,7 @@
             <div id="mini-cart-body" style="padding:14px;display:block;">
                 <div style="text-align:center;color:#666;padding:28px 6px">Chargement…</div>
             </div>
-            <div style="padding:14px;border-top:1px solid #f7f7f7;display:flex;justify-content:space-between;align-items:center;background:#fafafa;border-bottom-left-radius:12px;border-bottom-right-radius:12px">
+            <div style="padding:14px;border-top:1px solid #f7f7f7;display:flex;justify-content:space-between;align-items:center;background:#fafafa;border-bottom-left-radius:12px;border-bottom-right-radius:12px;position:sticky;bottom:0;z-index:10;">
                 <div style="display:flex;gap:8px;align-items:center">
                     <a href="/cart" class="shiny-button">Voir le panier</a>
                 </div>

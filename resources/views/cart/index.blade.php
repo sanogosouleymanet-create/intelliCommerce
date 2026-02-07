@@ -220,6 +220,7 @@
         selectAll.addEventListener('change', function(){
             var list = document.querySelectorAll('.select-product');
             list.forEach(function(cb){ cb.checked = selectAll.checked; });
+            updateCartTotal(); // update total when select-all changes
         });
         // clicking individual checkboxes should update the select-all state
         document.addEventListener('change', function(e){
@@ -229,13 +230,38 @@
                 if(all.length === 0) return;
                 var allChecked = all.every(function(cb){ return cb.checked; });
                 selectAll.checked = allChecked;
+                updateCartTotal(); // update total when individual checkbox changes
             }
         }, true);
     }
     initSelectAll();
     var mo2 = new MutationObserver(function(){ initSelectAll(); });
     mo2.observe(document.documentElement || document.body, { childList: true, subtree: true });
+    updateCartTotal(); // initialize total on load
 })();
+</script>
+<script>
+// Function to update the cart total based on selected products
+function updateCartTotal(){
+    var selected = document.querySelectorAll('.select-product:checked');
+    var total = 0;
+    if(selected.length === 0){
+        // No selections: sum all subtotals
+        var allSubs = document.querySelectorAll('.select-product');
+        allSubs.forEach(function(cb){
+            total += parseFloat(cb.getAttribute('data-subtotal')) || 0;
+        });
+    } else {
+        // Sum subtotals of selected items
+        selected.forEach(function(cb){
+            total += parseFloat(cb.getAttribute('data-subtotal')) || 0;
+        });
+    }
+    var totalEl = document.getElementById('cart-total');
+    if(totalEl){
+        totalEl.innerHTML = 'Total: ' + total.toLocaleString('fr-FR') + ' FCFA';
+    }
+}
 </script>
 <script>
 // (removed visible checkout button handler; using floating checkout button instead)

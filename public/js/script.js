@@ -141,6 +141,18 @@ document.addEventListener('DOMContentLoaded', function () {
     attachToggle(document.querySelector('.header-nav'));
     attachToggle(document.querySelector('.off-canvas'));
 
+    // Close header nav menu when clicking outside
+    document.addEventListener('click', function(e){
+        var headerNav = document.querySelector('.header-nav');
+        if (!headerNav) return;
+        var inside = e.target.closest('.header-nav');
+        if (!inside) {
+            headerNav.querySelectorAll('.has-child.expand').forEach(function(item){
+                item.classList.remove('expand');
+            });
+        }
+    });
+
     // Bascules spécifiques au mobile pour la liste générée par le script (catégories de premier niveau)
     function attachMobileToggles() {
         var mobileItems = document.querySelectorAll('.mobile-departments .mobile-item');
@@ -256,9 +268,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function addToCartRequest(id, qty, btn){
-            // If user is not authenticated as client, redirect to Connexion page
+            // If user is not authenticated at all, redirect to Connexion page
             try{
-                if(typeof window.isClientAuthenticated !== 'undefined' && !window.isClientAuthenticated){
+                if(typeof window.isAuthenticated !== 'undefined' && !window.isAuthenticated){
                     var dest = '/Connexion?redirect=' + encodeURIComponent(window.location.href);
                     window.location.href = dest;
                     return Promise.resolve({ success: false, redirected: true });
@@ -287,8 +299,8 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             var id = btn.dataset.id || btn.getAttribute('data-id');
             if(!id) return alert('Produit introuvable');
-            // If guest, redirect to Connexion instead of attempting AJAX
-            if(typeof window.isClientAuthenticated !== 'undefined' && !window.isClientAuthenticated){
+            // If not authenticated, redirect to Connexion instead of attempting AJAX
+            if(typeof window.isAuthenticated !== 'undefined' && !window.isAuthenticated){
                 window.location.href = '/Connexion?redirect=' + encodeURIComponent(window.location.href);
                 return;
             }
@@ -356,7 +368,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                 var subtotal = Math.round(price * qty);
                                 var subEl = row.querySelector('.cart-subtotal');
                                 if(subEl) subEl.textContent = subtotal.toLocaleString('fr-FR') + ' FCFA';
+                                // update data-subtotal on checkbox
+                                var cb = row.querySelector('.select-product');
+                                if(cb) cb.setAttribute('data-subtotal', subtotal);
                             }
+                            if(typeof updateCartTotal === 'function') updateCartTotal(); // update total after quantity change
                         }
                         // update page total element
                         var totalEl = document.getElementById('cart-total');
