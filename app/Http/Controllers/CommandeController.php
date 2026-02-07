@@ -126,13 +126,6 @@ class CommandeController extends Controller
                     $p->save();
                 }
             }
-
-            // remove ordered items from the original session cart (preserve other items)
-            foreach (array_keys($cart) as $pid) {
-                if (isset($originalCart[$pid])) unset($originalCart[$pid]);
-            }
-            session([$cartKey => $originalCart]);
-
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Commande enregistrée', 'commande_id' => $commande->idCommande]);
         } catch (\Exception $e) {

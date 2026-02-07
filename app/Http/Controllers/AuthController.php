@@ -38,6 +38,20 @@ class AuthController extends Controller
                 }
                 Auth::guard('administrateur')->login($admin);
                 $request->session()->regenerate();
+                // Restaurer un panier sauvegardé en cookie (si présent) en le fusionnant
+                $cookieName = 'saved_cart_admin_' . $admin->idAdministrateur;
+                if ($request->cookie($cookieName)) {
+                    $saved = json_decode($request->cookie($cookieName), true);
+                    if (is_array($saved)) {
+                        $key = 'cart_admin_' . $admin->idAdministrateur;
+                        $current = session($key, []);
+                        foreach ($saved as $pid => $qty) {
+                            $current[$pid] = (isset($current[$pid]) ? $current[$pid] + $qty : $qty);
+                        }
+                        session([$key => $current]);
+                    }
+                    cookie()->queue(cookie()->forget($cookieName));
+                }
                 return redirect('/PagePrincipale');
             }
         }
@@ -53,6 +67,20 @@ class AuthController extends Controller
                 }
                 Auth::guard('vendeur')->login($vendeur);
                 $request->session()->regenerate();
+                // Restaurer un panier sauvegardé en cookie (si présent) en le fusionnant
+                $cookieName = 'saved_cart_vendeur_' . $vendeur->idVendeur;
+                if ($request->cookie($cookieName)) {
+                    $saved = json_decode($request->cookie($cookieName), true);
+                    if (is_array($saved)) {
+                        $key = 'cart_vendeur_' . $vendeur->idVendeur;
+                        $current = session($key, []);
+                        foreach ($saved as $pid => $qty) {
+                            $current[$pid] = (isset($current[$pid]) ? $current[$pid] + $qty : $qty);
+                        }
+                        session([$key => $current]);
+                    }
+                    cookie()->queue(cookie()->forget($cookieName));
+                }
                 return redirect('/PagePrincipale');
             }
         }
@@ -68,6 +96,20 @@ class AuthController extends Controller
                 }
                 Auth::guard('client')->login($client);
                 $request->session()->regenerate();
+                // Restaurer un panier sauvegardé en cookie (si présent) en le fusionnant
+                $cookieName = 'saved_cart_client_' . $client->idClient;
+                if ($request->cookie($cookieName)) {
+                    $saved = json_decode($request->cookie($cookieName), true);
+                    if (is_array($saved)) {
+                        $key = 'cart_client_' . $client->idClient;
+                        $current = session($key, []);
+                        foreach ($saved as $pid => $qty) {
+                            $current[$pid] = (isset($current[$pid]) ? $current[$pid] + $qty : $qty);
+                        }
+                        session([$key => $current]);
+                    }
+                    cookie()->queue(cookie()->forget($cookieName));
+                }
                 return redirect('/PagePrincipale');
             }
         }
@@ -77,6 +119,27 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        // Avant de déconnecter, sauvegarder le panier courant dans un cookie pour
+        // pouvoir le restaurer après une future reconnexion.
+        if (Auth::guard('administrateur')->check()) {
+            $id = Auth::guard('administrateur')->id();
+            $key = 'cart_admin_' . $id;
+            $cart = session($key, []);
+            cookie()->queue(cookie('saved_cart_admin_' . $id, json_encode($cart), 60 * 24 * 30));
+        }
+        if (Auth::guard('vendeur')->check()) {
+            $id = Auth::guard('vendeur')->id();
+            $key = 'cart_vendeur_' . $id;
+            $cart = session($key, []);
+            cookie()->queue(cookie('saved_cart_vendeur_' . $id, json_encode($cart), 60 * 24 * 30));
+        }
+        if (Auth::guard('client')->check()) {
+            $id = Auth::guard('client')->id();
+            $key = 'cart_client_' . $id;
+            $cart = session($key, []);
+            cookie()->queue(cookie('saved_cart_client_' . $id, json_encode($cart), 60 * 24 * 30));
+        }
+
         Auth::guard('administrateur')->logout();
         Auth::guard('vendeur')->logout();
         Auth::guard('client')->logout();
