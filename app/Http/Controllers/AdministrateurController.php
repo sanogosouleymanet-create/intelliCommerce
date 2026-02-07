@@ -315,6 +315,8 @@ class AdministrateurController extends Controller
             return response()->json(['error' => 'Type invalide'], 400);
         }
 
+        $admin = Auth::guard('administrateur')->user();
+
         $messages = Message::with(['client','vendeur','administrateur'])
             ->where(function($query) use ($type, $id) {
                 if ($type === 'client') {
@@ -336,14 +338,101 @@ class AdministrateurController extends Controller
             }
         }
 
-        return response()->json($messages->map(function($m) {
+        return response()->json($messages->map(function($m) use ($admin) {
             return [
                 'id' => $m->idMessage,
                 'content' => $m->Contenu,
                 'date' => $m->DateEnvoi->format('d/m/Y H:i'),
-                'isOutgoing' => false, // Tous les messages sont entrants pour l'admin
+                'isOutgoing' => $m->Administrateur_idAdministrateur == $admin->idAdmi,
             ];
         }));
+    }
+
+    /**
+     * Supprime un message spécifique.
+     */
+    public function deleteMessage(Request $request, $id)
+    {
+        $message = Message::find($id);
+        if (!$message) {
+            return response()->json(['success' => false, 'message' => 'Message introuvable'], 404);
+        }
+        $message->delete();
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Supprime une conversation entière (tous les messages d'un expéditeur).
+     */
+    public function deleteConversation(Request $request, $type, $id)
+    {
+        if (!in_array($type, ['client', 'vendeur', 'admin'])) {
+            return response()->json(['error' => 'Type invalide'], 400);
+        }
+
+        $query = Message::query();
+        if ($type === 'client') {
+            $query->where('Client_idClient', $id);
+        } elseif ($type === 'vendeur') {
+            $query->where('Vendeur_idVendeur', $id);
+        } elseif ($type === 'admin') {
+            $query->where('Administrateur_idAdministrateur', $id);
+        }
+        $query->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Affiche la page des paramètres pour l'administrateur.
+     */
+    public function parametres()
+    {
+        $admin = Auth::guard('administrateur')->user();
+        return view('admin.parametres', compact('admin'));
+    }
+
+    /**
+     * Met à jour les paramètres de l'administrateur.
+     */
+    public function updateSettings(Request $request)
+    {
+        $admin = Auth::guard('administrateur')->user();
+        if (!$admin) {
+            return redirect()->route('admin.login');
+        }
+
+        $data = $request->only(['email', 'Nom', 'Prenom', 'current_password', 'new_password', 'new_password_confirmation']);
+        $rules = [
+            'email' => 'nullable|email',
+            'Nom' => 'nullable|string|max:100',
+            'Prenom' => 'nullable|string|max:100',
+        ];
+
+        // If user is changing password, require and validate password fields
+        if ($request->filled('new_password')) {
+            $rules['new_password'] = 'required|string|min:8|confirmed';
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make($data, $rules);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        // If changing password, verify current password
+        if ($request->filled('new_password')) {
+            if (!\Illuminate\Support\Facades\Hash::check($data['current_password'] ?? '', $admin->MotDePasse)) {
+                return back()->withErrors(['current_password' => 'Mot de passe actuel incorrect.']);
+            }
+            $admin->MotDePasse = \Illuminate\Support\Facades\Hash::make($data['new_password']);
+        }
+
+        // Update other fields
+        $admin->fill($request->only(['email', 'Nom', 'Prenom']));
+        $admin->save();
+
+        return redirect()->back()->with('status', 'Paramètres mis à jour');
     }
 
     /**
@@ -363,6 +452,9 @@ class AdministrateurController extends Controller
 
         $created = 0;
 
+        // current administrator who sends the message
+        $sender = Auth::guard('administrateur')->user();
+
         if ($data['recipient_type'] === 'single') {
             if (empty($data['recipient'])) {
                 return response()->json(['success' => false, 'message' => 'Destinataire requis pour un envoi unique.'], 422);
@@ -371,11 +463,33 @@ class AdministrateurController extends Controller
             $type = $parts[0] ?? '';
             $id = isset($parts[1]) ? intval($parts[1]) : 0;
             if ($type === 'client' && $id) {
-                $m = new Message(); $m->Contenu = $content; $m->DateEnvoi = $now; $m->Statut = 'envoye'; $m->Client_idClient = $id; $m->save(); $created = 1;
+                // create message for conversation with client and mark sender as current admin
+                $m = new Message();
+                $m->Contenu = $content;
+                $m->DateEnvoi = $now;
+                $m->Statut = 'envoye';
+                $m->Client_idClient = $id;
+                if ($sender) $m->Administrateur_idAdministrateur = $sender->idAdmi;
+                $m->save();
+                $created = 1;
             } elseif ($type === 'vendeur' && $id) {
-                $m = new Message(); $m->Contenu = $content; $m->DateEnvoi = $now; $m->Statut = 'envoye'; $m->Vendeur_idVendeur = $id; $m->save(); $created = 1;
+                $m = new Message();
+                $m->Contenu = $content;
+                $m->DateEnvoi = $now;
+                $m->Statut = 'envoye';
+                $m->Vendeur_idVendeur = $id;
+                if ($sender) $m->Administrateur_idAdministrateur = $sender->idAdmi;
+                $m->save();
+                $created = 1;
             } elseif ($type === 'admin' && $id) {
-                $m = new Message(); $m->Contenu = $content; $m->DateEnvoi = $now; $m->Statut = 'envoye'; $m->Administrateur_idAdministrateur = $id; $m->save(); $created = 1;
+                // Sending to another admin: keep recording under recipient admin (legacy behavior)
+                $m = new Message();
+                $m->Contenu = $content;
+                $m->DateEnvoi = $now;
+                $m->Statut = 'envoye';
+                $m->Administrateur_idAdministrateur = $id;
+                $m->save();
+                $created = 1;
             } else {
                 return response()->json(['success' => false, 'message' => 'Destinataire invalide.'], 422);
             }
@@ -383,19 +497,40 @@ class AdministrateurController extends Controller
             if ($data['recipient_type'] === 'clients' || $data['recipient_type'] === 'all') {
                 $clients = Client::all();
                 foreach ($clients as $c) {
-                    $m = new Message(); $m->Contenu = $content; $m->DateEnvoi = $now; $m->Statut = 'envoye'; $m->Client_idClient = $c->idClient; $m->save(); $created++;
+                    $m = new Message();
+                    $m->Contenu = $content;
+                    $m->DateEnvoi = $now;
+                    $m->Statut = 'envoye';
+                    $m->Client_idClient = $c->idClient;
+                    if ($sender) $m->Administrateur_idAdministrateur = $sender->idAdmi;
+                    $m->save();
+                    $created++;
                 }
             }
             if ($data['recipient_type'] === 'vendeurs' || $data['recipient_type'] === 'all') {
                 $vendeurs = Vendeur::all();
                 foreach ($vendeurs as $v) {
-                    $m = new Message(); $m->Contenu = $content; $m->DateEnvoi = $now; $m->Statut = 'envoye'; $m->Vendeur_idVendeur = $v->idVendeur; $m->save(); $created++;
+                    $m = new Message();
+                    $m->Contenu = $content;
+                    $m->DateEnvoi = $now;
+                    $m->Statut = 'envoye';
+                    $m->Vendeur_idVendeur = $v->idVendeur;
+                    if ($sender) $m->Administrateur_idAdministrateur = $sender->idAdmi;
+                    $m->save();
+                    $created++;
                 }
             }
             if ($data['recipient_type'] === 'admins' || $data['recipient_type'] === 'all') {
                 $admins = Administrateur::all();
                 foreach ($admins as $a) {
-                    $m = new Message(); $m->Contenu = $content; $m->DateEnvoi = $now; $m->Statut = 'envoye'; $m->Administrateur_idAdministrateur = $a->idAdmi; $m->save(); $created++;
+                    // keep existing behaviour for admin-targeted messages
+                    $m = new Message();
+                    $m->Contenu = $content;
+                    $m->DateEnvoi = $now;
+                    $m->Statut = 'envoye';
+                    $m->Administrateur_idAdministrateur = $a->idAdmi;
+                    $m->save();
+                    $created++;
                 }
             }
         }

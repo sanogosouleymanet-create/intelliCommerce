@@ -1,8 +1,8 @@
-# TODO: Implement WhatsApp-like Chat Interface for Admin Inbox
+# TODO: Add Delete Options for Messages and Conversations
 
-## Steps to Complete
-
-- [x] Modify AdministrateurController.php: Update messages() to group messages into conversations by sender (client, vendeur, admin). Add getConversation() method to fetch messages for a specific conversation.
-- [x] Update routes/web.php: Add a new route for fetching conversation messages (e.g., /admin/messages/conversation/{type}/{id}).
-- [x] Refactor resources/views/admin/inbox.blade.php: Implement sidebar for conversation list, chat area with message bubbles, input field for replies, and JavaScript for dynamic loading and sending.
-- [x] Test the interface: Ensure conversations load, messages display correctly, replies send, and status updates.
+- [x] Add delete button to each message in the chat area.
+- [x] Add delete button to each conversation in the sidebar.
+- [x] Create deleteMessage method in AdministrateurController.
+- [x] Create deleteConversation method in AdministrateurController.
+- [x] Add routes for deleting message and conversation.
+- [x] Update JavaScript to handle delete actions with confirmation.
