@@ -447,7 +447,7 @@
             <div id="mini-cart-body" style="padding:14px;display:block;">
                 <div style="text-align:center;color:#666;padding:28px 6px">Chargement…</div>
             </div>
-            <div style="padding:14px;border-top:1px solid #f7f7f7;display:flex;justify-content:space-between;align-items:center;background:#fafafa;border-bottom-left-radius:12px;border-bottom-right-radius:12px">
+            <div style="padding:14px;border-top:1px solid #f7f7f7;display:flex;justify-content:space-between;align-items:center;background:#fafafa;border-bottom-left-radius:12px;border-bottom-right-radius:12px;position:sticky;bottom:0;z-index:10;">
                 <div style="display:flex;gap:8px;align-items:center">
                     <a href="/cart" class="shiny-button">Voir le panier</a>
                 </div>

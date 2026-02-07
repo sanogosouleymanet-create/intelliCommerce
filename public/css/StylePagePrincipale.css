@@ -429,12 +429,12 @@ header li > a {
 
 /* Styles moved from PagePrincipale.blade.php head */
 /* Product grid styling to match the provided screenshot */
-.product-grid { 
-    display:flex; 
-    flex-wrap:wrap; 
-    gap:28px; 
-    justify-content:center; 
-    padding-left:18px; 
+.product-grid {
+    display:flex;
+    flex-wrap:wrap;
+    gap:28px;
+    justify-content:flex-start;
+    padding-left:18px;
 }
 .product-card { 
     width:220px; 
@@ -728,8 +728,9 @@ a.menu-active, a.menu-active:hover { background:#0b66d1; color:#fff !important; 
     position: relative;
     font-weight: var(--fw8);
     display: flex;
-    padding-left: 0.75em;
-    margin-right: 2em ;
+    padding-left: 0;
+    margin-right: 2em;
+    margin-top: 20px;
 }
 .circle{
     position: absolute;
