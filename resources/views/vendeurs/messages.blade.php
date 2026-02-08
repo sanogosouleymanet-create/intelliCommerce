@@ -328,7 +328,6 @@
                 })
                 .then(res => res.json())
                 .then(() => {
-                    alert('Personne bloquée');
                     location.reload();
                 })
                 .catch(e => alert('Erreur lors du blocage'));
@@ -348,7 +347,6 @@
                 })
                 .then(res => res.json())
                 .then(() => {
-                    alert('Personne débloquée');
                     location.reload();
                 })
                 .catch(e => alert('Erreur lors du déblocage'));

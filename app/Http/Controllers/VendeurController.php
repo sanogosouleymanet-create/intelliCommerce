@@ -9,6 +9,7 @@ use App\Models\Vendeur;
 use App\Models\Message;
 use App\Models\Client;
 use App\Models\Administrateur;
+use App\Models\Commande;
 
 class VendeurController extends Controller
 {
@@ -42,6 +43,19 @@ class VendeurController extends Controller
             'MotDePasse' => Hash::make($request->motdepasse),
             'DateCreation' => now(),
         ]);
+
+        // Créer également un compte client pour permettre au vendeur d'acheter des produits
+        $client = Client::create([
+            'Nom' => $request->nom,
+            'Prenom' => $request->prenom,
+            'DateDeNaissance' => now()->subYears(25)->toDateString(), // Default birthdate
+            'Adresse' => $request->adresse,
+            'TelClient' => $request->tel,
+            'email' => $request->mail,
+            'MotDePasse' => Hash::make($request->motdepasse),
+            'DateCreation' => now(),
+        ]);
+
             // Connecte automatiquement le vendeur créé et redirige vers son tableau de bord
             Auth::guard('vendeur')->login($vend);
             $request->session()->regenerate();
@@ -393,5 +407,124 @@ class VendeurController extends Controller
             }
         }
         return response()->json(['success' => false, 'message' => 'Utilisateur introuvable.'], 404);
+    }
+
+    /**
+     * Marquer une commande comme livrée.
+     */
+    public function markDelivered(Request $request, $id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) return response()->json(['success' => false, 'message' => 'Non authentifié'], 401);
+
+        $commande = Commande::where('idCommande', $id)->first();
+        if (!$commande) {
+            return response()->json(['success' => false, 'message' => 'Commande introuvable.'], 404);
+        }
+
+        // Vérifier si le vendeur possède au moins un produit dans cette commande
+        $vendeurOwnsProduct = $commande->Produit()->where('Vendeur_idVendeur', $vendeur->idVendeur)->exists();
+        if (!$vendeurOwnsProduct) {
+            return response()->json(['success' => false, 'message' => 'Vous n\'êtes pas autorisé à modifier cette commande.'], 403);
+        }
+
+        // Mettre à jour le statut
+        $commande->Statut = 'Livrée';
+        $commande->save();
+
+        return response()->json(['success' => true, 'message' => 'Commande marquée comme livrée.']);
+    }
+
+    /**
+     * Supprimer une commande.
+     */
+    public function deleteCommande(Request $request, $id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) return response()->json(['success' => false, 'message' => 'Non authentifié'], 401);
+
+        $commande = Commande::where('idCommande', $id)->first();
+        if (!$commande) {
+            return response()->json(['success' => false, 'message' => 'Commande introuvable.'], 404);
+        }
+
+        // Vérifier si le vendeur possède au moins un produit dans cette commande
+        $vendeurOwnsProduct = $commande->Produit()->where('Vendeur_idVendeur', $vendeur->idVendeur)->exists();
+        if (!$vendeurOwnsProduct) {
+            return response()->json(['success' => false, 'message' => 'Vous n\'êtes pas autorisé à supprimer cette commande.'], 403);
+        }
+
+        // Delete related Produitcommande records
+        \App\Models\Produitcommande::where('Commande_idCommande', $commande->idCommande)->delete();
+
+        // Delete the commande
+        $commande->delete();
+
+        return response()->json(['success' => true, 'message' => 'Commande supprimée avec succès.']);
+    }
+
+    /**
+     * Supprimer une commande du vendeur (en tant que client).
+     */
+    public function deleteMesCommande(Request $request, $id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) {
+            return redirect()->route('connexion');
+        }
+
+        // Trouver le compte client associé au vendeur
+        $client = Client::where('email', $vendeur->email)->first();
+        if (!$client) {
+            abort(404, 'Compte client introuvable.');
+        }
+
+        $commande = Commande::where('idCommande', $id)->where('Client_idClient', $client->idClient)->first();
+        if (!$commande) {
+            abort(404, 'Commande introuvable.');
+        }
+
+        // Delete related Produitcommande records
+        \App\Models\Produitcommande::where('Commande_idCommande', $commande->idCommande)->delete();
+
+        // Delete the commande
+        $commande->delete();
+
+        return redirect()->back();
+    }
+
+    /**
+     * Affiche la page détaillée d'un client pour le vendeur (seulement si le client a acheté chez ce vendeur).
+     */
+    public function showClient($id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) {
+            return redirect()->route('connexion');
+        }
+
+        $client = Client::whereHas('commandes', function($q) use ($vendeur) {
+            $q->where('Statut', 'Livrée')->whereHas('Produit', function($p) use ($vendeur) {
+                $p->where('Vendeur_idVendeur', $vendeur->idVendeur);
+            });
+        })->find($id);
+
+        if (!$client) {
+            abort(404, 'Client introuvable ou accès non autorisé.');
+        }
+
+        // Detect AJAX/partial requests and return only the partial when appropriate
+        $isAjax = request()->header('X-Requested-With') === 'XMLHttpRequest' || request()->ajax() || request()->wantsJson();
+
+        if ($isAjax) {
+            return view('vendeurs.client_show', compact('vendeur', 'client'));
+        }
+
+        // Full page request -> render PageVendeur with the client_show partial
+        return view('PageVendeur', [
+            'partial' => 'vendeurs.client_show',
+            'vendeur' => $vendeur,
+            'client' => $client
+        ]);
     }
 }

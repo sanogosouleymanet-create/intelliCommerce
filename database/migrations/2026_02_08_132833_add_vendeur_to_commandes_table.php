@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // The column is already named MontantTotal in the original migration, so no change needed
-        // This migration can be skipped or removed if not necessary
+        Schema::table('commandes', function (Blueprint $table) {
+            $table->unsignedBigInteger('Vendeur_idVendeur')->nullable()->after('Client_idClient');
+            $table->foreign('Vendeur_idVendeur')->references('idVendeur')->on('vendeurs');
+        });
     }
 
     /**
@@ -21,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('commandes', function (Blueprint $table) {
-            //
+            $table->dropForeign(['Vendeur_idVendeur']);
+            $table->dropColumn('Vendeur_idVendeur');
         });
     }
 };

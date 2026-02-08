@@ -26,17 +26,7 @@
 
 <section class="container vendeurs-clients">
     @php
-        $raw = $clients ?? ($vendeur->clients ?? collect());
-        $list = collect($raw)->filter(function($c){
-            // Keep client only if they have at least one commande
-            if(isset($c->commandes_count)) return $c->commandes_count > 0;
-            if($c->commandes instanceof \Illuminate\Support\Collection) return $c->commandes->count() > 0;
-            // Fallback: try to count via relation method if exists
-            if(method_exists($c, 'commandes')){
-                try{ return $c->commandes()->count() > 0; } catch (\Throwable $e){ }
-            }
-            return false;
-        });
+        $list = $clients ?? collect();
     @endphp
     <div class="card p-3 mb-3 d-flex align-items-center">
         <div class="w-100 d-flex align-items-center gap-2">
@@ -70,7 +60,7 @@
                                 <td>{{ $c->email ?? '—' }}</td>
                                 <td>{{ $c->TelClient ?? '—' }}</td>
                                 <td>{{ $c->commandes ? $c->commandes->count() : 0 }}</td>
-                                <td class="text-end"><a href="#" class="btn btn-sm btn-outline-secondary">Voir</a></td>
+                                <td class="text-end"><a href="{{ route('vendeur.clients.show', $c->idClient) }}" onclick="vendeurFetchAndInject('{{ route('vendeur.clients.show', $c->idClient) }}'); return false;" class="btn btn-sm btn-outline-secondary">Voir</a></td>
                             </tr>
                         @endforeach
                     </tbody>
