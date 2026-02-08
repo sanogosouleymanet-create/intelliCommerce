@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('idCommande');
             $table->timestamp('DateCommande');
             $table->string('Statut', 45)->default('en cours');
-            $table->double('MontanTotal');
+            $table->double('MontantTotal');
             $table->unsignedBigInteger('Client_idClient');
 
             $table->foreign('Client_idClient')

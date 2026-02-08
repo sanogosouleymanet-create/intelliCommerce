@@ -107,7 +107,7 @@ class ClientController extends Controller
     }
 
     /**
-     * Envoie un message à un vendeur.
+     * Envoie un message à un vendeur ou admin (nouveau ou réponse).
      */
     public function sendMessage(Request $request)
     {
@@ -115,17 +115,48 @@ class ClientController extends Controller
         if (!$client) return response()->json(['error' => 'Non authentifié'], 401);
 
         $data = $request->validate([
-            'recipient' => 'required|email',
+            'recipient' => 'required|string',
             'body' => 'required|string',
             'subject' => 'nullable|string'
         ]);
 
-        $vendeur = \App\Models\Vendeur::where('email', $data['recipient'])->first();
-        if (!$vendeur) {
-            return response()->json(['success' => false, 'message' => 'Vendeur introuvable avec cet email.'], 404);
-        }
-        if ($vendeur->bloque) {
-            return response()->json(['success' => false, 'message' => 'Vous ne pouvez pas envoyer de message à ce vendeur.'], 422);
+        $recipient = $data['recipient'];
+        $targetUser = null;
+        $targetType = null;
+        $targetId = null;
+
+        // Check if recipient is in type:id format (for replies)
+        if (strpos($recipient, ':') !== false) {
+            list($type, $id) = explode(':', $recipient, 2);
+            if ($type === 'vendeur') {
+                $targetUser = \App\Models\Vendeur::find($id);
+                $targetType = 'vendeur';
+                $targetId = $id;
+            } elseif ($type === 'admin') {
+                $targetUser = \App\Models\Administrateur::find($id);
+                $targetType = 'admin';
+                $targetId = $id;
+            } else {
+                return response()->json(['success' => false, 'message' => 'Type de destinataire invalide.'], 400);
+            }
+            if (!$targetUser) {
+                return response()->json(['success' => false, 'message' => 'Destinataire introuvable.'], 404);
+            }
+            if ($targetType === 'vendeur' && ($targetUser->Bloque ?? false)) {
+                return response()->json(['success' => false, 'message' => 'Vous ne pouvez pas envoyer de message à ce vendeur.'], 422);
+            }
+        } else {
+            // Assume it's an email for new message
+            $vendeur = \App\Models\Vendeur::where('email', $recipient)->first();
+            if (!$vendeur) {
+                return response()->json(['success' => false, 'message' => 'Vendeur introuvable avec cet email.'], 404);
+            }
+            if (!empty($vendeur->Bloque)) {
+                return response()->json(['success' => false, 'message' => 'Vous ne pouvez pas envoyer de message à ce vendeur.'], 422);
+            }
+            $targetUser = $vendeur;
+            $targetType = 'vendeur';
+            $targetId = $vendeur->idVendeur;
         }
 
         $m = new Message();
@@ -133,7 +164,11 @@ class ClientController extends Controller
         $m->DateEnvoi = now();
         $m->Statut = 'envoye';
         $m->Client_idClient = $client->idClient;
-        $m->Vendeur_idVendeur = $vendeur->idVendeur;
+        if ($targetType === 'vendeur') {
+            $m->Vendeur_idVendeur = $targetId;
+        } elseif ($targetType === 'admin') {
+            $m->Administrateur_idAdministrateur = $targetId;
+        }
         $m->sender_type = 'client';
         $m->save();
 
@@ -170,11 +205,11 @@ class ClientController extends Controller
 
         if ($type === 'vendeur') {
             $vendeur = \App\Models\Vendeur::find($id);
-            if ($vendeur) {
-                $vendeur->bloque = true;
-                $vendeur->save();
-                return response()->json(['success' => true, 'message' => 'Vendeur bloqué.']);
-            }
+                if ($vendeur) {
+                    $vendeur->Bloque = true;
+                    $vendeur->save();
+                    return response()->json(['success' => true, 'message' => 'Vendeur bloqué.']);
+                }
         }
         return response()->json(['success' => false, 'message' => 'Utilisateur introuvable.'], 404);
     }
@@ -189,12 +224,35 @@ class ClientController extends Controller
 
         if ($type === 'vendeur') {
             $vendeur = \App\Models\Vendeur::find($id);
-            if ($vendeur) {
-                $vendeur->bloque = false;
-                $vendeur->save();
-                return response()->json(['success' => true, 'message' => 'Vendeur débloqué.']);
-            }
+                if ($vendeur) {
+                    $vendeur->Bloque = false;
+                    $vendeur->save();
+                    return response()->json(['success' => true, 'message' => 'Vendeur débloqué.']);
+                }
         }
         return response()->json(['success' => false, 'message' => 'Utilisateur introuvable.'], 404);
+    }
+
+    /**
+     * Affiche les détails d'une commande spécifique pour le client authentifié.
+     */
+    public function showCommande(Request $request, $id)
+    {
+        $client = Auth::guard('client')->user();
+        if (!$client) {
+            return redirect()->route('connexion');
+        }
+
+        $commande = \App\Models\Commande::with(['Produit', 'Client'])->where('idCommande', $id)->where('Client_idClient', $client->idClient)->first();
+
+        if (!$commande) {
+            abort(404, 'Commande introuvable ou accès non autorisé.');
+        }
+
+        if ($request->ajax()) {
+            return view('clients.commande_detail', compact('commande', 'client'))->with('is_partial', true);
+        }
+
+        return view('PageClient', ['partial' => 'clients.commande_detail', 'client' => $client, 'commande' => $commande]);
     }
 }

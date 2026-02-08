@@ -1,17 +1,18 @@
-# TODO: Configure Client Messages Page Like Admin Inbox
+# TODO: Prevent Blocked Messages in Message Views
 
-## Backend Changes
-- [x] Add client-specific message routes in web.php (conversation, send, delete)
-- [x] Add methods in ClientController: getConversation, sendMessage, deleteMessage
-- [x] Ensure client can only access their own conversations (with admins)
+## Tasks
+- [x] Edit resources/views/vendeurs/messages.blade.php
+  - [x] Modify loadConversation to filter messages if blocked
+  - [x] Modify updateMenuOptions to hide reply-area if blocked
+  - [x] Modify sendReply to prevent sending if blocked
+- [x] Edit resources/views/clients/messages.blade.php
+  - [x] Modify loadConversation to filter messages if blocked
+  - [x] Modify updateMenuOptions to hide reply-area if blocked
+  - [x] Modify sendReply to prevent sending if blocked
+- [x] Edit resources/views/admin/inbox.blade.php
+  - [x] Modify loadConversation to filter messages if blocked
+  - [x] Modify updateMenuOptions to hide reply-area if blocked
+  - [x] Modify sendReply to prevent sending if blocked
 
-## Frontend Changes
-- [x] Update resources/views/clients/messages.blade.php to match admin inbox structure (sidebar, chat area, JS)
-- [x] Adapt JS for client routes (e.g., /client/messages/conversation/{id}, /client/messages/send)
-- [x] Remove admin-specific features like blocking, compose to groups
-
-## Testing
-- [x] Test loading conversations
-- [x] Test sending replies
-- [x] Test deleting messages
-- [x] Ensure no access to other clients' messages
+## Followup
+- [x] Test the changes to ensure replies are disabled for blocked conversations (messages sent before blocking remain visible)

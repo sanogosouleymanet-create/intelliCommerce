@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Vendeur;
+use App\Models\Message;
+use App\Models\Client;
+use App\Models\Administrateur;
 
 class VendeurController extends Controller
 {
@@ -108,5 +111,287 @@ class VendeurController extends Controller
         $vendeur->save();
 
         return response()->json(['success' => true, 'message' => 'Paramètres mis à jour', 'vendeur' => $vendeur]);
+    }
+
+    /**
+     * Affiche la page des messages pour le vendeur avec conversations groupées.
+     */
+    public function messages(Request $request)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) {
+            return redirect()->route('connexion');
+        }
+
+        // Récupérer tous les messages avec relations
+        $messages = Message::with(['client','vendeur','administrateur'])
+            ->where('Vendeur_idVendeur', $vendeur->idVendeur)
+            ->orderBy('DateEnvoi', 'desc')
+            ->get();
+
+        // Grouper les messages en conversations par expéditeur
+        $conversations = [];
+        foreach ($messages as $message) {
+            $key = '';
+            $sender = null;
+            if ($message->client) {
+                $key = 'client_' . $message->client->idClient;
+                $sender = $message->client;
+                $senderType = 'client';
+            } elseif ($message->administrateur) {
+                $key = 'admin_' . $message->administrateur->idAdmi;
+                $sender = $message->administrateur;
+                $senderType = 'admin';
+            }
+
+            if ($key && !isset($conversations[$key])) {
+                $conversations[$key] = [
+                    'sender' => $sender,
+                    'senderType' => $senderType,
+                    'lastMessage' => $message,
+                    'unreadCount' => 0,
+                    'lastMessageDate' => $message->DateEnvoi,
+                ];
+            } elseif ($key) {
+                // Mettre à jour le dernier message si plus récent
+                if ($message->DateEnvoi > $conversations[$key]['lastMessageDate']) {
+                    $conversations[$key]['lastMessage'] = $message;
+                    $conversations[$key]['lastMessageDate'] = $message->DateEnvoi;
+                }
+            }
+        }
+
+        // Calculer le nombre de messages non lus pour chaque conversation
+        foreach ($conversations as $key => &$conv) {
+            $query = Message::where('Vendeur_idVendeur', $vendeur->idVendeur);
+            if ($conv['senderType'] === 'client') {
+                $query->where('Client_idClient', $conv['sender']->idClient);
+            } elseif ($conv['senderType'] === 'admin') {
+                $query->where('Administrateur_idAdministrateur', $conv['sender']->idAdmi);
+            }
+            $conv['unreadCount'] = $query->where('sender_type', '!=', 'vendeur')->where('Statut', 'envoye')->count();
+        }
+
+        // Trier les conversations par date du dernier message
+        usort($conversations, function($a, $b) {
+            return $b['lastMessageDate'] <=> $a['lastMessageDate'];
+        });
+
+        // Attach blocked status from sender model when available (DB column is `Bloque`)
+        $conversations = collect($conversations)->map(function($conv){
+            $sender = $conv['sender'] ?? null;
+            $isBlocked = false;
+            if ($sender && isset($sender->Bloque)) {
+                $isBlocked = (bool)$sender->Bloque;
+            }
+            $conv['isBlocked'] = $isBlocked;
+            return $conv;
+        })->values();
+
+        // Detect AJAX/partial requests and return only the partial when appropriate
+        $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest' || $request->ajax() || $request->wantsJson();
+
+        if ($isAjax) {
+            return view('vendeurs.messages', compact('vendeur', 'conversations'));
+        }
+
+        // Full page request -> render PageVendeur with the messages partial
+        return view('PageVendeur', [
+            'partial' => 'vendeurs.messages',
+            'vendeur' => $vendeur,
+            'conversations' => $conversations,
+        ]);
+    }
+
+    /**
+     * Récupère les messages d'une conversation spécifique avec un client ou admin.
+     */
+    public function getConversation($type, $id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) return response()->json(['error' => 'Non authentifié'], 401);
+
+        if ($type === 'client') {
+            $target_id = $id;
+            $target_column = 'Client_idClient';
+        } elseif ($type === 'admin') {
+            $target_id = $id;
+            $target_column = 'Administrateur_idAdministrateur';
+        } else {
+            return response()->json(['error' => 'Type invalide'], 400);
+        }
+
+        $messages = Message::with(['client', 'administrateur'])
+            ->where('Vendeur_idVendeur', $vendeur->idVendeur)
+            ->where($target_column, $target_id)
+            ->orderBy('DateEnvoi', 'asc')
+            ->get();
+
+        // Marquer comme lus
+        foreach ($messages as $message) {
+            if ($message->Statut === 'envoye') {
+                $message->Statut = 'lu';
+                $message->save();
+            }
+        }
+
+        return response()->json($messages->map(function($m) use ($vendeur) {
+            return [
+                'id' => $m->idMessage,
+                'content' => $m->Contenu,
+                'date' => $m->DateEnvoi->format('d/m/Y H:i'),
+                'isOutgoing' => $m->sender_type === 'vendeur',
+            ];
+        }));
+    }
+
+    /**
+     * Envoie un message à un client ou admin (nouveau ou réponse).
+     */
+    public function sendMessage(Request $request)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) return response()->json(['error' => 'Non authentifié'], 401);
+
+        $data = $request->validate([
+            'recipient' => 'required|string',
+            'body' => 'required|string',
+            'subject' => 'nullable|string'
+        ]);
+
+        $recipient = $data['recipient'];
+        $targetUser = null;
+        $targetType = null;
+        $targetId = null;
+
+        // Check if recipient is in type:id format (for replies)
+        if (strpos($recipient, ':') !== false) {
+            list($type, $id) = explode(':', $recipient, 2);
+            if ($type === 'client') {
+                $targetUser = Client::find($id);
+                $targetType = 'client';
+                $targetId = $id;
+            } elseif ($type === 'admin') {
+                $targetUser = Administrateur::find($id);
+                $targetType = 'admin';
+                $targetId = $id;
+            } else {
+                return response()->json(['success' => false, 'message' => 'Type de destinataire invalide.'], 400);
+            }
+            if (!$targetUser) {
+                return response()->json(['success' => false, 'message' => 'Destinataire introuvable.'], 404);
+            }
+            if ($targetType === 'client' && ($targetUser->Bloque ?? false)) {
+                return response()->json(['success' => false, 'message' => 'Vous ne pouvez pas envoyer de message à ce client.'], 422);
+            }
+        } else {
+            // Assume it's an email for new message
+            $client = Client::where('email', $recipient)->first();
+            if (!$client) {
+                return response()->json(['success' => false, 'message' => 'Client introuvable avec cet email.'], 404);
+            }
+            if (!empty($client->Bloque)) {
+                return response()->json(['success' => false, 'message' => 'Vous ne pouvez pas envoyer de message à ce client.'], 422);
+            }
+            $targetUser = $client;
+            $targetType = 'client';
+            $targetId = $client->idClient;
+        }
+
+        $m = new Message();
+        $m->Contenu = trim($data['body']);
+        $m->DateEnvoi = now();
+        $m->Statut = 'envoye';
+        $m->Vendeur_idVendeur = $vendeur->idVendeur;
+        if ($targetType === 'client') {
+            $m->Client_idClient = $targetId;
+        } elseif ($targetType === 'admin') {
+            $m->Administrateur_idAdministrateur = $targetId;
+        }
+        $m->sender_type = 'vendeur';
+        $m->save();
+
+        return response()->json(['success' => true, 'message' => 'Message envoyé.']);
+    }
+
+    /**
+     * Supprime un message spécifique.
+     */
+    public function deleteMessage(Request $request, $id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) return response()->json(['error' => 'Non authentifié'], 401);
+
+        $message = Message::where('idMessage', $id)
+            ->where('Vendeur_idVendeur', $vendeur->idVendeur)
+            ->first();
+
+        if (!$message) {
+            return response()->json(['success' => false, 'message' => 'Message introuvable'], 404);
+        }
+
+        $message->delete();
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Supprime une conversation entière (tous les messages d'un expéditeur).
+     */
+    public function deleteConversation(Request $request, $type, $id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) return response()->json(['error' => 'Non authentifié'], 401);
+
+        if (!in_array($type, ['client', 'admin'])) {
+            return response()->json(['error' => 'Type invalide'], 400);
+        }
+
+        $query = Message::where('Vendeur_idVendeur', $vendeur->idVendeur);
+        if ($type === 'client') {
+            $query->where('Client_idClient', $id);
+        } elseif ($type === 'admin') {
+            $query->where('Administrateur_idAdministrateur', $id);
+        }
+        $query->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Bloque un utilisateur (client).
+     */
+    public function blockUser(Request $request, $type, $id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) return response()->json(['error' => 'Non authentifié'], 401);
+
+        if ($type === 'client') {
+            $client = Client::find($id);
+            if ($client) {
+                $client->Bloque = true;
+                $client->save();
+                return response()->json(['success' => true, 'message' => 'Client bloqué.']);
+            }
+        }
+        return response()->json(['success' => false, 'message' => 'Utilisateur introuvable.'], 404);
+    }
+
+    /**
+     * Débloque un utilisateur (client).
+     */
+    public function unblockUser(Request $request, $type, $id)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) return response()->json(['error' => 'Non authentifié'], 401);
+
+        if ($type === 'client') {
+            $client = Client::find($id);
+            if ($client) {
+                $client->Bloque = false;
+                $client->save();
+                return response()->json(['success' => true, 'message' => 'Client débloqué.']);
+            }
+        }
+        return response()->json(['success' => false, 'message' => 'Utilisateur introuvable.'], 404);
     }
 }

@@ -12,7 +12,7 @@ class Commande extends Model
     protected $fillable = [
         'DateCommande',
         'Statut',
-        'MontanTotal',
+        'MontantTotal',
         'Client_idClient',
     ];
 
@@ -29,6 +29,8 @@ class Commande extends Model
 
     public function Produit()
     {
-        return $this->belongsToMany(Produit::class, 'Produitcommande', 'Commande_idCommande', 'Produit_idProduit')->withPivot('Quantite');
+        return $this->belongsToMany(Produit::class, 'Produitcommande', 'Commande_idCommande', 'Produit_idProduit')->withPivot('Quantite', 'PrixUnitaire');
     }
+
+
 }

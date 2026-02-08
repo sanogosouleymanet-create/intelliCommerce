@@ -53,7 +53,7 @@
                     <tbody id="ordersTable">
                         @foreach($list->sortByDesc('DateCommande') as $commande)
                             @php
-                                $total = $commande->MontantTotal ?? $commande->MontanTotal ?? $commande->Montant ?? 0;
+                                $total = $commande->MontantTotal ?? 0;
                                 $date = $commande->DateCommande ? \Carbon\Carbon::parse($commande->DateCommande)->format('d/m/Y H:i') : '-';
                             @endphp
                             <tr data-id="{{ $commande->idCommande }}">

@@ -104,19 +104,15 @@ Route::middleware(['auth:vendeur'])->group(function () {
             ]);
         }
     });
-    Route::get('/vendeur/messages', function(Request $request) {
-        $vendeur = Auth::guard('vendeur')->user();
-        $messages = $vendeur->messages ?? [];
-        if ($request->ajax()) {
-            return view('vendeurs.messages', compact('vendeur', 'messages'));
-        } else {
-            return view('PageVendeur', [
-                'partial' => 'vendeurs.messages',
-                'vendeur' => $vendeur,
-                'messages' => $messages
-            ]);
-        }
-    });
+    Route::get('/vendeur/messages', [VendeurController::class, 'messages']);
+    // Message endpoints for conversation actions
+    Route::get('/vendeur/messages/conversation/{type}/{id}', [VendeurController::class, 'getConversation']);
+    Route::delete('/vendeur/messages/conversation/{type}/{id}', [VendeurController::class, 'deleteConversation']);
+    Route::delete('/vendeur/messages/{id}', [VendeurController::class, 'deleteMessage']);
+    Route::post('/vendeur/messages/block/{type}/{id}', [VendeurController::class, 'blockUser']);
+    Route::post('/vendeur/messages/unblock/{type}/{id}', [VendeurController::class, 'unblockUser']);
+    // Send message (named route used by the view)
+    Route::post('/vendeur/messages/send', [VendeurController::class, 'sendMessage'])->name('vendeur.messages.send');
     Route::get('/vendeur/parametres', function(Request $request) {
         $vendeur = Auth::guard('vendeur')->user();
         if ($request->ajax()) {
@@ -128,6 +124,14 @@ Route::middleware(['auth:vendeur'])->group(function () {
             ]);
         }
     });
+
+    // Vendeur message routes
+    Route::get('/messages/conversation/{type}/{id}', [VendeurController::class, 'getConversation'])->name('vendeur.messages.conversation');
+    Route::post('/messages/send', [VendeurController::class, 'sendMessage'])->name('vendeur.messages.send');
+    Route::delete('/messages/{id}', [VendeurController::class, 'deleteMessage'])->name('vendeur.messages.delete');
+    Route::delete('/messages/conversation/{type}/{id}', [VendeurController::class, 'deleteConversation'])->name('vendeur.messages.conversation.delete');
+    Route::post('/messages/block/{type}/{id}', [VendeurController::class, 'blockUser'])->name('vendeur.messages.block');
+    Route::post('/messages/unblock/{type}/{id}', [VendeurController::class, 'unblockUser'])->name('vendeur.messages.unblock');
 });
 
 Route::middleware(['auth:vendeur'])->group(function () {
@@ -283,7 +287,7 @@ Route::post('/ConnexionClient', function (Request $request) { return redirect()-
 // Client page (protected) — named PageClient
 Route::get('/PageClient', function (Request $request) {
     $client = Auth::guard('client')->user();
-    $client->load(['message' => function($q) { $q->orderBy('DateEnvoi', 'desc'); }]);
+    $client->load(['commandes.Produit', 'message' => function($q) { $q->orderBy('DateEnvoi', 'desc'); }]);
     // Support AJAX partials via ?view=dashboard
     if ($request->ajax()) {
         $view = $request->query('view', 'dashboard');
@@ -306,6 +310,9 @@ Route::middleware(['auth:client'])->group(function () {
         }
         return view('PageClient', ['partial' => 'clients.commandes', 'client' => $client, 'commandes' => $commandes]);
     });
+
+    Route::get('/commandes/{id}', [ClientController::class, 'showCommande'])->name('client.commande.show');
+    Route::delete('/commandes/{id}', [CommandeController::class, 'destroy'])->name('client.commande.destroy');
 
     Route::get('/messages', function(Request $request){
         $client = Auth::guard('client')->user();
@@ -335,7 +342,7 @@ Route::middleware(['auth:client'])->group(function () {
                     'lastMessage' => $message,
                     'unreadCount' => $message->Statut === 'envoye' ? 1 : 0,
                     'lastMessageDate' => $message->DateEnvoi,
-                    'isBlocked' => $senderType === 'vendeur' ? ($sender->bloque ?? false) : false,
+                    'isBlocked' => $senderType === 'vendeur' ? ($sender->Bloque ?? false) : false,
                 ];
             } elseif ($key) {
                 if ($message->DateEnvoi > $conversations[$key]['lastMessageDate']) {

@@ -107,7 +107,7 @@ class CommandeController extends Controller
             $commande = Commande::create([
                 'DateCommande' => now(),
                 'Statut' => 'en cours',
-                'MontanTotal' => $total,
+                'MontantTotal' => $total,
                 'Client_idClient' => $client->idClient,
             ]);
 
@@ -134,5 +134,26 @@ class CommandeController extends Controller
             $msg = env('APP_DEBUG') ? $e->getMessage() : 'Erreur lors de l enregistrement de la commande';
             return response()->json(['success' => false, 'message' => $msg], 500);
         }
+    }
+
+    public function destroy($id)
+    {
+        $client = Auth::guard('client')->user();
+        if (!$client) {
+            return redirect()->route('connexion')->withErrors('Veuillez vous connecter.');
+        }
+
+        $commande = Commande::where('idCommande', $id)->where('Client_idClient', $client->idClient)->first();
+        if (!$commande) {
+            return redirect()->back()->withErrors('Commande introuvable ou non autorisée.');
+        }
+
+        // Delete related Produitcommande records
+        Produitcommande::where('Commande_idCommande', $commande->idCommande)->delete();
+
+        // Delete the commande
+        $commande->delete();
+
+        return redirect('/commandes')->with('success', 'Commande supprimée avec succès.');
     }
 }
