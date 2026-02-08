@@ -182,10 +182,11 @@ document.addEventListener('DOMContentLoaded', function(){
         }catch(e){ main.innerHTML = '<div class="card"><p>Erreur réseau lors du chargement.</p></div>'; }
     }
     sidebar.addEventListener('click', async function(e){
-        const a = e.target.closest('a');
+        const li = e.target.closest('li[data-view]');
+        if(!li) return;
+        const a = li.querySelector('a');
         if(!a) return;
-        const viewKey = a.getAttribute('data-view') || a.dataset.view || null;
-        if(!viewKey) return;
+        const viewKey = li.getAttribute('data-view');
         e.preventDefault();
         await loadView(viewKey);
         skipNextHashChange = true;

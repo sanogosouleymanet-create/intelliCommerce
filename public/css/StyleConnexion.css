@@ -100,4 +100,46 @@ a{
 
 .button:hover::before {
   opacity: 1;
-} 
+}
+
+/* Colorer le logo en bleu primaire #000080 en utilisant un masque pour un rendu pixel-parfait. */
+/* On remplace l'<img> visible par un masque coloré ; conserver l'<img> caché pour l'accessibilité/repli. */
+.logo a { display:inline-block; width:250px; height:60px; position:relative; }
+
+/* Par défaut : afficher le masque si pris en charge */
+@supports (mask-image: url('/Logo-site.png')) {
+    .logo a::before {
+        content: "";
+        display: block;
+        width: 100%;
+        height: 100%;
+        background-color: #000080;
+        -webkit-mask-image: url('/Logo-site.png');
+        mask-image: url('/Logo-site.png');
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    }
+    .logo img { opacity: 0; position: absolute; left: -9999px; }
+}
+
+/* Repli : si le masque n'est pas pris en charge, afficher l'image et appliquer un filtre ajustable pour approcher la couleur */
+@supports not (mask-image: url('/Logo-site.png')) {
+    img.logo, .logo img {
+        filter: grayscale(1) sepia(1) saturate(6) hue-rotate(210deg) brightness(0.9) contrast(0.95) !important;
+        -webkit-filter: grayscale(1) sepia(1) saturate(6) hue-rotate(210deg) brightness(0.9) contrast(0.95) !important;
+        opacity: 1;
+        position: static;
+    }
+}
+
+/* Si le logo est un SVG inline, forcer son remplissage/contour à la couleur exacte */
+.logo svg * {
+    fill: #000080 !important;
+    stroke: #000080 !important;
+}
+

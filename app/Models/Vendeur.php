@@ -26,6 +26,7 @@ class Vendeur extends Authenticatable
         'Statut',
         'MotDePasse',
         'DateCreation',
+        'Bloque',
     ];
 
     public function produits()

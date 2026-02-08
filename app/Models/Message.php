@@ -18,6 +18,7 @@ class Message extends Model
         'Client_idClient',
         'Vendeur_idVendeur',
         'Administrateur_idAdministrateur',
+        'sender_type',
     ];
 
     public $timestamps = false; // car on utilise DateEnvoi

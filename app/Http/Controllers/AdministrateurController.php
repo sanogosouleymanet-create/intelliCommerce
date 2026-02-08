@@ -298,7 +298,17 @@ class AdministrateurController extends Controller
             return $b['lastMessageDate'] <=> $a['lastMessageDate'];
         });
 
-        $conversations = collect($conversations);
+        // Attach blocked status from sender model when available
+        $conversations = collect($conversations)->map(function($conv){
+            $sender = $conv['sender'] ?? null;
+            $isBlocked = false;
+            if ($sender) {
+                // Many models may use PascalCase column 'Bloque'
+                $isBlocked = isset($sender->Bloque) ? (bool)$sender->Bloque : false;
+            }
+            $conv['isBlocked'] = $isBlocked;
+            return $conv;
+        })->values();
 
         $clients = Client::orderBy('Nom')->get();
         $vendeurs = Vendeur::orderBy('Nom')->get();
@@ -384,7 +394,7 @@ class AdministrateurController extends Controller
     }
 
     /**
-     * Affiche la page des paramètres pour l'administrateur.
+     * Affiche la page des paramètres du site pour l'administrateur.
      */
     public function parametres()
     {
@@ -393,7 +403,7 @@ class AdministrateurController extends Controller
     }
 
     /**
-     * Met à jour les paramètres de l'administrateur.
+     * Met à jour les paramètres du site.
      */
     public function updateSettings(Request $request)
     {
@@ -402,17 +412,14 @@ class AdministrateurController extends Controller
             return redirect()->route('admin.login');
         }
 
-        $data = $request->only(['email', 'Nom', 'Prenom', 'current_password', 'new_password', 'new_password_confirmation']);
+        $data = $request->only(['site_name', 'site_description', 'contact_email', 'contact_phone', 'address']);
         $rules = [
-            'email' => 'nullable|email',
-            'Nom' => 'nullable|string|max:100',
-            'Prenom' => 'nullable|string|max:100',
+            'site_name' => 'nullable|string|max:255',
+            'site_description' => 'nullable|string',
+            'contact_email' => 'nullable|email',
+            'contact_phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
         ];
-
-        // If user is changing password, require and validate password fields
-        if ($request->filled('new_password')) {
-            $rules['new_password'] = 'required|string|min:8|confirmed';
-        }
 
         $validator = \Illuminate\Support\Facades\Validator::make($data, $rules);
 
@@ -420,19 +427,15 @@ class AdministrateurController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        // If changing password, verify current password
-        if ($request->filled('new_password')) {
-            if (!\Illuminate\Support\Facades\Hash::check($data['current_password'] ?? '', $admin->MotDePasse)) {
-                return back()->withErrors(['current_password' => 'Mot de passe actuel incorrect.']);
-            }
-            $admin->MotDePasse = \Illuminate\Support\Facades\Hash::make($data['new_password']);
+        // Save settings to database
+        foreach ($data as $key => $value) {
+            \App\Models\Setting::updateOrCreate(
+                ['key' => $key],
+                ['value' => $value]
+            );
         }
 
-        // Update other fields
-        $admin->fill($request->only(['email', 'Nom', 'Prenom']));
-        $admin->save();
-
-        return redirect()->back()->with('status', 'Paramètres mis à jour');
+        return redirect()->back()->with('status', 'Paramètres du site mis à jour');
     }
 
     /**
@@ -447,7 +450,8 @@ class AdministrateurController extends Controller
             'body' => 'required|string'
         ]);
 
-        $content = trim(($data['subject'] ? $data['subject']."\n\n" : '') . $data['body']);
+        $subject = $data['subject'] ?? null;
+        $content = trim(($subject ? $subject."\n\n" : '') . $data['body']);
         $now = now();
 
         $created = 0;
@@ -539,5 +543,43 @@ class AdministrateurController extends Controller
             return response()->json(['success' => true, 'created' => $created, 'message' => 'Message envoyé.']);
         }
         return redirect()->route('admin.messages')->with('status', 'Message envoyé');
+    }
+
+    /**
+     * Block a user (client or vendeur) so admin can manage conversations.
+     */
+    public function blockUser(Request $request, $type, $id)
+    {
+        if (!in_array($type, ['client', 'vendeur'])) {
+            return response()->json(['error' => 'Type invalide'], 400);
+        }
+        if ($type === 'client') {
+            $model = Client::find($id);
+        } else {
+            $model = Vendeur::find($id);
+        }
+        if (!$model) return response()->json(['error' => 'Utilisateur introuvable'], 404);
+        $model->Bloque = true;
+        $model->save();
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Unblock a user.
+     */
+    public function unblockUser(Request $request, $type, $id)
+    {
+        if (!in_array($type, ['client', 'vendeur'])) {
+            return response()->json(['error' => 'Type invalide'], 400);
+        }
+        if ($type === 'client') {
+            $model = Client::find($id);
+        } else {
+            $model = Vendeur::find($id);
+        }
+        if (!$model) return response()->json(['error' => 'Utilisateur introuvable'], 404);
+        $model->Bloque = false;
+        $model->save();
+        return response()->json(['success' => true]);
     }
 }

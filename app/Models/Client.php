@@ -24,6 +24,7 @@ class Client extends Authenticatable
         "email",
         "MotDePasse",
         "DateCreation",
+        "Bloque",
     ];
 
     public function commandes()

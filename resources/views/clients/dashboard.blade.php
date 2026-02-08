@@ -35,10 +35,17 @@
 
     <div class="col-12 mb-3">
         <div class="card p-3">
-            <h5>Messages</h5>
-            @if(isset($client) && $client->message && $client->message->count())
+            @php
+                $allMessages = $client->message()->orderBy('DateEnvoi', 'desc')->get();
+                $recentMessages = $allMessages->take(3);
+                $unreadInRecent = $recentMessages->where('Statut', 'non lu')->count();
+                $totalUnread = $allMessages->where('Statut', 'non lu')->count();
+                $hasMoreUnread = $totalUnread > $unreadInRecent;
+            @endphp
+            <h5>Messages @if($hasMoreUnread) <i class="fas fa-envelope text-warning"></i> @endif</h5>
+            @if($recentMessages->count())
                 <ul>
-                    @foreach($client->message->sortByDesc('DateEnvoi')->take(5) as $msg)
+                    @foreach($recentMessages as $msg)
                         <li>{{ \Illuminate\Support\Str::limit($msg->Contenu, 120) }} <small class="text-muted">— {{ \Carbon\Carbon::parse($msg->DateEnvoi)->diffForHumans() }}</small></li>
                     @endforeach
                 </ul>

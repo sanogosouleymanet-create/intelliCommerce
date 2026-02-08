@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use App\Models\Vendeur;
 use App\Models\Client;
 use App\Models\Administrateur;
+use App\Models\Message;
 
 
 // Routes SPA pour PageVendeur (injection partielle)
@@ -282,6 +283,7 @@ Route::post('/ConnexionClient', function (Request $request) { return redirect()-
 // Client page (protected) — named PageClient
 Route::get('/PageClient', function (Request $request) {
     $client = Auth::guard('client')->user();
+    $client->load(['message' => function($q) { $q->orderBy('DateEnvoi', 'desc'); }]);
     // Support AJAX partials via ?view=dashboard
     if ($request->ajax()) {
         $view = $request->query('view', 'dashboard');
@@ -307,12 +309,64 @@ Route::middleware(['auth:client'])->group(function () {
 
     Route::get('/messages', function(Request $request){
         $client = Auth::guard('client')->user();
-        $messages = $client ? $client->message()->orderBy('DateEnvoi','desc')->get() : collect();
-        if ($request->ajax()) {
-            return view('clients.messages', compact('client', 'messages'));
+        // Récupérer tous les messages du client avec les vendeurs et administrateurs
+        $messages = Message::with(['vendeur', 'administrateur'])->where('Client_idClient', $client->idClient)->orderBy('DateEnvoi', 'desc')->get();
+
+        // Grouper les messages en conversations par vendeur ou admin
+        $conversations = [];
+        foreach ($messages as $message) {
+            $key = '';
+            $sender = null;
+            $senderType = '';
+            if ($message->vendeur) {
+                $key = 'vendeur_' . $message->vendeur->idVendeur;
+                $sender = $message->vendeur;
+                $senderType = 'vendeur';
+            } elseif ($message->administrateur) {
+                $key = 'admin_' . $message->administrateur->idAdmi;
+                $sender = $message->administrateur;
+                $senderType = 'admin';
+            }
+
+            if ($key && !isset($conversations[$key])) {
+                $conversations[$key] = [
+                    'sender' => $sender,
+                    'senderType' => $senderType,
+                    'lastMessage' => $message,
+                    'unreadCount' => $message->Statut === 'envoye' ? 1 : 0,
+                    'lastMessageDate' => $message->DateEnvoi,
+                    'isBlocked' => $senderType === 'vendeur' ? ($sender->bloque ?? false) : false,
+                ];
+            } elseif ($key) {
+                if ($message->DateEnvoi > $conversations[$key]['lastMessageDate']) {
+                    $conversations[$key]['lastMessage'] = $message;
+                    $conversations[$key]['lastMessageDate'] = $message->DateEnvoi;
+                }
+                if ($message->Statut === 'envoye') {
+                    $conversations[$key]['unreadCount']++;
+                }
+            }
         }
-        return view('PageClient', ['partial' => 'clients.messages', 'client' => $client, 'messages' => $messages]);
+
+        // Trier les conversations par date du dernier message
+        usort($conversations, function($a, $b) {
+            return $b['lastMessageDate'] <=> $a['lastMessageDate'];
+        });
+
+        $conversations = collect($conversations)->values();
+
+        if ($request->ajax()) {
+            return view('clients.messages', compact('client', 'conversations'));
+        }
+        return view('PageClient', ['partial' => 'clients.messages', 'client' => $client, 'conversations' => $conversations]);
     });
+
+    // Client message routes
+    Route::get('/messages/conversation/{type}/{id}', [ClientController::class, 'getConversation'])->name('client.messages.conversation');
+    Route::post('/messages/send', [ClientController::class, 'sendMessage'])->name('client.messages.send');
+    Route::delete('/messages/{id}', [ClientController::class, 'deleteMessage'])->name('client.messages.delete');
+    Route::post('/messages/block/{type}/{id}', [ClientController::class, 'blockUser'])->name('client.messages.block');
+    Route::post('/messages/unblock/{type}/{id}', [ClientController::class, 'unblockUser'])->name('client.messages.unblock');
 
     Route::get('/parametres', function(Request $request){
         $client = Auth::guard('client')->user();
@@ -395,9 +449,13 @@ Route::prefix('admin')->middleware('auth:administrateur')->group(function () {
     Route::get('/clients/{id}', [AdministrateurController::class, 'showClient'])->name('admin.clients.show');
     Route::post('/clients/{id}/delete', [AdministrateurController::class, 'deleteClient'])->name('admin.clients.delete');
     Route::get('/messages', [AdministrateurController::class, 'messages'])->name('admin.messages');
+    Route::post('/messages/block/{type}/{id}', [AdministrateurController::class, 'blockUser'])->name('admin.messages.block');
+    Route::post('/messages/unblock/{type}/{id}', [AdministrateurController::class, 'unblockUser'])->name('admin.messages.unblock');
     // fetch a single conversation (AJAX)
     Route::get('/messages/conversation/{type}/{id}', [AdministrateurController::class, 'getConversation'])->name('admin.messages.conversation');
     Route::post('/messages/send', [AdministrateurController::class, 'sendMessage'])->name('admin.messages.send');
+    // Accept PATCH as a fallback for older clients/scripts that still send PATCH
+    Route::patch('/messages/send', [AdministrateurController::class, 'sendMessage']);
     Route::delete('/messages/{id}', [AdministrateurController::class, 'deleteMessage'])->name('admin.messages.delete');
     Route::delete('/messages/conversation/{type}/{id}', [AdministrateurController::class, 'deleteConversation'])->name('admin.messages.conversation.delete');
     Route::get('/vendeurs', [AdministrateurController::class, 'vendeurs'])->name('admin.vendeurs');
