@@ -1,22 +1,27 @@
 
-<div class="card" style="display:flex;height:80vh;overflow:hidden;">
+
+<div class="card" style="display:flex;height:80vh;overflow:hidden; width:100%; margin-top:10px;">
     <!-- Sidebar for conversations -->
     <div id="conversations-sidebar" style="width:30%;border-right:1px solid #eee;padding:12px;height:100%;overflow-y:auto;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <h4>Conversations</h4>
-            <button id="btn-compose" class="btn btn-sm btn-primary">Composer</button>
+            <button id="btn-compose" class="btn btn-sm btn-primary">Nouveau Message</button>
         </div>
         @if(empty($conversations))
             <p>Aucune conversation pour le moment.</p>
         @else
             <ul id="conversations-list" style="list-style:none;padding:0;">
                 @foreach($conversations as $key => $conv)
-                    <li class="conversation-item" data-type="{{ $conv['senderType'] }}" data-id="{{ $conv['sender']->idClient ?? $conv['sender']->idVendeur ?? $conv['sender']->idAdmi }}" data-name="{{ $conv['sender']->Nom }} {{ $conv['sender']->Prenom }}" style="padding:8px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+                    <li class="conversation-item" data-type="{{ $conv['senderType'] }}" data-id="{{ $conv['sender']->idClient ?? $conv['sender']->idVendeur ?? $conv['sender']->idAdmi }}" data-name="{{ $conv['sender']->Nom }} {{ $conv['sender']->Prenom }}" data-blocked="{{ ($conv['isBlocked'] ?? false) ? 'true' : 'false' }}" style="padding:8px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
                         <div style="display:flex;justify-content:space-between;">
-                            <strong>{{ $conv['sender']->Nom }} {{ $conv['sender']->Prenom }}</strong>
+                            <strong>
+                                @if($conv['isBlocked'] ?? false)
+                                    <i class="fas fa-ban" style="color:red;margin-right:4px;"></i>
+                                    
+                                @endif
+                                {{ $conv['sender']->Nom }} {{ $conv['sender']->Prenom }}
+                            </strong>
                             <div>
-                                
-                                <button class="btn btn-sm delete-conv" data-type="{{ $conv['senderType'] }}" data-id="{{ $conv['sender']->idClient ?? $conv['sender']->idVendeur ?? $conv['sender']->idAdmi }}" style="margin-left:8px;color:red;" title="Supprimer">&times;</button>
                             </div>
                         </div>
                         <small style="color:#6b7280;">{{ \Carbon\Carbon::parse($conv['lastMessageDate'])->format('d/m H:i') }}</small>
@@ -33,7 +38,17 @@
     <!-- Chat area -->
     <div id="chat-area" style="width:70%;display:flex;flex-direction:column;height:100%;">
         <div id="chat-header" style="padding:12px;border-bottom:1px solid #eee;display:none;flex-shrink:0;">
-            <h5 id="chat-title">Sélectionnez une conversation</h5>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h5 id="chat-title">Sélectionnez une conversation</h5>
+                <div style="position:relative;">
+                    <button id="chat-options-btn" style="background:none;border:none;font-size:18px;cursor:pointer;color:black;width: 200px;">&#8942;</button>
+                    <div id="chat-options-menu" style="position:absolute;top:100%;right:0;background:#fff;border:1px solid #ddd;border-radius:4px;padding:8px;display:none;z-index:10;">
+                        <button id="delete-conversation-btn" style="width:100%;margin-bottom:4px;background-color:white !important;border:1px solid #ddd;color:black;">Supprimer la conversation</button>
+                        <button id="block-user-btn" style="width:100%;display:none;margin-bottom:4px;background-color:white !important;border:1px solid #ddd;color:black;">Bloquer la personne</button>
+                        <button id="unblock-user-btn" style="width:100%;display:none;background-color:white !important;border:1px solid #ddd;color:green;">Débloquer la personne</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="messages-container" style="flex:1;padding:12px;display:none;overflow-y:auto;display:flex;flex-direction:column;">
             <!-- Messages will be loaded here -->
@@ -49,7 +64,6 @@
 
 <script>
 (function(){
-    const main = document.getElementById('main-content') || document.querySelector('main');
     const csrf = '{{ csrf_token() }}';
     let currentConversation = null;
 
@@ -125,7 +139,7 @@
             try{
                 const payload = { recipient_type, recipient: recipient || null, subject, body: bodyVal };
                 const res = await fetch('{{ route('admin.messages.send') }}', {
-                    method: 'POST',
+                    method: 'PATCH',
                     headers: {'Content-Type':'application/json','X-CSRF-TOKEN':csrf,'X-Requested-With':'XMLHttpRequest'},
                     body: JSON.stringify(payload)
                 });
@@ -142,11 +156,21 @@
         try{ if(window.__admin_prefill){ applyPrefill(window.__admin_prefill); delete window.__admin_prefill; } }catch(e){}
     }
 
-    function loadConversation(type, id, name) {
+    function loadConversation(type, id, name, blocked) {
+        // normalize name and blocked when not provided
+        if (typeof name === 'undefined' || name === null) {
+            name = (currentConversation && currentConversation.name) ? currentConversation.name : (document.getElementById('chat-title') ? document.getElementById('chat-title').textContent : 'Conversation');
+        }
+        blocked = (typeof blocked !== 'undefined') ? blocked : (currentConversation ? currentConversation.blocked : false);
         fetch(`{{ url('/admin/messages/conversation') }}/${type}/${id}`, {
             headers: {'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest'}
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                throw new Error('Erreur serveur: ' + res.status);
+            }
+            return res.json();
+        })
         .then(messages => {
             const container = document.getElementById('messages-container');
             container.innerHTML = '';
@@ -154,7 +178,7 @@
                 const msgDiv = document.createElement('div');
                 const isAdmin = msg.isOutgoing;
                 msgDiv.style.cssText = `margin-bottom:12px;padding:8px;border-radius:8px;max-width:70%;word-wrap:break-word;${isAdmin ? 'margin-left:auto;background:#007bff;color:white;' : 'margin-right:auto;background:#f1f1f1;'}`;
-                msgDiv.innerHTML = `<div style="white-space:pre-wrap;">${msg.content}</div><small style="color:${isAdmin ? '#e0e0e0' : '#666'};">${msg.date}</small><button class="btn btn-sm delete-msg" data-id="${msg.id}" style="margin-left:8px;color:red;" title="Supprimer">&times;</button>`;
+                msgDiv.innerHTML = `<div style="white-space:pre-wrap;">${msg.content || ''}</div><small style="color:${isAdmin ? '#e0e0e0' : '#666'};">${msg.date || ''}</small><button class="btn btn-sm delete-msg" data-id="${msg.id}" style="margin-left:8px;color:red;" title="Supprimer">&times;</button>`;
                 container.appendChild(msgDiv);
             });
             container.scrollTop = container.scrollHeight;
@@ -162,49 +186,87 @@
             document.getElementById('chat-header').style.display = 'block';
             document.getElementById('messages-container').style.display = 'block';
             document.getElementById('reply-area').style.display = 'block';
-            currentConversation = {type, id};
+            currentConversation = {type, id, name, blocked};
+            updateMenuOptions();
         })
-        .catch(e => alert('Erreur lors du chargement des messages'));
+        .catch(e => {
+            console.error(e);
+            alert('Erreur lors du chargement des messages: ' + e.message);
+        });
+    }
+
+    function updateMenuOptions() {
+        const blockBtn = document.getElementById('block-user-btn');
+        const unblockBtn = document.getElementById('unblock-user-btn');
+        if (currentConversation && currentConversation.blocked) {
+            if (blockBtn) blockBtn.style.display = 'none';
+            if (unblockBtn) unblockBtn.style.display = 'block';
+        } else {
+            if (blockBtn) blockBtn.style.display = 'block';
+            if (unblockBtn) unblockBtn.style.display = 'none';
+        }
     }
 
     function sendReply() {
         const input = document.getElementById('reply-input');
+        if (!input) { alert('Champ de réponse introuvable'); return; }
         const body = input.value.trim();
-        if (!body || !currentConversation) return;
+        if (!body) { alert('Saisissez un message'); input.focus(); return; }
+        if (!currentConversation) { alert('Sélectionnez une conversation avant d\'envoyer'); return; }
+
+        const sendBtn = document.getElementById('btn-send-reply');
+        if (sendBtn) sendBtn.disabled = true;
+
         const payload = { recipient_type: 'single', recipient: `${currentConversation.type}:${currentConversation.id}`, body };
         fetch('{{ route('admin.messages.send') }}', {
             method: 'POST',
-            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':csrf,'X-Requested-With':'XMLHttpRequest'},
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':csrf,'X-Requested-With':'XMLHttpRequest','Accept':'application/json'},
             body: JSON.stringify(payload)
         })
-        .then(res => res.json())
-        .then(() => {
-            input.value = '';
-            loadConversation(currentConversation.type, currentConversation.id);
+        .then(res => {
+            if (!res.ok) return res.json().then(js => Promise.reject(js)).catch(() => Promise.reject({message: 'Erreur serveur'}));
+            return res.json().catch(() => ({}));
         })
-        .catch(e => alert('Erreur lors de l\'envoi'));
+            .then(() => {
+            input.value = '';
+            loadConversation(currentConversation.type, currentConversation.id, currentConversation.name, currentConversation.blocked);
+        })
+        .catch(e => {
+            const msg = (e && e.message) ? e.message : 'Erreur lors de l\'envoi';
+            alert(msg);
+        })
+        .finally(() => { if (sendBtn) sendBtn.disabled = false; });
     }
 
-    document.getElementById('btn-compose').addEventListener('click', function(){ openCompose(); });
+    const btnCompose = document.getElementById('btn-compose');
+    if (btnCompose) btnCompose.addEventListener('click', function(){ openCompose(); });
 
-    document.getElementById('conversations-list').addEventListener('click', function(e){
-        const item = e.target.closest('.conversation-item');
-        if (item) {
-            const type = item.dataset.type;
-            const id = item.dataset.id;
-            const name = item.dataset.name;
-            loadConversation(type, id, name);
-        }
-    });
+    const convList = document.getElementById('conversations-list');
+    if (convList) {
+        convList.addEventListener('click', function(e){
+            const item = e.target.closest('.conversation-item');
+            if (item) {
+                const type = item.dataset.type;
+                const id = item.dataset.id;
+                const name = item.dataset.name;
+                const blocked = item.dataset.blocked === 'true';
+                loadConversation(type, id, name, blocked);
+            }
+        });
+    }
 
-    document.getElementById('btn-send-reply').addEventListener('click', sendReply);
+    const sendBtn = document.getElementById('btn-send-reply');
+    if (sendBtn) sendBtn.addEventListener('click', sendReply);
 
-    document.getElementById('reply-input').addEventListener('keydown', function(e){
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendReply();
-        }
-    });
+    const replyInput = document.getElementById('reply-input');
+    if (replyInput) {
+        replyInput.addEventListener('keydown', function(e){
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendReply();
+            }
+        });
+    }
 
     // Delete message
     document.getElementById('messages-container').addEventListener('click', function(e){
@@ -226,14 +288,29 @@
         }
     });
 
-    // Delete conversation
-    document.getElementById('conversations-list').addEventListener('click', function(e){
-        if (e.target.classList.contains('delete-conv')) {
-            e.stopPropagation();
-            const type = e.target.dataset.type;
-            const id = e.target.dataset.id;
+    // Toggle chat options menu
+    document.getElementById('chat-options-btn').addEventListener('click', function(e){
+        e.stopPropagation();
+        const menu = document.getElementById('chat-options-menu');
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e){
+        const menu = document.getElementById('chat-options-menu');
+        const btn = document.getElementById('chat-options-btn');
+        if (!btn.contains(e.target) && !menu.contains(e.target)) {
+            menu.style.display = 'none';
+        }
+    });
+
+    // Delete current conversation
+    const deleteConvBtn = document.getElementById('delete-conversation-btn');
+    if (deleteConvBtn) {
+        deleteConvBtn.addEventListener('click', function(){
+            if (!currentConversation) return;
             if (confirm('Supprimer cette conversation ?')) {
-                fetch(`{{ url('/admin/messages/conversation') }}/${type}/${id}`, {
+                fetch(`{{ url('/admin/messages/conversation') }}/${currentConversation.type}/${currentConversation.id}`, {
                     method: 'DELETE',
                     headers: {'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest'}
                 })
@@ -241,8 +318,48 @@
                 .then(() => location.reload())
                 .catch(e => alert('Erreur lors de la suppression'));
             }
-        }
-    });
+        });
+    }
+
+    // Block user
+    const blockBtn = document.getElementById('block-user-btn');
+    if (blockBtn) {
+        blockBtn.addEventListener('click', function(){
+            if (!currentConversation) return;
+            if (confirm('Bloquer cette personne ?')) {
+                fetch(`{{ url('/admin/messages/block') }}/${currentConversation.type}/${currentConversation.id}`, {
+                    method: 'POST',
+                    headers: {'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest'}
+                })
+                .then(res => res.json())
+                .then(() => {
+                    alert('Personne bloquée');
+                    location.reload();
+                })
+                .catch(e => alert('Erreur lors du blocage'));
+            }
+        });
+    }
+
+    // Unblock user
+    const unblockBtnElm = document.getElementById('unblock-user-btn');
+    if (unblockBtnElm) {
+        unblockBtnElm.addEventListener('click', function(){
+            if (!currentConversation) return;
+            if (confirm('Débloquer cette personne ?')) {
+                fetch(`{{ url('/admin/messages/unblock') }}/${currentConversation.type}/${currentConversation.id}`, {
+                    method: 'POST',
+                    headers: {'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest'}
+                })
+                .then(res => res.json())
+                .then(() => {
+                    alert('Personne débloquée');
+                    location.reload();
+                })
+                .catch(e => alert('Erreur lors du déblocage'));
+            }
+        });
+    }
 
     // If a prefill object was set before fetching this view, open compose automatically
     try{ if(window.__admin_prefill){ openCompose(window.__admin_prefill); delete window.__admin_prefill; } }catch(e){}

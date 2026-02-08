@@ -16,6 +16,15 @@
         .profile-actions { margin-top:12px; }
         .orders-list .order { border-bottom:1px dashed #efefef; padding:12px 0; }
         .recommended { margin-top:18px; }
+        /* Décaler l'aside un peu vers la gauche sur écrans medium et plus */
+        @media (min-width: 768px) {
+            .client-dashboard .row > aside { transform: translateX(-50px); }
+        }
+        /* Augmenter la largeur du conteneur principal pour donner plus d'espace 
+        .client-dashboard > .container {
+            max-width: 1800px !important;
+            width: 100% !important;
+        }*/
     </style>
 </head>
 <body>
@@ -100,7 +109,9 @@
                 <div class="row">
                     <aside class="col-md-3">
                         <div class="profile-card">
-                            <h4>Bonjour, {{ $client ? ($client->Nom . ' ' . ($client->Prenom ?? '')) : 'Client' }}</h4>
+                            <h5 class="mb-1" style="text-align: center;">{{ $client ? ($client->Nom . ' ' . ($client->Prenom ?? '')) : 'Client' }}</h5>
+                            <div class="text-muted small" style="text-align: center;">Espace Client</div>
+                            
                             <div class="profile-actions d-flex flex-column">
                                 <a href="/PageClient?view=dashboard" class="btn btn-sm btn-outline-primary mb-2" data-client-nav>Tableau de bord</a>
                                 <a href="/commandes" class="btn btn-sm btn-outline-secondary mb-2" data-client-nav>Mes commandes</a>
@@ -155,10 +166,17 @@
 
                                 <div class="col-12 mb-3">
                                     <div class="card p-3">
-                                        <h5>Messages</h5>
-                                        @if(isset($client) && $client->message && $client->message->count())
+                                        @php
+                                            $allMessages = $client->message()->orderBy('DateEnvoi', 'desc')->get();
+                                            $recentMessages = $allMessages->take(3);
+                                            $unreadInRecent = $recentMessages->where('Statut', 'non lu')->count();
+                                            $totalUnread = $allMessages->where('Statut', 'non lu')->count();
+                                            $hasMoreUnread = $totalUnread > $unreadInRecent;
+                                        @endphp
+                                        <h5>Messages @if($hasMoreUnread) <i class="fas fa-envelope text-warning"></i> @endif</h5>
+                                        @if($recentMessages->count())
                                             <ul>
-                                                @foreach($client->message->sortByDesc('DateEnvoi')->take(5) as $msg)
+                                                @foreach($recentMessages as $msg)
                                                     <li>{{ \Illuminate\Support\Str::limit($msg->Contenu, 120) }} <small class="text-muted">— {{ \Carbon\Carbon::parse($msg->DateEnvoi)->diffForHumans() }}</small></li>
                                                 @endforeach
                                             </ul>
@@ -242,7 +260,18 @@
                         const target = document.querySelector('main .container .row section.col-md-9');
                         if(target){
                             // Insert the full response so any <style> or <script> in the partial is preserved
+                            // but ensure inline scripts in the partial are executed: parse them from html and run
+                            const tmpDiv = document.createElement('div'); tmpDiv.innerHTML = html;
+                            // move styles and html into target
                             target.innerHTML = html;
+                            // execute inline scripts from the response
+                            tmpDiv.querySelectorAll('script').forEach(s => {
+                                const ns = document.createElement('script');
+                                if(s.src) ns.src = s.src;
+                                else ns.textContent = s.textContent;
+                                document.body.appendChild(ns);
+                                ns.parentNode.removeChild(ns);
+                            });
                             history.pushState(null,'',href);
                             // update active tab
                             document.querySelectorAll('a[data-client-nav]').forEach(a => a.classList.toggle('active', a.getAttribute('href') === href));
@@ -250,6 +279,8 @@
                             applyClientsParamStyles();
                             ensureClientInputsStyled();
                             initClientParamForm();
+                            // call messages initializer if present
+                            try{ if(window.initClientMessages) window.initClientMessages(); }catch(e){}
                         } else {
                             console.warn('Target container for client partial not found');
                         }
@@ -271,11 +302,20 @@
                         const tmp = document.createElement('div'); tmp.innerHTML = html;
                         const target = document.querySelector('main .container .row section.col-md-9');
                         if(target){
+                            const tmpDiv = document.createElement('div'); tmpDiv.innerHTML = html;
                             target.innerHTML = html;
+                            tmpDiv.querySelectorAll('script').forEach(s => {
+                                const ns = document.createElement('script');
+                                if(s.src) ns.src = s.src;
+                                else ns.textContent = s.textContent;
+                                document.body.appendChild(ns);
+                                ns.parentNode.removeChild(ns);
+                            });
                             document.querySelectorAll('a[data-client-nav]').forEach(a => a.classList.toggle('active', a.getAttribute('href') === (location.pathname + location.search)));
                             applyClientsParamStyles();
                             ensureClientInputsStyled();
                             initClientParamForm();
+                            try{ if(window.initClientMessages) window.initClientMessages(); }catch(e){}
                         }
                     }catch(e){ console.error('popstate fetch failed', e); }
                 })();

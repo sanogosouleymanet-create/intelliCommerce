@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Alertes IA</title>
+    <link rel="stylesheet" href="{{ asset('css/StylePagePrincipale.css') }}" >
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <style>
         body{font-family:Arial,Helvetica,sans-serif;background:#f5f6fa;padding:20px}

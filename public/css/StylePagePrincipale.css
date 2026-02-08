@@ -204,7 +204,7 @@ a{
 
 /* Forcer la couleur des liens en noir même si d'autres règles s'appliquent */
 a:visited{ color: #000 !important; }
-a:hover{ color: #000080 !important; }
+a:hover{ color: #8cd5e2 !important; }
 
 /* Colorer le logo en bleu primaire #000080 en utilisant un masque pour un rendu pixel-parfait. */
 /* On remplace l'<img> visible par un masque coloré ; conserver l'<img> caché pour l'accessibilité/repli. */

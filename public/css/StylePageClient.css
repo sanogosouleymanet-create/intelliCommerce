@@ -159,7 +159,7 @@
 
 /* Forcer la couleur des liens en noir pour la zone client */
 a, a:link, a:visited { color: #000 !important; text-decoration: none; }
-a:hover { color: #000080 !important; }
+a:hover { color: #6eb5d1 !important; }
 
 /* Colorer le logo en bleu primaire #000080 (préférer une approche SVG ou masque pour un rendu pixel-parfait) */
 /*img.logo, .logo img {
