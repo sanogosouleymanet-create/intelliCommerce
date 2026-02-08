@@ -69,7 +69,9 @@ Route::middleware(['auth:vendeur'])->group(function () {
     });
     Route::get('/vendeur/commandes', function(Request $request) {
         $vendeur = Auth::guard('vendeur')->user();
-        $commandes = $vendeur->commandes ?? [];
+        $commandes = \App\Models\Commande::whereHas('Produit', function($q) use ($vendeur) {
+            $q->where('Vendeur_idVendeur', $vendeur->idVendeur);
+        })->with(['Produit', 'Client'])->get();
         if ($request->ajax()) {
             return view('vendeurs.commandes', compact('vendeur', 'commandes'));
         } else {
