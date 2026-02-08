@@ -26,7 +26,7 @@
                         </div>
                         <small style="color:#6b7280;">{{ \Carbon\Carbon::parse($conv['lastMessageDate'])->format('d/m H:i') }}</small>
                         <!--<div style="color:#6b7280;font-size:0.9rem;">{{ Str::limit($conv['lastMessage']->Contenu ?? '', 50) }}</div>-->
-                        @if($conv['unreadCount'] > 0)
+                        @if($conv['unreadCount'] > 0 && !($conv['isBlocked'] ?? false))
                             <span class="badge badge-danger">{{ $conv['unreadCount'] }}</span>
                         @endif
                     </li>
@@ -198,16 +198,23 @@
     function updateMenuOptions() {
         const blockBtn = document.getElementById('block-user-btn');
         const unblockBtn = document.getElementById('unblock-user-btn');
+        const replyArea = document.getElementById('reply-area');
         if (currentConversation && currentConversation.blocked) {
             if (blockBtn) blockBtn.style.display = 'none';
             if (unblockBtn) unblockBtn.style.display = 'block';
+            if (replyArea) replyArea.style.display = 'none';
         } else {
             if (blockBtn) blockBtn.style.display = 'block';
             if (unblockBtn) unblockBtn.style.display = 'none';
+            if (replyArea) replyArea.style.display = 'block';
         }
     }
 
     function sendReply() {
+        if (currentConversation && currentConversation.blocked) {
+            alert('Vous ne pouvez pas envoyer de message à une personne bloquée.');
+            return;
+        }
         const input = document.getElementById('reply-input');
         if (!input) { alert('Champ de réponse introuvable'); return; }
         const body = input.value.trim();
@@ -241,19 +248,17 @@
     const btnCompose = document.getElementById('btn-compose');
     if (btnCompose) btnCompose.addEventListener('click', function(){ openCompose(); });
 
-    const convList = document.getElementById('conversations-list');
-    if (convList) {
-        convList.addEventListener('click', function(e){
-            const item = e.target.closest('.conversation-item');
-            if (item) {
-                const type = item.dataset.type;
-                const id = item.dataset.id;
-                const name = item.dataset.name;
-                const blocked = item.dataset.blocked === 'true';
-                loadConversation(type, id, name, blocked);
-            }
-        });
-    }
+    // Use delegated listener so clicks work after AJAX partial loads
+    document.addEventListener('click', function(e){
+        const item = e.target.closest('.conversation-item');
+        if (item && document.getElementById('conversations-list')) {
+            const type = item.dataset.type;
+            const id = item.dataset.id;
+            const name = item.dataset.name;
+            const blocked = item.dataset.blocked === 'true';
+            loadConversation(type, id, name, blocked);
+        }
+    });
 
     const sendBtn = document.getElementById('btn-send-reply');
     if (sendBtn) sendBtn.addEventListener('click', sendReply);

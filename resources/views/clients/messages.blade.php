@@ -31,7 +31,7 @@
                         </div>
                         <small style="color:#6b7280;">{{ \Carbon\Carbon::parse($conv['lastMessageDate'])->format('d/m H:i') }}</small>
                         <!--<div style="color:#6b7280;font-size:0.9rem;">{{ Str::limit($conv['lastMessage']->Contenu ?? '', 50) }}</div>-->
-                        @if($conv['unreadCount'] > 0)
+                        @if($conv['unreadCount'] > 0 && !($conv['isBlocked'] ?? false))
                             <span class="badge badge-danger">{{ $conv['unreadCount'] }}</span>
                         @endif
                     </li>
@@ -49,8 +49,8 @@
                     <button id="chat-options-btn" style="background:none;border:none;font-size:18px;cursor:pointer;color:black;width: 200px;">&#8942;</button>
                     <div id="chat-options-menu" style="position:absolute;top:100%;right:0;background:#fff;border:1px solid #ddd;border-radius:4px;padding:8px;display:none;z-index:10;">
                         <button id="delete-conversation-btn" style="width:100%;margin-bottom:4px;background-color:white !important;border:1px solid #ddd;color:black;">Supprimer la conversation</button>
-                        <button id="block-user-btn" style="width:100%;display:none;margin-bottom:4px;background-color:white !important;border:1px solid #ddd;color:black;">Bloquer la personne</button>
-                        <button id="unblock-user-btn" style="width:100%;display:none;background-color:white !important;border:1px solid #ddd;color:green;">Débloquer la personne</button>
+                        <button id="block-user-btn" style="width:100%;display:none;margin-bottom:4px;background-color:white !important;border:1px solid #ddd;color:black;">Bloquer</button>
+                        <button id="unblock-user-btn" style="width:100%;display:none;background-color:white !important;border:1px solid #ddd;color:black;">Débloquer</button>
                     </div>
                 </div>
             </div>
@@ -187,6 +187,10 @@
     }
 
     function sendReply() {
+        if (currentConversation && currentConversation.blocked) {
+            alert('Vous ne pouvez pas envoyer de message à une personne bloquée.');
+            return;
+        }
         const input = document.getElementById('reply-input');
         if (!input) { alert('Champ de réponse introuvable'); return; }
         const body = input.value.trim();
@@ -220,19 +224,17 @@
     const btnCompose = document.getElementById('btn-compose');
     if (btnCompose) btnCompose.addEventListener('click', function(){ openCompose(); });
 
-    const convList = document.getElementById('conversations-list');
-    if (convList) {
-        convList.addEventListener('click', function(e){
-            const item = e.target.closest('.conversation-item');
-            if (item) {
-                const type = item.dataset.type;
-                const id = item.dataset.id;
-                const name = item.dataset.name;
-                const blocked = item.dataset.blocked === 'true';
-                loadConversation(type, id, name, blocked);
-            }
-        });
-    }
+    // Use delegated listener so clicks work after AJAX partial loads
+    document.addEventListener('click', function(e){
+        const item = e.target.closest('.conversation-item');
+        if (item && document.getElementById('conversations-list')) {
+            const type = item.dataset.type;
+            const id = item.dataset.id;
+            const name = item.dataset.name;
+            const blocked = item.dataset.blocked === 'true';
+            loadConversation(type, id, name, blocked);
+        }
+    });
 
     const sendBtn = document.getElementById('btn-send-reply');
     if (sendBtn) sendBtn.addEventListener('click', sendReply);
@@ -326,7 +328,7 @@
         unblockBtnElm.addEventListener('click', function(){
             if (!currentConversation) return;
             if (confirm('Débloquer cette personne ?')) {
-                fetch(`{{ url('/admin/messages/unblock') }}/${currentConversation.type}/${currentConversation.id}`, {
+                fetch(`{{ url('/messages/unblock') }}/${currentConversation.type}/${currentConversation.id}`, {
                     method: 'POST',
                     headers: {'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest'}
                 })

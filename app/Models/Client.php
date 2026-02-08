@@ -29,11 +29,11 @@ class Client extends Authenticatable
 
     public function commandes()
     {
-        return $this->hasMany(Commande::class);
+        return $this->hasMany(Commande::class, 'Client_idClient', 'idClient');
     }
     public function message()
     {
-        return $this->hasMany(Message::class);
+        return $this->hasMany(Message::class, 'Client_idClient', 'idClient');
     }
 
     public function getAuthPassword()

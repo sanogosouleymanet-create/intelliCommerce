@@ -36,7 +36,7 @@
             <div class="row">
                 <div class="col-md-6 mb-2">
                     <label class="form-label">Nom Boutique</label>
-                    <input name="NomBoutique" class="form-control form-control-plaintext" readonly value="{{ $vendeur->NomBoutique ?? '' }}">
+                    <input id="nomBoutique" name="NomBoutique" class="form-control form-control-plaintext" readonly value="{{ $vendeur->NomBoutique ?? '' }}">
                 </div>
                 <div class="col-md-6 mb-2">
                     <label class="form-label">Email</label>
@@ -92,8 +92,8 @@ window.CSRF_TOKEN = '{{ csrf_token() }}';
     const form = document.getElementById('formParametres');
     if(!form || form.dataset.inited) return; form.dataset.inited = '1';
 
-    // include all input fields except hidden inputs and buttons
-    const inputs = Array.from(form.querySelectorAll('input, textarea')).filter(i => i.type !== 'hidden' && i.tagName.toLowerCase() !== 'button');
+    // include all input fields except hidden inputs, buttons, and NomBoutique
+    const inputs = Array.from(form.querySelectorAll('input, textarea')).filter(i => i.type !== 'hidden' && i.tagName.toLowerCase() !== 'button' && i.name !== 'NomBoutique');
     const btnEdit = document.getElementById('btnEditParam');
     const btnSave = document.getElementById('btnSaveParam');
     const status = document.getElementById('paramStatus');

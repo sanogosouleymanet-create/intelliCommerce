@@ -128,6 +128,7 @@
                     </aside>
 
                     <section class="col-md-9">
+                        @yield('content')
                         @if(isset($partial))
                             @include($partial)
                         @else
@@ -152,7 +153,14 @@
                                                                 <div class="text-muted">Le {{ \Carbon\Carbon::parse($commande->DateCommande)->format('d/m/Y H:i') }}</div>
                                                             </div>
                                                             <div>
-                                                                <div class="text-end">Total: <strong>{{ number_format($commande->Montant,0,',',' ') }} FCFA</strong></div>
+                                                                @php
+                                                                    $total = $commande->Produit->sum(function($produit) {
+                                                                        $prix = $produit->pivot->PrixUnitaire ?? $produit->Prix ?? 0;
+                                                                        $qty = $produit->pivot->Quantite ?? 0;
+                                                                        return (float)$prix * (float)$qty;
+                                                                    });
+                                                                @endphp
+                                                                <div class="text-end">Total: <strong>{{ number_format($total ?? 0, 0, ',', ' ') }} FCFA</strong></div>
                                                             </div>
                                                         </div>
                                                     </div>

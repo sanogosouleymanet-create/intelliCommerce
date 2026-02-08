@@ -12,7 +12,7 @@
     <style>
         /* small overrides to adapt PagePrincipale style to vendeur dashboard */
         .vendeur-dashboard { padding: 24px 0; }
-        .profile-card { 
+        .profile-card {
             border:1px solid #eee; padding:16px; border-radius:6px; background:#fff; }
         .profile-actions { margin-top:12px; }
         /* Active state for sidebar buttons */
@@ -20,8 +20,26 @@
         .profile-actions a.active i { color:#fff; }
         .orders-list .order { border-bottom:1px dashed #efefef; padding:12px 0; }
         .recommended { margin-top:18px; }
-        
+
         .main-content::-webkit-scrollbar { display: none; } /* Chrome, Safari, Opera */
+
+        /* Responsiveness for small screens */
+        @media (max-width: 767px) {
+            .logo img { width: 150px; }
+            aside { display: none; }
+            .main-content { width: 100%; margin-left: 0; }
+            aside.show {
+                display: block;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 250px;
+                height: 100%;
+                z-index: 1000;
+                background: #fff;
+                box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            }
+        }
     </style>
 </head>
 <body>
@@ -145,6 +163,16 @@
 
     <script>
         (function(){
+            // Mobile sidebar toggle
+            const trigger = document.querySelector('.trigger');
+            const aside = document.querySelector('aside');
+            if(trigger && aside){
+                trigger.addEventListener('click', function(e){
+                    e.preventDefault();
+                    aside.classList.toggle('show');
+                });
+            }
+
             const navLinks = document.querySelectorAll('[data-vendeur-nav]');
             const contentEl = document.getElementById('partial-body');
 
@@ -162,6 +190,23 @@
                     }
                     const html = await res.text();
                     contentEl.innerHTML = html;
+                    // Execute scripts in the loaded content
+                    const scripts = contentEl.querySelectorAll('script');
+                    scripts.forEach(script => {
+                        if (!script.src) {
+                            // Inline script
+                            try {
+                                eval(script.textContent);
+                            } catch (e) {
+                                console.error('Error executing script:', e);
+                            }
+                        } else {
+                            // External script, load it
+                            const newScript = document.createElement('script');
+                            newScript.src = script.src;
+                            document.head.appendChild(newScript);
+                        }
+                    });
                     setActive(link);
                     if(addHistory) history.pushState({ url: url }, '', url);
                     contentEl.scrollIntoView({ behavior: 'smooth' });

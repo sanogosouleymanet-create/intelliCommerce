@@ -17,7 +17,7 @@ class AnalysesController extends Controller
         });
         $commandesCount = $commandesQuery->count();
 
-        $ventes30 = $commandesQuery->where('DateCommande', '>=', now()->subDays(30))->sum('MontanTotal');
+        $ventes30 = $commandesQuery->where('DateCommande', '>=', now()->subDays(30))->sum('MontantTotal');
 
         // Top products (by quantity) for this vendeur in the last 30 days
         $topPivot = \App\Models\Produitcommande::whereHas('produit', function($q) use ($vendeur) {

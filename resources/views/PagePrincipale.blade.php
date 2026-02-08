@@ -368,7 +368,7 @@
                                 <div class="main-text">Tous les Catégories</div>
                                 <div class="mini-text mobile-hide">Total {{ isset($produits) ? $produits->count() : \App\Models\Produit::count() }} Produits</div>
                                 <a href="#" class="dpt-trigger mobile-hide" aria-expanded="false">
-                                    <i class="ri-menu-3-line ri-xl"></i>
+                                    <i class="ri-menu-3-line ri-xl" style="color: white;"></i>
                                 </a>
                             </div>
                             <div class="dpt-menu">

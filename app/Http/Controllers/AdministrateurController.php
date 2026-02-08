@@ -468,6 +468,11 @@ class AdministrateurController extends Controller
             $id = isset($parts[1]) ? intval($parts[1]) : 0;
             if ($type === 'client' && $id) {
                 // create message for conversation with client and mark sender as current admin
+                $client = Client::find($id);
+                if (!$client) return response()->json(['success' => false, 'message' => 'Client introuvable.'], 404);
+                if (!empty($client->Bloque)) {
+                    return response()->json(['success' => false, 'message' => 'Impossible d\'envoyer : destinataire bloqué.'], 422);
+                }
                 $m = new Message();
                 $m->Contenu = $content;
                 $m->DateEnvoi = $now;
@@ -477,6 +482,11 @@ class AdministrateurController extends Controller
                 $m->save();
                 $created = 1;
             } elseif ($type === 'vendeur' && $id) {
+                $vendeur = Vendeur::find($id);
+                if (!$vendeur) return response()->json(['success' => false, 'message' => 'Vendeur introuvable.'], 404);
+                if (!empty($vendeur->Bloque)) {
+                    return response()->json(['success' => false, 'message' => 'Impossible d\'envoyer : destinataire bloqué.'], 422);
+                }
                 $m = new Message();
                 $m->Contenu = $content;
                 $m->DateEnvoi = $now;
@@ -501,6 +511,7 @@ class AdministrateurController extends Controller
             if ($data['recipient_type'] === 'clients' || $data['recipient_type'] === 'all') {
                 $clients = Client::all();
                 foreach ($clients as $c) {
+                    if (!empty($c->Bloque)) continue; // skip blocked recipients
                     $m = new Message();
                     $m->Contenu = $content;
                     $m->DateEnvoi = $now;
@@ -514,6 +525,7 @@ class AdministrateurController extends Controller
             if ($data['recipient_type'] === 'vendeurs' || $data['recipient_type'] === 'all') {
                 $vendeurs = Vendeur::all();
                 foreach ($vendeurs as $v) {
+                    if (!empty($v->Bloque)) continue; // skip blocked recipients
                     $m = new Message();
                     $m->Contenu = $content;
                     $m->DateEnvoi = $now;
