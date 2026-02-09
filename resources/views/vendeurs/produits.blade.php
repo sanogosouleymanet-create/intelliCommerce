@@ -72,7 +72,6 @@
                                         <div class="mt-auto d-flex justify-content-between align-items-center">
                                             <div class="product-price fw-bold">{{ number_format($produit->Prix ?? 0, 0, ',', ' ') }} FCFA</div>
                                             <div class="d-flex gap-2">
-                                                <a href="/produit/{{ $produit->idProduit ?? $produit->id }}" class="btn btn-sm btn-outline-secondary produit-link">Voir</a>
                                                 <a href="/produits/{{ $produit->idProduit ?? $produit->id }}/edit" class="btn btn-sm btn-outline-primary">Modifier</a>
                                             </div>
                                         </div>
