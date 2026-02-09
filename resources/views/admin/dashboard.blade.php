@@ -434,7 +434,7 @@ window.adminFetchAndInject = async function(url, opts){
     if(!main) { console.warn('adminFetchAndInject: main content area not found'); return; }
     try{
         console.log('adminFetchAndInject ->', url);
-        const res = await fetch(url, Object.assign({headers:{'X-Requested-With':'XMLHttpRequest'}}, opts || {}));
+        const res = await fetch(url, Object.assign({headers:{'X-Requested-With':'XMLHttpRequest'}, credentials: 'same-origin'}, opts || {}));
         console.log('adminFetchAndInject status', res.status);
         const text = await res.text();
         // Parse the response and inject only the .main-content (or <main>) to avoid nesting full pages

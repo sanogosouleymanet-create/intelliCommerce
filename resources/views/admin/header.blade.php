@@ -22,5 +22,34 @@
                         <span style="position:absolute;top:-6px;right:-6px;background:#c0392b;color:#fff;border-radius:999px;padding:2px 6px;font-size:12px;min-width:20px;text-align:center">{{ $counts['ia_alertes'] ?? 0 }}</span>
                     @endif
                 </a>
+                <a href="{{ route('admin.messages') }}" id="header-messages" title="Messages" style="position:relative;display:inline-flex;align-items:center;margin-left:8px">
+                    <i class="fa-solid fa-envelope"></i>
+                    @if(($counts['messages_unread'] ?? 0) > 0)
+                        <span id="header-messages-count" style="position:absolute;top:-6px;right:-6px;background:#c0392b;color:#fff;border-radius:999px;padding:2px 6px;font-size:12px;min-width:20px;text-align:center">{{ $counts['messages_unread'] ?? 0 }}</span>
+                    @endif
+                </a>
+                <script>
+                    (function(){
+                        var el = document.getElementById('header-messages');
+                        if(!el) return;
+                        el.addEventListener('click', function(ev){
+                            ev.preventDefault();
+                            var url = '{{ route('admin.messages') }}';
+                            if(window.adminFetchAndInject){
+                                window.adminFetchAndInject(url);
+                                // Update sidebar active state and hash like sidebar click does
+                                const sidebar = document.querySelector('.sidebar');
+                                if(sidebar){
+                                    sidebar.querySelectorAll('li').forEach(li => li.classList.remove('active'));
+                                    const targetLi = sidebar.querySelector('li[data-view="messages"]');
+                                    if(targetLi) targetLi.classList.add('active');
+                                    location.hash = 'messages';
+                                }
+                                return;
+                            }
+                            window.location = url;
+                        });
+                    })();
+                </script>
             </div>
         </header>

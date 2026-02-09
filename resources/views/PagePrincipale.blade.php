@@ -66,6 +66,20 @@
                                                 if($p) $cartTotal += ($p->Prix ?? 0) * $q;
                                             }
                                         }
+
+                                        // compute unread messages count
+                                        $messageUnreadCount = 0;
+                                        $messagesUrl = '#';
+                                        if(auth()->guard('client')->check()){
+                                            $messageUnreadCount = \App\Models\Message::where('Client_idClient', auth()->guard('client')->id())->where('Statut', 'non lu')->count();
+                                            $messagesUrl = '/messages';
+                                        } elseif(auth()->guard('vendeur')->check()){
+                                            $messageUnreadCount = \App\Models\Message::where('Vendeur_idVendeur', auth()->guard('vendeur')->id())->where('Statut', 'non lu')->count();
+                                            $messagesUrl = '/vendeur/messages';
+                                        } elseif(auth()->guard('administrateur')->check()){
+                                            $messageUnreadCount = \App\Models\Message::where('Administrateur_idAdministrateur', auth()->guard('administrateur')->id())->where('Statut', 'non lu')->count();
+                                            $messagesUrl = '/admin/messages';
+                                        }
                                     @endphp
                                 @if($admin || $vendeur || $client)
                                     @php
@@ -345,17 +359,19 @@
                     </div>
                     <div class="right">
                         <ul class="flexitem second-links">
-                            <li><a href="#" class="iscart">
+                            @if($admin || $vendeur || $client)
+                            <li><a href="{{ $messagesUrl }}">
                                 <div class="icon-large"><i class="ri-mail-unread-line"></i></div>
-                                    <div class="fly-item"><span class="item-number">{{ $cartCount }}</span></div>
-                                
+                                    <div class="fly-item"><span class="item-number">{{ $messageUnreadCount }}</span></div>
+
                             </a></li>
-                            
+                            @endif
+
                             <li><a href="#" class="iscart">
                                 <div class="icon-large"><i class="ri-shopping-cart-line"></i></div>
                                     <div class="fly-item"><span class="item-number">{{ $cartCount }}</span></div>
-                                
-                            </a></li>  
+
+                            </a></li>
                         </ul>
                     </div>
                 </div>

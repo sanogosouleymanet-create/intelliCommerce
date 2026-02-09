@@ -71,6 +71,16 @@ class AdministrateurController extends Controller
             'administrateurs' => Administrateur::count(),
             'ia_alertes' => Ia_alerte::count(),
         ];
+        // Count unread messages for this administrator (messages sent by others)
+        try {
+            $messagesUnread = Message::where('Administrateur_idAdministrateur', $admin->idAdministrateur)
+                ->where('sender_type', '!=', 'administrateur')
+                ->where('Statut', 'non lu')
+                ->count();
+            $counts['messages_unread'] = $messagesUnread;
+        } catch (\Throwable $e) {
+            $counts['messages_unread'] = 0;
+        }
         $client = \App\Models\Client::where('email', $admin->email)->first();
         $commandes = $client ? $client->commandes()->with(['produitcommandes.produit'])->orderBy('DateCommande', 'desc')->take(5)->get() : collect();
         return view('admin.dashboard', compact('counts', 'admin', 'commandes'));
@@ -361,7 +371,7 @@ class AdministrateurController extends Controller
                     'sender' => $sender,
                     'senderType' => $senderType,
                     'lastMessage' => $message,
-                    'unreadCount' => $message->Statut === 'envoye' ? 1 : 0,
+                    'unreadCount' => $message->Statut === 'non lu' ? 1 : 0,
                     'lastMessageDate' => $message->DateEnvoi,
                 ];
             } elseif ($key) {
@@ -370,7 +380,7 @@ class AdministrateurController extends Controller
                     $conversations[$key]['lastMessage'] = $message;
                     $conversations[$key]['lastMessageDate'] = $message->DateEnvoi;
                 }
-                if ($message->Statut === 'envoye') {
+                if ($message->Statut === 'non lu') {
                     $conversations[$key]['unreadCount']++;
                 }
             }
@@ -425,7 +435,7 @@ class AdministrateurController extends Controller
 
         // Marquer comme lus
         foreach ($messages as $message) {
-            if ($message->Statut === 'envoye') {
+            if ($message->Statut === 'non lu') {
                 $message->Statut = 'lu';
                 $message->save();
             }
@@ -559,7 +569,7 @@ class AdministrateurController extends Controller
                 $m = new Message();
                 $m->Contenu = $content;
                 $m->DateEnvoi = $now;
-                $m->Statut = 'envoye';
+                $m->Statut = 'non lu';
                 $m->Client_idClient = $id;
                 if ($sender) $m->Administrateur_idAdministrateur = $sender->idAdmi;
                 $m->save();
@@ -583,7 +593,7 @@ class AdministrateurController extends Controller
                 $m = new Message();
                 $m->Contenu = $content;
                 $m->DateEnvoi = $now;
-                $m->Statut = 'envoye';
+                $m->Statut = 'non lu';
                 $m->Administrateur_idAdministrateur = $id;
                 $m->save();
                 $created = 1;
@@ -612,7 +622,7 @@ class AdministrateurController extends Controller
                     $m = new Message();
                     $m->Contenu = $content;
                     $m->DateEnvoi = $now;
-                    $m->Statut = 'envoye';
+                    $m->Statut = 'non lu';
                     $m->Vendeur_idVendeur = $v->idVendeur;
                     if ($sender) $m->Administrateur_idAdministrateur = $sender->idAdmi;
                     $m->save();
@@ -626,7 +636,7 @@ class AdministrateurController extends Controller
                     $m = new Message();
                     $m->Contenu = $content;
                     $m->DateEnvoi = $now;
-                    $m->Statut = 'envoye';
+                    $m->Statut = 'non lu';
                     $m->Administrateur_idAdministrateur = $a->idAdmi;
                     $m->save();
                     $created++;
