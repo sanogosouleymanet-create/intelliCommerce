@@ -17,8 +17,16 @@
                 <option value="">Toutes les categories</option>
                 <option value="Electronique" {{ request('categorie') == 'Electronique' ? 'selected' : '' }}>Électronique</option>
                 <option value="Vetements" {{ request('categorie') == 'Vetements' ? 'selected' : '' }}>Vêtements</option>
-                <option value="Chaussures" {{ request('categorie') == 'Chaussures' ? 'selected' : '' }}>Chaussures</option>
-                <option value="Aliment" {{ request('categorie') == 'Aliment' ? 'selected' : '' }}>Aliment</option>
+                <option value="Chaussures-Femme" {{ request('categorie') == 'Chaussures-Femme' ? 'selected' : '' }}>Chaussures Femme</option>
+                <option value="Chaussures-Homme" {{ request('categorie') == 'Chaussures-Homme' ? 'selected' : '' }}>Chaussures Homme</option>
+                <option value="'Mode-Homme" {{ request('categorie') == 'Mode-Homme' ? 'selected' : '' }}>Mode Homme</option>
+                <option value="Mode-Femme" {{ request('categorie') == 'Mode-Femme' ? 'selected' : '' }}>Mode Femme</option>
+                <option value="Beauté" {{ request('categorie') == 'Beauté' ? 'selected' : '' }}>Beauté</option>
+                <option value="Mode-Fille" {{ request('categorie') == 'Mode-Fille' ? 'selected' : '' }}>Mode Fille</option>
+                <option value="Mode-Garçon" {{ request('categorie') == 'Mode-Garçon' ? 'selected' : '' }}>Mode Garçon</option>
+                <option value="Cuisine&Maison" {{ request('categorie') == 'Cuisine&Maison' ? 'selected' : '' }}>Cuisine & Maison</option>
+                <option value="Sports" {{ request('categorie') == 'Sports' ? 'selected' : '' }}>Sports</option>
+                 <option value="Aliment" {{ request('categorie') == 'Aliment' ? 'selected' : '' }}>Aliment</option>
                 <option value="Livres" {{ request('categorie') == 'Livres' ? 'selected' : '' }}>Livres</option>
                 <option value="Autres" {{ request('categorie') == 'Autres' ? 'selected' : '' }}>Autres</option>
             </select>
