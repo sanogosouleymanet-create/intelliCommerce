@@ -17,9 +17,20 @@
             <div class="col-md-4 mb-2"><label class="form-label">Catégorie</label>
                 <select name="Categorie" class="form-select">
                     <option value="">Sélectionner</option>
-                    @foreach(['Electronique','Vetements','Chaussures','Aliment','Livres','Autres'] as $cat)
-                        <option value="{{ $cat }}" {{ ($produit->Categorie == $cat) ? 'selected' : '' }}>{{ $cat }}</option>
-                    @endforeach
+                    <option value="Electronique" {{ ($produit->Categorie == 'Electronique') ? 'selected' : '' }}>Électronique</option>
+                    <option value="Vetements" {{ ($produit->Categorie == 'Vetements') ? 'selected' : '' }}>Vêtements</option>
+                    <option value="Chaussures-Femme" {{ ($produit->Categorie == 'Chaussures-Femme') ? 'selected' : '' }}>Chaussures Femme</option>
+                    <option value="Chaussures-Homme" {{ ($produit->Categorie == 'Chaussures-Homme') ? 'selected' : '' }}>Chaussures Homme</option>
+                    <option value="Mode-Homme" {{ ($produit->Categorie == 'Mode-Homme') ? 'selected' : '' }}>Mode Homme</option>
+                    <option value="Mode-Femme" {{ ($produit->Categorie == 'Mode-Femme') ? 'selected' : '' }}>Mode Femme</option>
+                    <option value="Beauté" {{ ($produit->Categorie == 'Beauté') ? 'selected' : '' }}>Beauté</option>
+                    <option value="Mode-Fille" {{ ($produit->Categorie == 'Mode-Fille') ? 'selected' : '' }}>Mode Fille</option>
+                    <option value="Mode-Garçon" {{ ($produit->Categorie == 'Mode-Garçon') ? 'selected' : '' }}>Mode Garçon</option>
+                    <option value="Cuisine&Maison" {{ ($produit->Categorie == 'Cuisine&Maison') ? 'selected' : '' }}>Cuisine & Maison</option>
+                    <option value="Sports" {{ ($produit->Categorie == 'Sports') ? 'selected' : '' }}>Sports</option>
+                    <option value="Aliment" {{ ($produit->Categorie == 'Aliment') ? 'selected' : '' }}>Aliment</option>
+                    <option value="Livres" {{ ($produit->Categorie == 'Livres') ? 'selected' : '' }}>Livres</option>
+                    <option value="Autres" {{ ($produit->Categorie == 'Autres') ? 'selected' : '' }}>Autres</option>
                 </select>
             </div>
         </div>

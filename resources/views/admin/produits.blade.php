@@ -63,7 +63,7 @@
                     <td>{{ $produit->vendeur->Nom ?? '—' }}</td>
                     <td>
                         <button class="btn secondary btn-view-produit">Voir</button>
-            
+                        <button class="btn primary btn-add-to-cart" data-id="{{ $produit->idProduit }}">Ajouter au panier</button>
                         <button class="btn danger btn-delete-produit">Supprimer</button>
                     </td>
                 </tr>

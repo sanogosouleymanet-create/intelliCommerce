@@ -42,6 +42,8 @@ class CartController extends Controller
             }
         }
 
+        // Admins can add any products (no restriction)
+
         $key = $this->cartKey($request);
         $cart = session($key, []);
         if (isset($cart[$id])) $cart[$id] += $qty; else $cart[$id] = $qty;

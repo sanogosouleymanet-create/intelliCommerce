@@ -499,9 +499,17 @@ Route::prefix('admin')->middleware('auth:administrateur')->group(function () {
     Route::get('/vendeurs', [AdministrateurController::class, 'vendeurs'])->name('admin.vendeurs');
     Route::get('/vendeurs/{id}', [AdministrateurController::class, 'showVendeur'])->name('admin.vendeurs.show');
     Route::post('/vendeurs/{id}/delete', [AdministrateurController::class, 'deleteVendeur'])->name('admin.vendeurs.delete');
+    Route::get('/commandes', [AdministrateurController::class, 'commandes'])->name('admin.commandes');
+    Route::get('/mes-commandes', [AdministrateurController::class, 'mesCommandes'])->name('admin.mes-commandes');
+    Route::get('/commandes/{id}', [AdministrateurController::class, 'showCommande'])->name('admin.commandes.show');
     Route::get('/parametres', [AdministrateurController::class, 'parametres'])->name('admin.parametres');
     Route::post('/parametres', [AdministrateurController::class, 'updateSettings'])->name('admin.parametres.update');
     Route::get('/ia-alertes', [AdministrateurController::class, 'iaAlerts'])->name('admin.ia_alertes');
+    Route::get('/cart', [AdministrateurController::class, 'cart'])->name('admin.cart');
+    Route::post('/cart/add', [AdministrateurController::class, 'addToCart'])->name('admin.cart.add');
+    Route::post('/cart/remove', [AdministrateurController::class, 'removeFromCart'])->name('admin.cart.remove');
+    Route::post('/cart/update', [AdministrateurController::class, 'updateCart'])->name('admin.cart.update');
+    Route::post('/cart/place-order', [AdministrateurController::class, 'placeOrder'])->name('admin.cart.place-order');
 });
 
 Route::get('/ConnexionAdmin', function () {

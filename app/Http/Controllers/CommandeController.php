@@ -64,26 +64,38 @@ class CommandeController extends Controller
     {
         $client = Auth::guard('client')->user();
         $vendeur = Auth::guard('vendeur')->user();
+        $admin = Auth::guard('administrateur')->user();
 
-        if (!$client && !$vendeur) {
+        if (!$client && !$vendeur && !$admin) {
             return response()->json(['success' => false, 'message' => 'Veuillez vous connecter pour passer commande'], 401);
         }
 
-        // If it's a seller, find or create their corresponding client account
-        if ($vendeur && !$client) {
-            $client = \App\Models\Client::where('email', $vendeur->email)->first();
+        // If it's a seller or admin, find or create their corresponding client account
+        if (($vendeur || $admin) && !$client) {
+            $user = $vendeur ?: $admin;
+            $client = \App\Models\Client::where('email', $user->email)->first();
             if (!$client) {
-            $client = \App\Models\Client::create([
-                'Nom' => $vendeur->Nom,
-                'Prenom' => $vendeur->Prenom,
-                'DateDeNaissance' => now()->subYears(25)->toDateString(), // Default birthdate
-                'Adresse' => $vendeur->Adresse,
-                'TelClient' => $vendeur->TelVendeur,
-                'email' => $vendeur->email,
-                'MotDePasse' => $vendeur->MotDePasse,
-                'DateCreation' => now(),
-                'Bloque' => false,
-            ]);
+                // ensure TelClient is an integer and unique (DB requires integer + unique)
+                $tel = $user->TelVendeur ?? $user->TelAdmin ?? null;
+                if (empty($tel) || !preg_match('/^\d+$/', (string)$tel)) {
+                    // generate a large random unique integer for TelClient
+                    do {
+                        $telCandidate = random_int(1000000000, 2147483647);
+                    } while (\App\Models\Client::where('TelClient', $telCandidate)->exists());
+                    $tel = $telCandidate;
+                }
+
+                $client = \App\Models\Client::create([
+                    'Nom' => $user->Nom,
+                    'Prenom' => $user->Prenom ?? '',
+                    'DateDeNaissance' => now()->subYears(25)->toDateString(), // Default birthdate
+                    'Adresse' => $user->Adresse ?? '',
+                    'TelClient' => $tel,
+                    'email' => $user->email,
+                    'MotDePasse' => $user->MotDePasse,
+                    'DateCreation' => now(),
+                    'Bloque' => false,
+                ]);
             }
         }
 
