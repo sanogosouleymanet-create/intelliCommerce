@@ -102,7 +102,6 @@
                         <nav class="mobile-hide">
                             <ul class="flexitem second-links">
                                 <li><a href="{{('/')}}">Accueil</a></li>
-                                <li><a href="#">Boutique</a></li>
                                 <li class="has-child">
                                     <a href="#">Femme 
                                     <div class="icon-small"><i class="ri-arrow-down-s-line"></i></div>
@@ -374,7 +373,7 @@
                             <div class="dpt-menu">
                                 <ul class="second-links">
                                     <li class="has-child beauty">
-                                        <a href="#">
+                                        <a href="{{ url('/') }}?categorie={{ urlencode('Beauté') }}">
                                             <div class="icon-large"><i class="ri-bear-smile-line"></i></div>
                                             Beauté
                                             <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
@@ -391,7 +390,7 @@
                                         </ul>
                                     </li>
                                     <li class="has-child electronic">
-                                        <a href="#">
+                                        <a href="{{ url('/') }}?categorie={{ urlencode('Électronique') }}">
                                             <div class="icon-large"><i class="ri-bluetooth-connect-line"></i></div>
                                             Électronique
                                             <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
@@ -408,7 +407,7 @@
                                         </ul>
                                     </li>
                                     <li class="has-child fashion">
-                                        <a href="#">
+                                        <a href="{{ url('/') }}?categorie={{ urlencode('Mode-Femme') }}">
                                             <div class="icon-large"><i class="ri-t-shirt-air-line"></i></div>
                                             Mode Femme
                                             <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
@@ -423,21 +422,21 @@
                                         </ul>
                                     </li>
                                     <li class="has-child fashion">
-                                        <a href="#">
+                                        <a href="{{ url('/') }}?categorie={{ urlencode('Mode-Homme') }}">
                                             <div class="icon-large"><i class="ri-shirt-line"></i></div>
                                             Mode Homme
                                             
                                         </a>
                                     </li>
                                     <li class="has-child fashion">
-                                        <a href="#">
+                                        <a href="{{ url('/') }}?categorie={{ urlencode('Mode-Fille') }}">
                                             <div class="icon-large"><i class="ri-user-5-line"></i></div>
                                             Mode Fille
 
                                         </a>
                                     </li>
                                     <li class="has-child fashion">
-                                        <a href="#">
+                                        <a href="{{ url('/') }}?categorie={{ urlencode('Mode-garçon') }}">
                                             <div class="icon-large"><i class="ri-user-6-line"></i></div>
                                             Mode Garçon
                                         </a>
