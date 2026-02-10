@@ -370,7 +370,7 @@
                             <div class="dpt-menu">
                                 <ul class="second-links">
                                     <li class="has-child beauty">
-                                        <a href="{{ url('/') }}?recherche={{ urlencode('Beauté') }}">
+                                        <a href="{{ url('/') }}?categorie={{ urlencode('Beauté') }}">
                                             <div class="icon-large"><i class="ri-bear-smile-line"></i></div>
                                             Beauté
                                             <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
@@ -387,7 +387,7 @@
                                         </ul>
                                     </li>
                                     <li class="has-child electronic">
-                                        <a href="{{ url('/') }}?recherche={{ urlencode('Électronique') }}">
+                                        <a href="{{ url('/') }}?categorie={{ urlencode('Électronique') }}">
                                             <div class="icon-large"><i class="ri-bluetooth-connect-line"></i></div>
                                             Électronique
                                             <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
@@ -404,7 +404,7 @@
                                         </ul>
                                     </li>
                                     <li class="has-child fashion">
-                                        <a href="{{ url('/') }}?recherche={{ urlencode('Mode-Femme') }}">
+                                        <a href="{{ url('/') }}?categorie={{ urlencode('Mode-Femme') }}">
                                             <div class="icon-large"><i class="ri-t-shirt-air-line"></i></div>
                                             Mode Femme
                                             <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
@@ -439,7 +439,7 @@
                                         </a>
                                     </li>
                                     <li class="has-child homekit">
-                                        <a href="#">
+                                        <a href="{{ url('/') }}?recherche={{ urlencode('Cuisine&Maison') }}">
                                             <div class="icon-large"><i class="ri-heart-pulse-line"></i></div>
                                             Cuisine & Maison
                                              <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
@@ -449,41 +449,41 @@
                                                 <div class="wrapper">
                                                     <div class="flexcol">
                                                         <div class="row">
-                                                            <h4><a href="{{ url('/') }}?categorie={{ urlencode('Cuisine & Salle à manger') }}">Cuisine & Salle à manger</a></h4>
+                                                            <h4><a href="{{ url('/') }}?recherche={{ urlencode('Cuisine & Salle à manger') }}">Cuisine & Salle à manger</a></h4>
                                                             <ul>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Cuisine') }}">Cuisine</a></li>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Salle à manger') }}">Salle à manger</a></li>
+                                                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Cuisine') }}">Cuisine</a></li>
+                                                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Salle à manger') }}">Salle à manger</a></li>
                                                             </ul>
                                                         </div>
                                                     </div>
                                                     <div class="flexcol">
                                                         <div class="row">
-                                                            <h4><a href="{{ url('/') }}?categorie={{ urlencode('Salon') }}">Salon</a></h4>
+                                                            <h4><a href="{{ url('/') }}?recherche={{ urlencode('Salon') }}">Salon</a></h4>
                                                             <ul>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Meubles de salon') }}">Meubles de salon</a></li>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Véranda') }}">Véranda</a></li>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Salle familiale') }}">Salle familiale</a></li>
+                                                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Meubles de salon') }}">Meubles de salon</a></li>
+                                                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Véranda') }}">Véranda</a></li>
+                                                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Salle familiale') }}">Salle familiale</a></li>
                                                             </ul>
                                                         </div>
                                                     </div>
                                                     <div class="flexcol">
                                                         <div class="row">
-                                                            <h4><a href="{{ url('/') }}?categorie={{ urlencode('Lit & Bain') }}">Lit & Bain</a></h4>
+                                                            <h4><a href="{{ url('/') }}?recherche={{ urlencode('Lit & Bain') }}">Lit & Bain</a></h4>
                                                             <ul>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Toilettes') }}">Toilettes</a></li>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Rangement & Placard') }}">Rangement & Placard</a></li>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Chambre à coucher') }}">Chambre à coucher</a></li>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Bébé et Enfant') }}">Bébé et Enfant</a></li>
+                                                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Toilettes') }}">Toilettes</a></li>
+                                                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Rangement & Placard') }}">Rangement & Placard</a></li>
+                                                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Chambre à coucher') }}">Chambre à coucher</a></li>
+                                                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Bébé et Enfant') }}">Bébé et Enfant</a></li>
                                                             </ul>
                                                         </div>
                                                     </div>
                                                     <div class="flexcol">
                                                         <div class="row">
-                                                            <h4><a href="{{ url('/') }}?categorie={{ urlencode('Utilitaire') }}">Utilitaire</a></h4>
+                                                            <h4><a href="{{ url('/') }}?recherche={{ urlencode('Utilitaire') }}">Utilitaire</a></h4>
                                                             <ul>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Lessive') }}">Lessive</a></li>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Garage') }}">Garage</a></li>
-                                                                <li><a href="{{ url('/') }}?categorie={{ urlencode('Vestiaire') }}">Vestiaire</a></li>
+                                                                <li><a href="{{ url('/') }}?recherchee={{ urlencode('Lessive') }}">Lessive</a></li>
+                                                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Garage') }}">Garage</a></li>
+                                                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Vestiaire') }}">Vestiaire</a></li>
                                                             </ul>
                                                         </div>
                                                     </div>
@@ -752,7 +752,7 @@
         // Remplacer #mainContent par une vue détail produit (sans navigation)
         (function(){
             // history stack: each entry { html, scroll }
-            let savedStack = [];
+            window.savedStack = window.savedStack || [];
             function renderDetail(data){
                 // parse similar products if provided as JSON string
                 let similar = [];
@@ -814,14 +814,15 @@
             function restoreMain(){
                 const container = document.getElementById('mainContent');
                 if(!container) return;
-                if(savedStack.length){
-                    const entry = savedStack.pop();
+                if(window.savedStack.length){
+                    const entry = window.savedStack.pop();
                     container.innerHTML = entry.html;
                     if(typeof entry.scroll === 'number'){
                         window.scrollTo({ top: entry.scroll, left: 0, behavior: 'auto' });
                     }
                 }
             }
+            window.restoreMain = restoreMain;
             document.addEventListener('click', function(e){
                 const btn = e.target.closest('.product-open');
                 if(btn){
@@ -846,7 +847,7 @@
                         const container = document.getElementById('mainContent');
                         if(!container){ renderDetail(data); return; }
                         // push current view so closing the fragment returns here
-                        savedStack.push({ html: container.innerHTML, scroll: window.scrollY || window.pageYOffset || 0 });
+                        window.savedStack.push({ html: container.innerHTML, scroll: window.scrollY || window.pageYOffset || 0 });
                         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                             .then(resp => resp.text())
                             .then(html => {
@@ -863,7 +864,7 @@
                 if(e.target.closest('.js-back')){
                     e.preventDefault();
                     // navigate back in history; popstate handler will restore the view
-                    if(history.state && history.state.produitId) history.back(); else restoreMain();
+                    if(history.state && history.state.produitId) history.back(); else window.restoreMain();
                     return;
                 }
 
@@ -918,6 +919,11 @@
                         container.innerHTML = prev.html;
                         window.scrollTo(prev.scroll || 0, 0);
                     }
+                }
+                // Handle product detail popstate
+                if(e.state && e.state.produitId){
+                    // Restore the main list view
+                    window.restoreMain();
                 }
             });
             })();
