@@ -104,10 +104,10 @@
                     </div>
                     <div class="right">
                         <ul class="flexitem second-links">
-                            <li class="mobile-hide"><a href="#">
+                           <!-- <li class="mobile-hide"><a href="#">
                                 <div class="icon-large"><i class="ri-heart-line"></i></div>
                                 <div class="fly-item"><span class="item-number">0</span></div>
-                            </a></li>
+                            </a></li>-->
                             <li><a href="#" class="iscart">
                                 <div class="icon-large"><i class="ri-shopping-cart-line"></i></div>
                                     <div class="fly-item"><span class="item-number">0</span></div>
@@ -183,7 +183,7 @@
 
             async function loadUrl(url, link, addHistory = true){
                 try{
-                    const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+                    const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'include' });
                     if(!res.ok){
                         contentEl.innerHTML = '<div class="alert alert-danger">Erreur de chargement</div>';
                         return;
@@ -218,19 +218,20 @@
                 }
             }
 
-            navLinks.forEach(link => {
-                link.addEventListener('click', function(e){
+            document.addEventListener('click', function(e){
+                const link = e.target.closest('[data-vendeur-nav]');
+                if(link){
                     const href = link.getAttribute('href');
                     const sameOrigin = href && (href.startsWith('/') || href.startsWith(window.location.origin));
                     if(sameOrigin){
                         e.preventDefault();
                         loadUrl(href, link);
                     }
-                });
+                }
             });
 
             window.addEventListener('popstate', function(e){
-                const url = (e.state && e.state.url) || window.location.href;
+                const url = window.location.href;
                 const match = Array.from(navLinks).find(l => l.href === url || l.getAttribute('href') === (new URL(url)).pathname + (new URL(url)).search);
                 loadUrl(url, match || null, false);
             });
@@ -239,6 +240,15 @@
             const current = window.location.pathname + window.location.search;
             const initial = Array.from(navLinks).find(l => l.getAttribute('href') === current || l.href === window.location.href);
             if(initial) setActive(initial);
+
+            // Set initial history state for back button support
+            history.replaceState({ url: window.location.href }, '', window.location.href);
+
+            // Expose loadUrl as global function for partials
+            window.vendeurFetchAndInject = function(url, addHistory = true) {
+                // when called from partials (e.g. "Voir"), default to adding a history entry
+                loadUrl(url, null, addHistory);
+            };
 
             // Initialize partial-specific widgets (e.g., parametres form)
             function initPartials(){

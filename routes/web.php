@@ -82,9 +82,37 @@ Route::middleware(['auth:vendeur'])->group(function () {
             ]);
         }
     });
+    Route::get('/vendeur/mes-commandes', function(Request $request) {
+        $vendeur = Auth::guard('vendeur')->user();
+        $client = \App\Models\Client::where('email', $vendeur->email)->first();
+        $commandes = $client ? $client->commandes()->with(['Produit' => function($q) {
+            $q->with('Vendeur');
+        }])->get() : collect();
+        if ($request->ajax()) {
+            return view('vendeurs.mes-commandes', compact('vendeur', 'commandes'));
+        } else {
+            return view('PageVendeur', [
+                'partial' => 'vendeurs.mes-commandes',
+                'vendeur' => $vendeur,
+                'commandes' => $commandes
+            ]);
+        }
+    });
+    Route::post('/vendeur/commandes/{id}/mark-delivered', [VendeurController::class, 'markDelivered']);
+    Route::delete('/vendeur/commandes/{id}', [VendeurController::class, 'deleteCommande']);
+    Route::delete('/vendeur/mes-commandes/{id}', [VendeurController::class, 'deleteMesCommande'])->name('vendeur.mes-commandes.destroy');
+    Route::post('/passer-commande', [CommandeController::class, 'store']);
     Route::get('/vendeur/clients', function(Request $request) {
         $vendeur = Auth::guard('vendeur')->user();
-        $clients = $vendeur->clients ?? [];
+        $clients = Client::whereHas('commandes', function($q) use ($vendeur) {
+            $q->where('Statut', 'Livrée')->whereHas('Produit', function($p) use ($vendeur) {
+                $p->where('Vendeur_idVendeur', $vendeur->idVendeur);
+            });
+        })->with(['commandes' => function($q) use ($vendeur) {
+            $q->where('Statut', 'Livrée')->whereHas('Produit', function($p) use ($vendeur) {
+                $p->where('Vendeur_idVendeur', $vendeur->idVendeur);
+            });
+        }])->get();
         if ($request->ajax()) {
             return view('vendeurs.clients', compact('vendeur', 'clients'));
         } else {
@@ -94,7 +122,8 @@ Route::middleware(['auth:vendeur'])->group(function () {
                 'clients' => $clients
             ]);
         }
-    });
+    })->name('vendeur.clients');
+    Route::get('/vendeur/clients/{id}', [VendeurController::class, 'showClient'])->name('vendeur.clients.show');
     Route::get('/vendeur/analyses', function(Request $request) {
         $vendeur = Auth::guard('vendeur')->user();
         if ($request->ajax()) {
@@ -106,7 +135,7 @@ Route::middleware(['auth:vendeur'])->group(function () {
             ]);
         }
     });
-    Route::get('/vendeur/messages', [VendeurController::class, 'messages']);
+    Route::get('/vendeur/messages', [VendeurController::class, 'messages'])->name('vendeur.messages');
     // Message endpoints for conversation actions
     Route::get('/vendeur/messages/conversation/{type}/{id}', [VendeurController::class, 'getConversation']);
     Route::delete('/vendeur/messages/conversation/{type}/{id}', [VendeurController::class, 'deleteConversation']);

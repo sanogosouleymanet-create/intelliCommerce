@@ -9,7 +9,7 @@
             <div class="card p-3">
                 <h5>Total Ventes</h5>
                 @php
-                    $commandesQuery = \App\Models\Commande::whereHas('Produit', function($q) use ($vendeur){ $q->where('Vendeur_idVendeur', $vendeur->idVendeur); });
+                    $commandesQuery = \App\Models\Commande::whereHas('Produit', function($q) use ($vendeur){ $q->where('Vendeur_idVendeur', $vendeur->idVendeur); })->where('Statut', 'Livrée');
                     $totalVentes = $commandesQuery->get()->sum(function($c){ return $c->MontantTotal ?? 0; });
                     $nbCommandes = $commandesQuery->count();
                 @endphp
@@ -41,7 +41,7 @@
             $days = collect();
             for($i=6;$i>=0;$i--){
                 $d = \Carbon\Carbon::today()->subDays($i);
-                $sum = \App\Models\Commande::whereHas('Produit', function($q) use ($vendeur){ $q->where('Vendeur_idVendeur', $vendeur->idVendeur); })->whereDate('DateCommande', $d)->get()->sum(function($c){ return $c->MontantTotal ?? 0; });
+                $sum = \App\Models\Commande::whereHas('Produit', function($q) use ($vendeur){ $q->where('Vendeur_idVendeur', $vendeur->idVendeur); })->where('Statut', 'Livrée')->whereDate('DateCommande', $d)->get()->sum(function($c){ return $c->MontantTotal ?? 0; });
                 $days->push(['label' => $d->format('d/m'), 'value' => $sum]);
             }
             $max = $days->max('value') ?: 1;

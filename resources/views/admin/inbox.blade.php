@@ -7,6 +7,7 @@
             <h4>Conversations</h4>
             <button id="btn-compose" class="btn btn-sm btn-primary">Nouveau Message</button>
         </div>
+        <input id="search-conversations" type="text" placeholder="Rechercher une conversation..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;margin-bottom:12px;">
         @if(empty($conversations))
             <p>Aucune conversation pour le moment.</p>
         @else
@@ -368,5 +369,22 @@
 
     // If a prefill object was set before fetching this view, open compose automatically
     try{ if(window.__admin_prefill){ openCompose(window.__admin_prefill); delete window.__admin_prefill; } }catch(e){}
+
+    // Search conversations
+    const searchInput = document.getElementById('search-conversations');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            const items = document.querySelectorAll('#conversations-list .conversation-item');
+            items.forEach(item => {
+                const name = item.dataset.name.toLowerCase();
+                if (name.includes(query)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
 })();
 </script>

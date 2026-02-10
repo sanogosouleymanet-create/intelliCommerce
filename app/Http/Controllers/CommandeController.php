@@ -63,8 +63,28 @@ class CommandeController extends Controller
     public function store(Request $request)
     {
         $client = Auth::guard('client')->user();
-        if (!$client) {
+        $vendeur = Auth::guard('vendeur')->user();
+
+        if (!$client && !$vendeur) {
             return response()->json(['success' => false, 'message' => 'Veuillez vous connecter pour passer commande'], 401);
+        }
+
+        // If it's a seller, find or create their corresponding client account
+        if ($vendeur && !$client) {
+            $client = \App\Models\Client::where('email', $vendeur->email)->first();
+            if (!$client) {
+            $client = \App\Models\Client::create([
+                'Nom' => $vendeur->Nom,
+                'Prenom' => $vendeur->Prenom,
+                'DateDeNaissance' => now()->subYears(25)->toDateString(), // Default birthdate
+                'Adresse' => $vendeur->Adresse,
+                'TelClient' => $vendeur->TelVendeur,
+                'email' => $vendeur->email,
+                'MotDePasse' => $vendeur->MotDePasse,
+                'DateCreation' => now(),
+                'Bloque' => false,
+            ]);
+            }
         }
 
         // determine cart key (same logic as CartController)
@@ -94,6 +114,16 @@ class CommandeController extends Controller
         // build lines, check availability, compute total
         $prodIds = array_keys($cart);
         $produits = Produit::whereIn('idProduit', $prodIds)->get()->keyBy('idProduit');
+
+        // Check if seller is trying to order their own products
+        if ($vendeur) {
+            foreach ($produits as $p) {
+                if ($p->Vendeur_idVendeur == $vendeur->idVendeur) {
+                    return response()->json(['success' => false, 'message' => 'Vous ne pouvez pas commander vos propres produits.'], 400);
+                }
+            }
+        }
+
         $total = 0;
         foreach ($cart as $pid => $qty) {
             $p = $produits->get($pid);

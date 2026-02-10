@@ -19,7 +19,7 @@
                 <option value="Vetements" {{ request('categorie') == 'Vetements' ? 'selected' : '' }}>Vêtements</option>
                 <option value="Chaussures-Femme" {{ request('categorie') == 'Chaussures-Femme' ? 'selected' : '' }}>Chaussures Femme</option>
                 <option value="Chaussures-Homme" {{ request('categorie') == 'Chaussures-Homme' ? 'selected' : '' }}>Chaussures Homme</option>
-                <option value="'Mode-Homme" {{ request('categorie') == 'Mode-Homme' ? 'selected' : '' }}>Mode Homme</option>
+                <option value="Mode-Homme" {{ request('categorie') == 'Mode-Homme' ? 'selected' : '' }}>Mode Homme</option>
                 <option value="Mode-Femme" {{ request('categorie') == 'Mode-Femme' ? 'selected' : '' }}>Mode Femme</option>
                 <option value="Beauté" {{ request('categorie') == 'Beauté' ? 'selected' : '' }}>Beauté</option>
                 <option value="Mode-Fille" {{ request('categorie') == 'Mode-Fille' ? 'selected' : '' }}>Mode Fille</option>
@@ -115,7 +115,15 @@
                         <option value="">Sélectionner</option>
                         <option value="Electronique">Électronique</option>
                         <option value="Vetements">Vêtements</option>
-                        <option value="Chaussures">Chaussures</option>
+                        <option value="Chaussures-Femme">Chaussures Femme</option>
+                        <option value="Chaussures-Homme">Chaussures Homme</option>
+                        <option value="Mode-Homme">Mode Homme</option>
+                        <option value="Mode-Femme">Mode Femme</option>
+                        <option value="Beauté">Beauté</option>
+                        <option value="Mode-Fille">Mode Fille</option>
+                        <option value="Mode-Garçon">Mode Garçon</option>
+                        <option value="Cuisine&Maison">Cuisine & Maison</option>
+                        <option value="Sports">Sports</option>
                         <option value="Aliment">Aliment</option>
                         <option value="Livres">Livres</option>
                         <option value="Autres">Autres</option>
@@ -185,5 +193,53 @@
     document.getElementById('openAddBtn')?.addEventListener('click', function(e){ e.preventDefault(); document.getElementById('addModal').style.display='flex'; document.getElementById('addModal').setAttribute('aria-hidden','false'); });
     document.getElementById('fabAdd')?.addEventListener('click', function(e){ e.preventDefault(); document.getElementById('addModal').style.display='flex'; document.getElementById('addModal').setAttribute('aria-hidden','false'); });
     document.getElementById('closeAdd')?.addEventListener('click', function(){ document.getElementById('addModal').style.display='none'; document.getElementById('addModal').setAttribute('aria-hidden','true'); });
+
+    // Intercepter l'envoi du formulaire d'ajout pour faire un POST AJAX
+    const formProduit = document.getElementById('formProduit');
+    formProduit?.addEventListener('submit', async function(e){
+        e.preventDefault();
+        const submitBtn = formProduit.querySelector('button[type="submit"]');
+        if(submitBtn) submitBtn.disabled = true;
+        try{
+            const data = new FormData(formProduit);
+            const res = await fetch(formProduit.action, {
+                method: 'POST',
+                body: data,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin'
+            });
+            if(!res.ok){
+                const j = await res.json().catch(()=>null);
+                alert(j?.message || 'Erreur lors de l\u2019ajout du produit');
+                return;
+            }
+            const json = await res.json().catch(()=>null);
+            if(json && json.success){
+                // Rafraîchir la liste des produits via l'endpoint partiel
+                try{
+                    const fetchUrl = '/vendeur/produits?partial=1';
+                    const resp = await fetch(fetchUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+                    if(resp.ok){
+                        const html = await resp.text();
+                        const tmp = document.createElement('div'); tmp.innerHTML = html;
+                        const inner = tmp.querySelector('#product-list') || tmp;
+                        const container = document.getElementById('product-list');
+                        if(container && inner) container.innerHTML = inner.innerHTML;
+                    }
+                }catch(err){ console.error('refresh error', err); }
+
+                // fermer la modal
+                const modal = document.getElementById('addModal');
+                if(modal){ modal.style.display = 'none'; modal.setAttribute('aria-hidden','true'); }
+            } else {
+                alert(json?.message || 'Réponse inattendue');
+            }
+        }catch(err){
+            console.error('submit error', err);
+            alert('Erreur réseau lors de l\u2019ajout');
+        } finally {
+            if(submitBtn) submitBtn.disabled = false;
+        }
+    });
 })();
 </script>

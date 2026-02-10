@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Vendeur;
 
 class Commande extends Model
 {
@@ -14,6 +15,7 @@ class Commande extends Model
         'Statut',
         'MontantTotal',
         'Client_idClient',
+        'Vendeur_idVendeur',
     ];
 
     protected $table = 'commandes';
@@ -30,6 +32,11 @@ class Commande extends Model
     public function Produit()
     {
         return $this->belongsToMany(Produit::class, 'Produitcommande', 'Commande_idCommande', 'Produit_idProduit')->withPivot('Quantite', 'PrixUnitaire');
+    }
+
+    public function Vendeur()
+    {
+        return $this->belongsTo(Vendeur::class, 'Vendeur_idVendeur');
     }
 
 
