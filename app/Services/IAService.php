@@ -151,6 +151,13 @@ class IAService
         $destId = $message->Client_idClient;
     }
 
+    // Ne pas envoyer d'alertes de type "Message" aux vendeurs :
+    // rediriger vers l'administrateur pour modération
+    if ($destType === 'Vendeur') {
+        $destType = 'admin';
+        $destId = $message->Administrateur_idAdministrateur ?? 1;
+    }
+
     $this->creerAlerte(
         'Message',
         "Message toxique détecté (Score: {$scoreToxicite}) : \"{$message->Contenu}\"",

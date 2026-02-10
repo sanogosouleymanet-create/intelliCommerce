@@ -18,7 +18,7 @@
     <div class="card p-3 mb-3">
         <div class="d-flex align-items-center">
             <div class="me-auto">
-                <a href="/vendeur/mes-commandes" class="btn btn-outline-info btn-sm" data-vendeur-nav>Mes commandes</a>
+                <a href="/vendeur/mes-commandes" class="btn btn-outline-info btn-sm" style="border-color: black !important; color: black !important;" data-vendeur-nav>Mes commandes</a>
             </div>
             <div class="ms-auto d-flex gap-2">
                 <div class="input-group" style="max-width:520px">
