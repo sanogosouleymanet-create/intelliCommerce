@@ -69,7 +69,11 @@ class AdministrateurController extends Controller
             'vendeurs' => Vendeur::count(),
             'clients' => Client::count(),
             'administrateurs' => Administrateur::count(),
-            'ia_alertes' => Ia_alerte::count(),
+            // Exclude IA alerts targeted to vendeurs — admin should not see vendor-specific alerts
+            'ia_alertes' => Ia_alerte::where(function($q) {
+                $q->where('destinataire_type', '!=', 'vendeur')
+                  ->orWhereNull('destinataire_type');
+            })->count(),
         ];
         // Count unread messages for this administrator (messages sent by others)
         try {
@@ -88,8 +92,45 @@ class AdministrateurController extends Controller
 
     public function iaAlerts()
     {
-        $alerts = Ia_alerte::orderBy('DateCreation', 'desc')->get();
+        // Only show alerts not targeted at vendeurs (i.e. admin/global alerts)
+        // Eager-load source and destinataire to show message details when available
+        $alerts = Ia_alerte::with(['source', 'destinataire'])->where(function($q) {
+            $q->where('destinataire_type', '!=', 'vendeur')
+              ->orWhereNull('destinataire_type');
+        })->orderBy('DateCreation', 'desc')->get();
         return view('admin.ia_alertes', compact('alerts'));
+    }
+
+    /**
+     * Affiche une alerte IA en détail pour l'administrateur.
+     */
+    public function showAlerte($id)
+    {
+        $alert = Ia_alerte::with(['source', 'destinataire'])->where('idAlerte', $id)->first();
+        if (!$alert) {
+            abort(404);
+        }
+        return view('admin.ia_alerte_show', compact('alert'));
+    }
+
+    /**
+     * Supprime plusieurs alertes IA sélectionnées.
+     */
+    public function deleteAlerts(Request $request)
+    {
+        $this->validate($request, [
+            'ids' => 'required|array',
+            'ids.*' => 'integer'
+        ]);
+
+        $ids = $request->input('ids', []);
+        try {
+            \App\Models\Ia_alerte::whereIn('idAlerte', $ids)->delete();
+        } catch (\Throwable $e) {
+            return back()->withErrors(['message' => 'Impossible de supprimer les alertes sélectionnées.']);
+        }
+
+        return redirect()->route('admin.ia_alertes')->with('status', 'Alertes supprimées');
     }
     
 
@@ -442,11 +483,16 @@ class AdministrateurController extends Controller
         }
 
         return response()->json($messages->map(function($m) use ($admin) {
+            // provide sender_type and sender_id to make client-side alignment robust
+            $senderType = $m->sender_type ?? null;
+            $senderId = $m->Administrateur_idAdministrateur ?? ($m->Vendeur_idVendeur ?? $m->Client_idClient);
             return [
                 'id' => $m->idMessage,
                 'content' => $m->Contenu,
                 'date' => $m->DateEnvoi->format('d/m/Y H:i'),
-                'isOutgoing' => $m->Administrateur_idAdministrateur == $admin->idAdmi,
+                'isOutgoing' => ($m->Administrateur_idAdministrateur == $admin->idAdmi),
+                'sender_type' => $senderType,
+                'sender_id' => $senderId,
             ];
         }));
     }

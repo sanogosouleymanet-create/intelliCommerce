@@ -12,11 +12,11 @@ class AdministrateurSeeder extends Seeder
     {
         // Change credentials after first login
         Administrateur::firstOrCreate(
-            ['email' => 'admin@example.com'],
+            ['email' => 'akonate198@gmail.com'],
             [
-                'Nom' => 'Super',
-                'Prenom' => 'Admin',
-                'MotDePasse' => Hash::make('secret123'),
+                'Nom' => 'Konate',
+                'Prenom' => 'Aboubacar',
+                'MotDePasse' => Hash::make('konate123'),
                 'DateCreation' => now(),
             ]
         );

@@ -1,9 +1,6 @@
-# TODO: Add "Passer la commande" button in top right of cart page
+# TODO: Update ia_alertes table and related code for polymorphic recipients
 
-## Steps:
-- [ ] Modify HTML structure: Wrap title in .cart-page-header div with flex layout
-- [ ] Add checkout button HTML in .cart-page-header
-- [ ] Add CSS for .cart-page-header styling
-- [ ] Add JavaScript function updateCheckoutButton() to enable/disable button based on selections
-- [ ] Add JavaScript function initCheckoutTopBtn() for button click handling
-- [ ] Integrate new functions into existing select-all script with MutationObserver
+- [x] Update app/Models/Ia_alerte.php: Modify fillable to include 'destinataire_type', 'destinataire_id', 'lu' and remove 'idAdmi'. Remove administrateur() relationship and add destinataire() morphTo relationship.
+- [x] Update app/Services/IAService.php: Change CrerAlerte method signature to accept $destinataireType and $destinataireId instead of $adminId, and adjust the create array accordingly.
+- [x] Run php artisan migrate to apply the migration.
+- [x] Test the changes by creating alerts for admins and sellers.
