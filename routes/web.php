@@ -194,13 +194,13 @@ Route::get('/', function (Request $request) {
     if ($request->filled('categorie')) {
         $query->where('Categorie', $request->categorie);
     }
-    // Filtrer par recherche rapide (nom ou description)
+    // Filtrer par recherche rapide (nom, description ou catégorie du produit)
     if ($request->filled('recherche')) {
         $term = trim($request->recherche);
-        // search in product name or description only (not category)
         $query->where(function($q) use ($term) {
             $q->where('Nom', 'like', '%' . $term . '%')
-              ->orWhere('Description', 'like', '%' . $term . '%');
+              ->orWhere('Description', 'like', '%' . $term . '%')
+              ->orWhere('Categorie', 'like', '%' . $term . '%');
         });
     }
 

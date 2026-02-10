@@ -69,9 +69,40 @@
                                     <div class="card-body d-flex flex-column" style="padding-right:6px;padding-left:6px;">
                                         <h6 class="product-title">{{ $produit->Nom }}</h6>
                                         <p class="product-meta small text-muted mb-2">{{ \Illuminate\Support\Str::limit($produit->Description, 80) }}</p>
+                                        @php
+                                            $dataName = e($produit->Nom);
+                                            $dataDesc = e($produit->Description ?? '');
+                                            $dataPrice = number_format($produit->Prix, 0, ',', ' ') . ' FCFA';
+                                            $dataImg = $imgUrl;
+                                            $vendorName = e($vendeur->NomBoutique ?? ($vendeur->Nom . ' ' . ($vendeur->Prenom ?? '')));
+                                            $vendorAddress = e($vendeur->Adresse ?? '');
+                                            // produits similaires (même catégorie)
+                                            $similar = \App\Models\Produit::where('Categorie', $produit->Categorie)
+                                                ->where('idProduit', '!=', $produit->idProduit)
+                                                ->limit(4)
+                                                ->get(['idProduit','Nom','Prix','Image'])
+                                                ->map(function($s){
+                                                    $img = trim((string)($s->Image ?? ''));
+                                                    $imgUrl = 'https://via.placeholder.com/120x90?text=No';
+                                                    if($img !== ''){
+                                                        if(preg_match('/^https?:\/\//i', $img)){
+                                                            $imgUrl = $img;
+                                                        } elseif(\Illuminate\Support\Facades\Storage::exists('public/'.$img)){
+                                                            $imgUrl = asset('storage/'.$img);
+                                                        } elseif(file_exists(public_path($img))){
+                                                            $imgUrl = asset($img);
+                                                        } elseif(file_exists(public_path('images/'.basename($img)))){
+                                                            $imgUrl = asset('images/'.basename($img));
+                                                        }
+                                                    }
+                                                    return ['id' => $s->idProduit, 'name' => $s->Nom, 'price' => number_format($s->Prix,0,',',' ') . ' FCFA', 'img' => $imgUrl];
+                                                })->toArray();
+                                            $dataSimilar = e(json_encode($similar));
+                                        @endphp
                                         <div class="mt-auto d-flex justify-content-between align-items-center">
                                             <div class="product-price fw-bold">{{ number_format($produit->Prix ?? 0, 0, ',', ' ') }} FCFA</div>
                                             <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary product-open" data-id="{{ $produit->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" data-vendor-name="{{ $vendorName }}" data-vendor-address="{{ $vendorAddress }}" data-stock="{{ $produit->Stock ?? 0 }}" data-category="{{ $produit->Categorie ?? '' }}" data-similar='{{ $dataSimilar }}'>Voir</button>
                                                 <a href="/produits/{{ $produit->idProduit ?? $produit->id }}/edit" class="btn btn-sm btn-outline-primary">Modifier</a>
                                             </div>
                                         </div>
@@ -181,7 +212,11 @@
         const a = e.target.closest && e.target.closest('a.produit-link'); if(!a) return; e.preventDefault();
         const url = a.href;
         fetch(url, { headers: {'X-Requested-With': 'XMLHttpRequest'}, credentials: 'same-origin' })
-            .then(r => { if(!r.ok){ window.location.href = url; throw 'nav'; } return r.text(); })
+            .then(r => {
+                if(r.redirected || /login|connexion/i.test(r.url) || r.status === 401 || r.status === 403){ window.location.href = r.url; throw 'auth'; }
+                if(!r.ok){ window.location.href = url; throw 'nav'; }
+                return r.text();
+            })
             .then(html => {
                 // Replace main content if PageVendeur expects it
                 try{ if(typeof replaceMainContent === 'function'){ replaceMainContent(html); return; } }catch(e){}
@@ -240,6 +275,163 @@
         } finally {
             if(submitBtn) submitBtn.disabled = false;
         }
+    });
+})();
+
+// Product detail view handler
+(function(){
+    // history stack: each entry { html, scroll }
+    let savedStack = [];
+    function renderDetail(data){
+        // parse similar products if provided as JSON string
+        let similar = [];
+        try{ if(data.similar) similar = JSON.parse(data.similar); }catch(e){ similar = []; }
+        const similarHtml = similar.length ? `<div style="margin-top:12px">
+                <h5>Produits similaires</h5>
+                <div class="product-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;">${similar.map(s => `
+                    <div class="product-card card">
+                        <div class="position-relative">
+                            <img src="${s.img}" class="card-img-top" alt="${s.name}">
+                            <button class="add-to-cart" title="Ajouter au panier" data-id="${s.id}" aria-label="Ajouter ${s.name} au panier">
+                                <i class="fa fa-cart-plus"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="product-title">
+                                <button type="button" class="product-open btn-link" data-id="${s.id}" data-name="${s.name.replace(/\"/g,'')}" data-desc="" data-price="${s.price}" data-img="${s.img}" data-vendor-name="${data.vendorName||''}" data-vendor-address="${data.vendorAddress||''}" data-stock="" data-category="" data-similar="">${s.name}</button>
+                            </h6>
+                            <p class="product-meta mb-2">${s.name.substring(0,60)}...</p>
+                            <div class="mt-auto d-flex justify-content-between align-items-center">
+                                <div class="product-price">${s.price}</div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary product-open" data-id="${s.id}" data-name="${s.name.replace(/\"/g,'')}" data-desc="" data-price="${s.price}" data-img="${s.img}" data-vendor-name="${data.vendorName||''}" data-vendor-address="${data.vendorAddress||''}" data-stock="" data-category="" data-similar="">Voir</button>
+                            </div>
+                        </div>
+                    </div>`).join('')}</div></div>` : '';
+
+        // details block: prix, stock, catégorie, boutique
+        const detailsHtml = `<div style="margin-top:8px;padding:12px;border-radius:6px;background:#86d0df;color:#000">
+                <div style="font-weight:700">Prix: <span style="font-weight:400">${data.price||''}</span></div>
+                <div style="font-weight:700;margin-top:6px">Stock: <span style="font-weight:400">${data.stock||''}</span></div>
+                <div style="font-weight:700;margin-top:6px">Catégorie: <span style="font-weight:400">${data.category||''}</span></div>
+                <div style="font-weight:700;margin-top:6px">Boutique: <span style="font-weight:400">${data.vendorName||''}</span></div>
+            </div>`;
+
+        const html = `
+            <div class="product-detail" style="display:flex;gap:18px;align-items:flex-start;padding:12px;background:#fff;border-radius:8px;">
+                <div style="flex:1;max-width:520px;min-width:0">
+                    <img src="${data.img || ''}" alt="${data.name||''}" style="width:100%;height:auto;max-height:520px;object-fit:contain;border-radius:8px;display:block;" />
+                </div>
+                <div style="width:360px;display:flex;flex-direction:column;gap:12px;">
+                    <h2 style="margin:0">${data.name||''}</h2>
+                    <div style="color:#1e88e5;font-weight:700;font-size:1.1rem">${data.price||''}</div>
+                    ${detailsHtml}
+                    <p style="color:#444;flex:1;white-space:pre-wrap">${data.desc||''}</p>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <button class="btn btn-sm btn-outline-secondary js-back" style="padding:10px 14px;border-radius:8px">← Retour à la liste</button>
+                        <button class="btn btn-primary" style="padding:10px 14px;border-radius:8px"><i class="fa fa-cart-plus" aria-hidden="true"></i>&nbsp;Ajouter au panier</button>
+                    </div>
+                </div>
+            </div>
+            ${similarHtml ? `<div class="similar-full" style="margin-top:18px;padding:12px;background:transparent;border-radius:6px">${similarHtml}</div>` : ''}
+        `;
+        const container = document.getElementById('product-list');
+        if(!container) return;
+        // push current view onto stack so we can return to it
+        savedStack.push({ html: container.innerHTML, scroll: window.scrollY || window.pageYOffset || 0 });
+        container.innerHTML = html;
+        // push history state so refresh/back behavior is preserved
+        try{ history.pushState({ produitId: data.id || null }, '', data.id ? ('?produit=' + encodeURIComponent(data.id)) : window.location.pathname); }catch(e){}
+    }
+    function restoreMain(){
+        const container = document.getElementById('product-list');
+        if(!container) return;
+        if(savedStack.length){
+            const entry = savedStack.pop();
+            container.innerHTML = entry.html;
+            if(typeof entry.scroll === 'number'){
+                window.scrollTo({ top: entry.scroll, left: 0, behavior: 'auto' });
+            }
+        }
+    }
+    document.addEventListener('click', function(e){
+        const btn = e.target.closest('.product-open');
+        if(btn){
+            e.preventDefault();
+            const data = {
+                id: btn.dataset.id,
+                name: btn.dataset.name || '',
+                desc: btn.dataset.desc || '',
+                price: btn.dataset.price || '',
+                img: btn.dataset.img || '',
+                vendorName: btn.dataset.vendorName || '',
+                vendorAddress: btn.dataset.vendorAddress || '',
+                stock: btn.dataset.stock || '',
+                category: btn.dataset.category || '',
+                similar: btn.dataset.similar || ''
+            };
+
+            // If important details are missing (vendor, stock or similar), fetch server fragment
+            const needsAjax = !(data.vendorName || data.vendorAddress) || data.stock === '' || !data.similar;
+            if(needsAjax && data.id){
+                const url = '/produit/' + encodeURIComponent(data.id);
+                const container = document.getElementById('product-list');
+                if(!container){ renderDetail(data); return; }
+                // push current view so closing the fragment returns here
+                savedStack.push({ html: container.innerHTML, scroll: window.scrollY || window.pageYOffset || 0 });
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+                    .then(resp => {
+                        if(resp.redirected || /login|connexion/i.test(resp.url) || resp.status === 401 || resp.status === 403){ window.location.href = resp.url; throw 'auth'; }
+                        if(!resp.ok) throw new Error('non-ok');
+                        return resp.text();
+                    })
+                    .then(html => {
+                        container.innerHTML = html;
+                        try{ history.pushState({ produitId: data.id || null }, '', '?produit=' + encodeURIComponent(data.id)); }catch(e){}
+                    })
+                    .catch(err => { console.error('Fetch produit fragment failed', err); renderDetail(data); });
+                return;
+            }
+
+            renderDetail(data);
+            return;
+        }
+        if(e.target.closest('.js-back')){
+            e.preventDefault();
+            // navigate back in history; popstate handler will restore the view
+            if(history.state && history.state.produitId) history.back(); else restoreMain();
+            return;
+        }
+
+        // Add to cart on similar product or fragment
+        const addBtn = e.target.closest('.add-to-cart-similar, .add-to-cart-fragment');
+        if(addBtn){
+            e.preventDefault();
+            const id = addBtn.dataset.id;
+            // dispatch event to add product to cart; do not change button state here
+            document.dispatchEvent(new CustomEvent('product-added-to-cart', { detail: { id } }));
+            return;
+        }
+    });
+    // handle browser back/forward navigation to restore list/detail state
+    window.addEventListener('popstate', function(event){
+        try{
+            // If we have a savedStack entry, the previous view is the list we saved — restore it immediately.
+            if(Array.isArray(savedStack) && savedStack.length){
+                restoreMain();
+                return;
+            }
+            const state = event.state;
+            if(!state || !state.produitId){
+                // no produit in history state -> restore product list view
+                if(typeof restoreMain === 'function'){
+                    restoreMain();
+                } else {
+                    window.location.reload();
+                }
+                return;
+            }
+            // state contains produitId: keep detail visible (or implement loading if needed)
+        }catch(err){ console.error('popstate handler error', err); }
     });
 })();
 </script>

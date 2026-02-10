@@ -34,6 +34,14 @@ class CartController extends Controller
         if (!$produit) return response()->json(['success' => false, 'message' => 'Produit introuvable'], 404);
         if (($produit->Stock ?? 0) < $qty) return response()->json(['success' => false, 'message' => 'Stock insuffisant'], 400);
 
+        // Vérifier si le vendeur essaie d'ajouter son propre produit
+        if (Auth::guard('vendeur')->check()) {
+            $vendeur = Auth::guard('vendeur')->user();
+            if ($produit->Vendeur_idVendeur == $vendeur->idVendeur) {
+                return response()->json(['success' => false, 'message' => 'Vous ne pouvez pas ajouter vos propres produits au panier'], 400);
+            }
+        }
+
         $key = $this->cartKey($request);
         $cart = session($key, []);
         if (isset($cart[$id])) $cart[$id] += $qty; else $cart[$id] = $qty;

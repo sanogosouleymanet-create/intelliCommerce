@@ -1,4 +1,1 @@
-- [x] Edit 'resources/views/vendeurs/analyses.blade.php' to add status filter 'Livré' to Total Ventes query
-- [x] Edit 'resources/views/vendeurs/analyses.blade.php' to add status filter 'Livré' to Clients actifs query
-- [x] Edit 'resources/views/vendeurs/analyses.blade.php' to add status filter 'Livré' to Revenue chart query
-- [x] Test the view by running the application and verifying the analyses page
+- [x] Ajouter une vérification dans CartController::add pour empêcher un vendeur d'ajouter ses propres produits au panier

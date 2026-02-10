@@ -113,7 +113,7 @@
                                                  <div class="row">
                                                      <h4>Vêtements femme</h4>
                                                      <ul>
-                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Robes') }}">Robes</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Robes') }}">Robes</a></li>
                                                          <li><a href="{{ url('/') }}?recherche={{ urlencode('Hauts & T-shirts') }}">Hauts & T-shirts</a></li>
                                                          <li><a href="{{ url('/') }}?recherche={{ urlencode('Vestes et manteaux') }}">Vestes et manteaux</a></li>
                                                          <li><a href="{{ url('/') }}?recherche={{ urlencode('Pantalons & capris') }}">Pantalons & capris</a></li>
@@ -343,10 +343,7 @@
                     </div>
                     <div class="right">
                         <ul class="flexitem second-links">
-                            <li class="mobile-hide"><a href="#">
-                                <div class="icon-large"><i class="ri-heart-line"></i></div>
-                                <div class="fly-item"><span class="item-number">{{ $cartCount }}</span></div>
-                            </a></li>
+                            
                             <li><a href="#" class="iscart">
                                 <div class="icon-large"><i class="ri-shopping-cart-line"></i></div>
                                     <div class="fly-item"><span class="item-number">{{ $cartCount }}</span></div>
@@ -373,52 +370,52 @@
                             <div class="dpt-menu">
                                 <ul class="second-links">
                                     <li class="has-child beauty">
-                                        <a href="{{ url('/') }}?categorie={{ urlencode('Beauté') }}">
+                                        <a href="{{ url('/') }}?recherche={{ urlencode('Beauté') }}">
                                             <div class="icon-large"><i class="ri-bear-smile-line"></i></div>
                                             Beauté
                                             <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
                                         </a>
                                         <ul>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Maquillage') }}">Maquillage</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Soins de la peau') }}">Soins de la peau</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Soins capillaires') }}">Soins capillaires</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Parfums') }}">Parfums</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Soins des pieds & mains') }}">Soins des pieds & mains</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Outils & accessoires') }}">Outils & accessoires</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Rasage & épilation') }}">Rasage & épilation</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Soins personnels') }}">Soins personnels</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Maquillage') }}">Maquillage</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Soins de la peau') }}">Soins de la peau</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Soins capillaires') }}">Soins capillaires</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Parfums') }}">Parfums</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Soins des pieds & mains') }}">Soins des pieds & mains</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Outils & accessoires') }}">Outils & accessoires</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Rasage & épilation') }}">Rasage & épilation</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Soins personnels') }}">Soins personnels</a></li>
                                         </ul>
                                     </li>
                                     <li class="has-child electronic">
-                                        <a href="{{ url('/') }}?categorie={{ urlencode('Électronique') }}">
+                                        <a href="{{ url('/') }}?recherche={{ urlencode('Électronique') }}">
                                             <div class="icon-large"><i class="ri-bluetooth-connect-line"></i></div>
                                             Électronique
                                             <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
                                         </a>
                                         <ul>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Camera') }}">Camera</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Téléphone') }}">Téléphone</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Airpods') }}">Airpods</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Ordinateur') }}">Ordinateur</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Télévision') }}">Télévision</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Vidéo Projecteurs') }}">Vidéo Projecteurs</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Casque') }}">Casque</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Enceinte bluetooth') }}">Enceinte bluetooth</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Camera') }}">Camera</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Téléphone') }}">Téléphone</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Airpods') }}">Airpods</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Ordinateur') }}">Ordinateur</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Télévision') }}">Télévision</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Vidéo Projecteurs') }}">Vidéo Projecteurs</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Casque') }}">Casque</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Enceinte bluetooth') }}">Enceinte bluetooth</a></li>
                                         </ul>
                                     </li>
                                     <li class="has-child fashion">
-                                        <a href="{{ url('/') }}?categorie={{ urlencode('Mode-Femme') }}">
+                                        <a href="{{ url('/') }}?recherche={{ urlencode('Mode-Femme') }}">
                                             <div class="icon-large"><i class="ri-t-shirt-air-line"></i></div>
                                             Mode Femme
                                             <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
                                         </a>
                                         <ul>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Vêtements') }}">Vêtements</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Chaussures') }}">Chaussures</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Bijoux') }}">Bijoux</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Montres') }}">Montres</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Accessoires') }}">Accessoires</a></li>
-                                            <li><a href="{{ url('/') }}?categorie={{ urlencode('Sacs à main') }}">Sacs à main</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Vêtements') }}">Vêtements</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Chaussures') }}">Chaussures</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Bijoux') }}">Bijoux</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Montres') }}">Montres</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Accessoires') }}">Accessoires</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Sacs à main') }}">Sacs à main</a></li>
                                         </ul>
                                     </li>
                                     <li class="has-child fashion">
@@ -762,15 +759,21 @@
                 try{ if(data.similar) similar = JSON.parse(data.similar); }catch(e){ similar = []; }
                 const similarHtml = similar.length ? `<div style="margin-top:12px">
                         <h5 style="margin:8px 0">Produits similaires</h5>
-                        <div style="display:flex;gap:10px;flex-wrap:wrap">${similar.map(s => `
-                            <div style="width:140px;background:#fff;border-radius:6px;padding:6px;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
-                                <a href="#" class="product-open" data-id="${s.id}" data-name="${s.name.replace(/\"/g,'') }" data-desc="" data-price="${s.price}" data-img="${s.img}">
-                                    <img src="${s.img}" alt="${s.name}" style="width:100%;height:78px;object-fit:cover;border-radius:4px;">
-                                    <div style="font-size:0.85rem;color:#222;font-weight:700;margin-top:6px">${s.name}</div>
-                                    <div style="color:#1e88e5;font-weight:700">${s.price}</div>
-                                </a>
-                                <div style="margin-top:6px;text-align:center">
-                                    <button class="btn btn-sm btn-outline-primary add-to-cart-similar" data-id="${s.id}" style="padding:6px 8px;border-radius:6px">Ajouter</button>
+                        <div class="product-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;">${similar.map(s => `
+                            <div class="product-card card">
+                                <div class="position-relative">
+                                    <img src="${s.img}" class="card-img-top" alt="${s.name}">
+                                    <button class="add-to-cart" title="Ajouter au panier" data-id="${s.id}" aria-label="Ajouter ${s.name} au panier">
+                                        <i class="fa fa-cart-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="product-title"><a href="#" class="product-open" data-id="${s.id}" data-name="${s.name.replace(/\"/g,'')}" data-desc="" data-price="${s.price}" data-img="${s.img}" data-vendor-name="" data-vendor-address="" data-stock="" data-category="" data-similar="">${s.name}</a></h6>
+                                    <p class="product-meta mb-2">${s.name.substring(0,60)}...</p>
+                                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                                        <div class="product-price">${s.price}</div>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary product-open" data-id="${s.id}" data-name="${s.name.replace(/\"/g,'')}" data-desc="" data-price="${s.price}" data-img="${s.img}" data-vendor-name="" data-vendor-address="" data-stock="" data-category="" data-similar="">Voir</button>
+                                    </div>
                                 </div>
                             </div>`).join('')}</div></div>` : '';
 
@@ -972,3 +975,12 @@
         </div>
     </div>
 </html>
+<script>
+    (function(){
+        try{
+            document.querySelectorAll('a[href*="?categorie="]').forEach(function(a){
+                a.href = a.href.replace(/\?categorie=/g, '?recherche=').replace(/&categorie=/g, '&recherche=');
+            });
+        }catch(e){ console.error('normalize categorie->recherche links', e); }
+    })();
+</script>
