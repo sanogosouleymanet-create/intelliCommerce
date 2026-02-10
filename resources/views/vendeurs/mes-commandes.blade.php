@@ -1,5 +1,5 @@
 @php
-    // Espace Vendeur — Commandes
+    // Espace Vendeur — Mes Commandes
     // Variables attendues : $vendeur, $commandes
 @endphp
 
@@ -18,7 +18,7 @@
     <div class="card p-3 mb-3">
         <div class="d-flex align-items-center">
             <div class="me-auto">
-                <a href="/vendeur/mes-commandes" class="btn btn-outline-info btn-sm" data-vendeur-nav>Mes commandes</a>
+                <h5>Mes Commandes</h5>
             </div>
             <div class="ms-auto d-flex gap-2">
                 <div class="input-group" style="max-width:520px">
@@ -37,7 +37,7 @@
     <div class="card p-3">
         <div class="table-responsive">
             @php
-                $list = $commandes ?? ($vendeur->commandes ?? collect());
+                $list = $commandes ?? collect();
             @endphp
 
             @if($list && $list->count())
@@ -66,8 +66,11 @@
                                 <td><span class="badge bg-secondary statut">{{ $commande->Statut ?? '—' }}</span></td>
                                 <td class="text-end">
                                     <button class="btn btn-sm btn-outline-primary btn-view" data-id="{{ $commande->idCommande }}">Voir</button>
-                                    <button class="btn btn-sm btn-outline-success btn-mark" data-id="{{ $commande->idCommande }}">Marquer livrée</button>
-                                    <button class="btn btn-sm btn-outline-danger btn-delete" data-id="{{ $commande->idCommande }}">Supprimer</button>
+                                    <form action="{{ route('vendeur.mes-commandes.destroy', $commande->idCommande) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette commande ?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                    </form>
                                 </td>
                             </tr>
                             <tr class="order-details d-none" data-details-for="{{ $commande->idCommande }}">
@@ -119,64 +122,6 @@
     document.querySelectorAll('.btn-view').forEach(btn => btn.addEventListener('click', function(){
         const id = this.dataset.id; const details = document.querySelector('.order-details[data-details-for="'+id+'"]');
         if(details) details.classList.toggle('d-none');
-    }));
-
-    // Mark as delivered (AJAX call to server)
-    document.querySelectorAll('.btn-mark').forEach(btn => btn.addEventListener('click', async function(){
-        const id = this.dataset.id; const tr = document.querySelector('tr[data-id="'+id+'"]');
-        try{
-            const response = await fetch(`/vendeur/commandes/${id}/mark-delivered`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                }
-            });
-            const data = await response.json();
-            if (data.success) {
-                tr.querySelector('.statut').textContent = 'Livrée';
-                tr.querySelector('.statut').classList.remove('bg-secondary');
-                tr.querySelector('.statut').classList.add('bg-success');
-                this.disabled = true;
-            } else {
-                alert(data.message || 'Erreur lors de la mise à jour.');
-            }
-        }catch(e){ console.error(e); alert('Erreur réseau.'); }
-    }));
-
-    // Disable buttons for already delivered orders
-    document.querySelectorAll('.btn-mark').forEach(btn => {
-        const id = btn.dataset.id;
-        const tr = document.querySelector('tr[data-id="'+id+'"]');
-        const statut = tr.querySelector('.statut').textContent.trim();
-        if (statut === 'Livrée') {
-            btn.disabled = true;
-        }
-    });
-
-    // Delete order (AJAX call to server)
-    document.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', async function(){
-        const id = this.dataset.id;
-        const tr = document.querySelector('tr[data-id="'+id+'"]');
-        if (!confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) return;
-        try{
-            const response = await fetch(`/vendeur/commandes/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                }
-            });
-            const data = await response.json();
-            if (data.success) {
-                tr.remove();
-                // Also remove the details row if exists
-                const details = document.querySelector('.order-details[data-details-for="'+id+'"]');
-                if (details) details.remove();
-            } else {
-                alert(data.message || 'Erreur lors de la suppression.');
-            }
-        }catch(e){ console.error(e); alert('Erreur réseau.'); }
     }));
 })();
 </script>

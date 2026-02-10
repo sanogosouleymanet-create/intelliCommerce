@@ -14,7 +14,7 @@
     <div class="col-md-4">
         <div class="card p-3">
             <h5 class="mb-2"><i class="fa-solid fa-cart-shopping me-2"></i> Commandes</h5>
-            <div class="fs-2 fw-bold">{{ $commandesCount ?? ($vendeur->commandes ? $vendeur->commandes->count() : 0) }}</div>
+            <div class="fs-2 fw-bold">{{ $commandesCount ?? 0 }}</div>
         </div>
     </div>
 
@@ -32,7 +32,7 @@
         <div class="card p-3">
             <h5>Commandes Récentes</h5>
             <div class="orders-list mt-2">
-                @if(isset($vendeur) && $vendeur->commandes && $vendeur->commandes->count())
+                @if(isset($commandesRecentes) && $commandesRecentes->count())
                     <div class="table-responsive">
                         <table class="table table-striped table-hover mb-0">
                             <thead>
@@ -45,7 +45,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($vendeur->commandes->sortByDesc('DateCommande')->take(8) as $commande)
+                                @foreach($commandesRecentes as $commande)
                                     <tr>
                                         <td>#C-{{ $commande->idCommande }}</td>
                                         <td>{{ \Carbon\Carbon::parse($commande->DateCommande)->format('d/m/Y H:i') }}</td>
@@ -101,7 +101,7 @@
                                         <td>{{ $p->Nom }}</td>
                                         <td>{{ $t->ventes }}</td>
                                         <td>{{ number_format($p->Prix ?? 0, 0, ',', ' ') }} FCFA</td>
-                                        <td><a href="/produit/{{ $p->idProduit }}" class="btn btn-sm btn-outline-secondary">Voir</a></td>
+                                        <!--<td><a href="/produit/{{ $p->idProduit }}" class="btn btn-sm btn-outline-secondary">Voir</a></td>-->
                                     </tr>
                                 @endif
                             @endforeach
