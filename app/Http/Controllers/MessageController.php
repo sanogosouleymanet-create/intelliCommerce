@@ -53,13 +53,8 @@ class MessageController extends Controller
     {
         $message = Message::where('idMessage', $id)->firstOrFail();
 
-        if (Schema::hasColumn('messages', 'Lu')) {
-            $message->Lu = true;
-        } elseif (Schema::hasColumn('messages', 'Statut')) {
-            $message->Statut = 'lu';
-        }
-
-        $message->save();
+        // Delegate marking to the model helper to support both 'Lu' and 'Statut' schemas.
+        $message->markAsRead();
 
         return response()->json(['success' => true]);
     }

@@ -71,13 +71,22 @@
                                         $messageUnreadCount = 0;
                                         $messagesUrl = '#';
                                         if(auth()->guard('client')->check()){
-                                            $messageUnreadCount = \App\Models\Message::where('Client_idClient', auth()->guard('client')->id())->where('Statut', 'non lu')->count();
+                                            $messageUnreadCount = \App\Models\Message::where('Client_idClient', auth()->guard('client')->id())
+                                                ->whereIn('Statut', ['non lu','envoye'])
+                                                ->where(function($q){ $q->where('sender_type', '!=', 'client')->orWhereNull('sender_type'); })
+                                                ->count();
                                             $messagesUrl = '/messages';
                                         } elseif(auth()->guard('vendeur')->check()){
-                                            $messageUnreadCount = \App\Models\Message::where('Vendeur_idVendeur', auth()->guard('vendeur')->id())->where('Statut', 'non lu')->count();
+                                            $messageUnreadCount = \App\Models\Message::where('Vendeur_idVendeur', auth()->guard('vendeur')->id())
+                                                ->whereIn('Statut', ['non lu','envoye'])
+                                                ->where(function($q){ $q->where('sender_type', '!=', 'vendeur')->orWhereNull('sender_type'); })
+                                                ->count();
                                             $messagesUrl = '/vendeur/messages';
                                         } elseif(auth()->guard('administrateur')->check()){
-                                            $messageUnreadCount = \App\Models\Message::where('Administrateur_idAdministrateur', auth()->guard('administrateur')->id())->where('Statut', 'non lu')->count();
+                                            $messageUnreadCount = \App\Models\Message::where('Administrateur_idAdministrateur', auth()->guard('administrateur')->id())
+                                                ->whereIn('Statut', ['non lu','envoye'])
+                                                ->where(function($q){ $q->where('sender_type', '!=', 'administrateur')->orWhereNull('sender_type'); })
+                                                ->count();
                                             $messagesUrl = '/admin/messages';
                                         }
                                     @endphp
@@ -362,8 +371,7 @@
                             @if($admin || $vendeur || $client)
                             <li><a href="{{ $messagesUrl }}">
                                 <div class="icon-large"><i class="ri-mail-unread-line"></i></div>
-                                    <div class="fly-item"><span class="item-number">{{ $messageUnreadCount }}</span></div>
-
+                                    <div class="fly-item"><span class="message-number">{{ $messageUnreadCount }}</span></div>
                             </a></li>
                             @endif
 
@@ -543,7 +551,6 @@
            </div>
         </header>
 
-        <main>
             <div class="container py-4">
                 <div class="row">
                     <section class="col-12">

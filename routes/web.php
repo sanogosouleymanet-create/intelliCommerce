@@ -372,7 +372,7 @@ Route::middleware(['auth:client'])->group(function () {
                     'sender' => $sender,
                     'senderType' => $senderType,
                     'lastMessage' => $message,
-                    'unreadCount' => $message->Statut === 'non lu' ? 1 : 0,
+                    'unreadCount' => $message->isUnread() ? 1 : 0,
                     'lastMessageDate' => $message->DateEnvoi,
                     'isBlocked' => $senderType === 'vendeur' ? ($sender->Bloque ?? false) : false,
                 ];
@@ -381,7 +381,8 @@ Route::middleware(['auth:client'])->group(function () {
                     $conversations[$key]['lastMessage'] = $message;
                     $conversations[$key]['lastMessageDate'] = $message->DateEnvoi;
                 }
-                if ($message->Statut === 'envoye') {
+                // Count messages considered unread by the model (supports legacy variants)
+                if ($message->isUnread()) {
                     $conversations[$key]['unreadCount']++;
                 }
             }
