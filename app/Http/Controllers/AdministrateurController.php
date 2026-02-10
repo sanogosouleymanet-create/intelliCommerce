@@ -385,22 +385,33 @@ class AdministrateurController extends Controller
      */
     public function messages()
     {
-        // Récupérer tous les messages avec relations
-        $messages = Message::with(['client','vendeur','administrateur'])->orderBy('DateEnvoi', 'desc')->get();
+        // Récupérer uniquement les messages impliquant l'administrateur connecté
+        $admin = Auth::guard('administrateur')->user();
+        if (!$admin) {
+            return redirect()->route('connexion');
+        }
+        // Les messages impliquant l'admin auront la colonne Administrateur_idAdministrateur
+        // égale à l'id de l'admin (que ce soit en tant qu'expéditeur ou destinataire selon le flux).
+        $messages = Message::with(['client','vendeur','administrateur'])
+            ->where('Administrateur_idAdministrateur', $admin->idAdmi)
+            ->orderBy('DateEnvoi', 'desc')
+            ->get();
 
         // Grouper les messages en conversations par expéditeur
         $conversations = [];
         foreach ($messages as $message) {
             $key = '';
             $sender = null;
-            if ($message->client) {
-                $key = 'client_' . $message->client->idClient;
-                $sender = $message->client;
-                $senderType = 'client';
-            } elseif ($message->vendeur) {
+            // Prioritize vendeur when both client and vendeur are set so client↔vendeur
+            // conversations appear under the vendor rather than always under the client.
+            if ($message->vendeur) {
                 $key = 'vendeur_' . $message->vendeur->idVendeur;
                 $sender = $message->vendeur;
                 $senderType = 'vendeur';
+            } elseif ($message->client) {
+                $key = 'client_' . $message->client->idClient;
+                $sender = $message->client;
+                $senderType = 'client';
             } elseif ($message->administrateur) {
                 $key = 'admin_' . $message->administrateur->idAdmi;
                 $sender = $message->administrateur;
@@ -458,21 +469,29 @@ class AdministrateurController extends Controller
         if (!in_array($type, ['client', 'vendeur', 'admin'])) {
             return response()->json(['error' => 'Type invalide'], 400);
         }
-
         $admin = Auth::guard('administrateur')->user();
+        if (!$admin) return response()->json(['error' => 'Non authentifié'], 401);
 
-        $messages = Message::with(['client','vendeur','administrateur'])
-            ->where(function($query) use ($type, $id) {
-                if ($type === 'client') {
-                    $query->where('Client_idClient', $id);
-                } elseif ($type === 'vendeur') {
-                    $query->where('Vendeur_idVendeur', $id);
-                } elseif ($type === 'admin') {
-                    $query->where('Administrateur_idAdministrateur', $id);
-                }
-            })
-            ->orderBy('DateEnvoi', 'asc')
-            ->get();
+        // Only return messages between this admin and the target (client or vendor),
+        // or messages targeted to this admin when type==='admin'. This prevents the admin
+        // from seeing client<->vendor conversations that don't involve the admin.
+        $query = Message::with(['client','vendeur','administrateur'])->orderBy('DateEnvoi', 'asc');
+        if ($type === 'client') {
+            $query->where('Client_idClient', $id)
+                  ->where('Administrateur_idAdministrateur', $admin->idAdmi);
+        } elseif ($type === 'vendeur') {
+            $query->where('Vendeur_idVendeur', $id)
+                  ->where('Administrateur_idAdministrateur', $admin->idAdmi);
+        } elseif ($type === 'admin') {
+            // conversation with an admin: only allow if it's this admin (or the other admin id)
+            if ($id != $admin->idAdmi) {
+                // prevent accessing other admins' inboxes
+                return response()->json(['error' => 'Accès refusé'], 403);
+            }
+            $query->where('Administrateur_idAdministrateur', $id);
+        }
+
+        $messages = $query->get();
 
         // Marquer comme lus uniquement pour les messages entrants non lus
         foreach ($messages as $message) {
