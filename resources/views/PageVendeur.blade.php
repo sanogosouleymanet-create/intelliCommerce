@@ -43,6 +43,20 @@
                 box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             }
         }
+        /* Ensure header right-side icons aren't flush against the viewport edge */
+        .header-nav .wrapper .right { padding-right: 18px; }
+        /* small extra spacing for the IA notification icon */
+        .header-nav .second-links .ia-notif { margin-right: 6px; }
+        /* Badge styles used by cart and notification icons */
+        .header-nav .second-links{display:flex;gap:12px;align-items:center}
+        .header-nav .second-links a{position:relative;display:inline-flex;align-items:center;padding:6px 8px}
+        .header-nav .second-links .icon-large{display:inline-flex; width: 22px; height: 22px; align-items:center;justify-content:center;position:relative}
+        .header-nav .second-links .icon-large .fly-item{position:absolute;top:0;right:0;pointer-events:none;transform: translate(-10%, -50%);
+    pointer-events: none;}
+        /* Per-icon tweaks to align badges precisely */
+        .header-nav .second-links .iscart .icon-large .fly-item{top:0px;right:0}
+        /* Slightly reduce badge size on very small screens */
+        @media (max-width:420px){ .header-nav .second-links .item-number{font-size:11px;padding:1px 5px;min-width:18px} }
     </style>
 </head>
 <body>
@@ -91,7 +105,7 @@
                                         $user = $admin ?? $vendeur ?? $client;
                                         $displayName = trim($user->Nom . ' ' . ($user->Prenom ?? ''));
                                         if($admin) {
-                                            $profileUrl = route('admin.dashboard');
+                                            $profileUrl = route('admin.PageAdmin');
                                         } elseif($vendeur) {
                                             $profileUrl = route('PageVendeur');
                                         } else {
@@ -135,20 +149,17 @@
                                 <div class="fly-item"><span class="item-number">0</span></div>
                             </a></li>-->
                             <li><a href="/cart" class="iscart">
-                                <div class="icon-large"><i class="ri-shopping-cart-line"></i></div>
+                                <div class="icon-large"><i class="ri-shopping-cart-line"></i>
                                     <div class="fly-item"><span class="item-number">{{ $cartCount }}</span></div>
+                                </div>
                             </a></li>
-
-                            <a href="{{ route('vendeurs.ia_alertes') }}" class="ia-notif" title="Alerte" style="position:relative;display:inline-flex;align-items:center">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                <path d="M12 2C10.3431 2 9 3.34315 9 5V6.087C6.16344 6.65392 4 9.12479 4 12V17L2 19V20H22V19L20 17V12C20 9.12479 17.8366 6.65392 15 6.087V5C15 3.34315 13.6569 2 12 2Z" stroke="#000" stroke-width="1"/>
-                                <path d="M9.5 21C9.5 22.1046 10.3954 23 11.5 23H12.5C13.6046 23 14.5 22.1046 14.5 21" stroke="#000" stroke-width="1"/>
-                            </svg>
-                            @if (($counts['ia_alertes'] ?? 0) > 0)
-                                <span style="position:absolute;top:-6px;right:-6px;background:#c0392b;color:#fff;border-radius:999px;padding:2px 6px;font-size:12px;min-width:20px;text-align:center">{{ $counts['ia_alertes'] ?? 0 }}</span>
-                            @endif
+                            <li>
+                            <a href="{{ route('vendeurs.ia_alertes') }}" class="ia-notif" title="Alerte" style="display:inline-flex;align-items:center">
+                                <div class="icon-large"><i class="ri-notification-2-line"></i>
+                                    <div class="fly-item"><span class="item-number">{{ $counts['ia_alertes'] ?? 0 }}</span></div>
+                                </div>
                             </a>
-
+                            </li>
                         </ul>
                     </div>
                 </div>

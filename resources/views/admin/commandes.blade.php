@@ -1,3 +1,4 @@
+<div class="main-content">
 <div class="card">
     <h2>Gestion des Commandes</h2>
     <div style="margin-bottom: 20px;">
@@ -79,6 +80,7 @@
         <h3>Détails de la Commande</h3>
         <div id="commandeDetails"></div>
     </div>
+</div>
 </div>
 
 <script>

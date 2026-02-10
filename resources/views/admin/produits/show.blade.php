@@ -52,3 +52,18 @@
         </div>
     </div>
 </section>
+
+
+<script>
+// Gestion du bouton retour navigateur pour AJAX admin
+window.addEventListener('popstate', function(event) {
+    // Recharge la liste des produits via AJAX si on revient sur la page précédente
+    if (window.location.pathname.match(/\/admin\/produits$/)) {
+        if(window.adminFetchAndInject){
+            window.adminFetchAndInject(window.location.pathname);
+        } else {
+            window.location.reload();
+        }
+    }
+});
+</script>
