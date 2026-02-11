@@ -161,7 +161,7 @@
             <div class="container py-4">
                 <div class="row">
                     <div class="col-12 text-center">
-                        <p style="text-align: center;">&copy; 2024 Intelli-Commerce. Tous droits réservés.</p>
+                        <p style="text-align: center;">&copy; 2026 Intelli-Commerce. Tous droits réservés.</p>
                     </div>
                 </div>
             </div>

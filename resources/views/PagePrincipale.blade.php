@@ -205,15 +205,15 @@
                                                  <div class="row">
                                                      <h4>Vêtements homme</h4>
                                                      <ul>
-                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Chemises') }}">Chemises</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Chemise') }}">Chemises</a></li>
                                                          <li><a href="{{ url('/') }}?recherche={{ urlencode('T-shirts') }}">T-shirts</a></li>
-                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Vestes') }}">Vestes</a></li>
-                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Pantalons') }}">Pantalons</a></li>
-                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Shorts') }}">Shorts</a></li>
-                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Costumes') }}">Costumes</a></li>
-                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Sweats') }}">Sweats</a></li>
-                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Pyjamas') }}">Pyjamas</a></li>
-                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Maillots de bain') }}">Maillots de bain</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Veste') }}">Vestes</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Pantalon') }}">Pantalons</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Short') }}">Shorts</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Costume') }}">Costumes</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Sweat') }}">Sweats</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Pyjama') }}">Pyjamas</a></li>
+                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Maillot de bain') }}">Maillots de bain</a></li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -221,10 +221,10 @@
                                                 <div class="row">
                                                     <h4>Chaussures</h4>
                                                     <ul>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Baskets') }}">Baskets</a></li>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Bottes') }}">Bottes</a></li>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Sandales') }}">Sandales</a></li>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Mocassins') }}">Mocassins</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Basket') }}">Baskets</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Botte') }}">Bottes</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Sandale') }}">Sandales</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Mocassin') }}">Mocassins</a></li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -232,11 +232,11 @@
                                                 <div class="row">
                                                     <h4>Accessoires & Soins</h4>
                                                     <ul>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Montres') }}">Montres</a></li>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Ceintures') }}">Ceintures</a></li>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Sacs') }}">Sacs</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Montre') }}">Montres</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Ceinture') }}">Ceintures</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Sac') }}">Sacs</a></li>
                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Rasage') }}">Rasage</a></li>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Parfums') }}">Parfums</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Parfum') }}">Parfums</a></li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -249,6 +249,8 @@
                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Hugo Boss') }}">Hugo Boss</a></li>
                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Tommy Hilfiger') }}">Tommy Hilfiger</a></li>
                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Puma') }}">Puma</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Puma') }}">Prada</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Puma') }}">Gucci</a></li>
                                                     </ul>
                                                     <a href="#" class="view-all">Voir toutes les marques <i class="ri-arrow-right-line"></i></a>
                                                 </div>
@@ -302,9 +304,9 @@
                                                 <div class="row">
                                                     <h4>Puériculture & Jouets</h4>
                                                     <ul>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Poussettes') }}">Poussettes</a></li>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Sièges auto') }}">Sièges auto</a></li>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Jouets') }}">Jouets</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Poussette') }}">Poussettes</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Siège auto') }}">Sièges auto</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Jouet') }}">Jouets</a></li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -314,7 +316,7 @@
                                                     <ul class="Women-brands">
                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Disney') }}">Disney</a></li>
                                                         <li><a href="{{ url('/') }}?recherche={{ urlencode('Nike enfant') }}">Nike</a></li>
-                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Zara Kids') }}">Zara Kids</a></li>
+                                                        <li><a href="{{ url('/') }}?recherche={{ urlencode('Zara Kid') }}">Zara Kids</a></li>
                                                     </ul>
                                                     <a href="#" class="view-all">Voir toutes les marques <i class="ri-arrow-right-line"></i></a>
                                                 </div>
@@ -336,13 +338,18 @@
                                     </div>
                                  </div>
                                 </li>
-                                <li><a href="#">Sports
+                                <li><a href="{{ url('/') }}?recherche={{ urlencode('Sports') }}">Sports
                                 </a></li>
                             </ul>
                         </nav>
                     </div>
                     <div class="right">
                         <ul class="flexitem second-links">
+                            <li><a href="#" class="iscart">
+                                <div class="icon-large"><i class="ri-mail-unread-line"></i></div>
+                                    <div class="fly-item"><span class="item-number">{{ $cartCount }}</span></div>
+                                
+                            </a></li>
                             
                             <li><a href="#" class="iscart">
                                 <div class="icon-large"><i class="ri-shopping-cart-line"></i></div>
@@ -379,7 +386,7 @@
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Maquillage') }}">Maquillage</a></li>
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Soins de la peau') }}">Soins de la peau</a></li>
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Soins capillaires') }}">Soins capillaires</a></li>
-                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Parfums') }}">Parfums</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Parfum') }}">Parfums</a></li>
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Soins des pieds & mains') }}">Soins des pieds & mains</a></li>
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Outils & accessoires') }}">Outils & accessoires</a></li>
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Rasage & épilation') }}">Rasage & épilation</a></li>
@@ -398,8 +405,8 @@
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Airpods') }}">Airpods</a></li>
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Ordinateur') }}">Ordinateur</a></li>
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Télévision') }}">Télévision</a></li>
-                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Vidéo Projecteurs') }}">Vidéo Projecteurs</a></li>
-                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Casque') }}">Casque</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Vidéo Projecteur') }}">Vidéo Projecteurs</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Casque') }}">Casques</a></li>
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Enceinte bluetooth') }}">Enceinte bluetooth</a></li>
                                         </ul>
                                     </li>
@@ -410,11 +417,11 @@
                                             <div class="icon-small"><i class="ri-arrow-right-s-line"></i></div>
                                         </a>
                                         <ul>
-                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Vêtements') }}">Vêtements</a></li>
-                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Chaussures') }}">Chaussures</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Vêtement') }}">Vêtements</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Chaussure') }}">Chaussures</a></li>
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Bijoux') }}">Bijoux</a></li>
-                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Montres') }}">Montres</a></li>
-                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Accessoires') }}">Accessoires</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Montre') }}">Montres</a></li>
+                                            <li><a href="{{ url('/') }}?recherche={{ urlencode('Accessoires') }}">Accessoire</a></li>
                                             <li><a href="{{ url('/') }}?recherche={{ urlencode('Sacs à main') }}">Sacs à main</a></li>
                                         </ul>
                                     </li>
@@ -422,7 +429,6 @@
                                         <a href="{{ url('/') }}?categorie={{ urlencode('Mode-Homme') }}">
                                             <div class="icon-large"><i class="ri-shirt-line"></i></div>
                                             Mode Homme
-                                            
                                         </a>
                                     </li>
                                     <li class="has-child fashion">
