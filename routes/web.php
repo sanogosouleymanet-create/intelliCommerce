@@ -371,7 +371,7 @@ Route::middleware(['auth:client'])->group(function () {
                     'sender' => $sender,
                     'senderType' => $senderType,
                     'lastMessage' => $message,
-                    'unreadCount' => $message->Statut === 'envoye' ? 1 : 0,
+                    'unreadCount' => $message->Statut === 'non lu' ? 1 : 0,
                     'lastMessageDate' => $message->DateEnvoi,
                     'isBlocked' => $senderType === 'vendeur' ? ($sender->Bloque ?? false) : false,
                 ];

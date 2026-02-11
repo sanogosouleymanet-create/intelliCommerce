@@ -41,7 +41,7 @@ class MessageController extends Controller
         $message = Message::create([
             'Contenu' => $validated['Contenu'],
             'DateEnvoi' => now(),
-            'Statut' => 0,
+            'Statut' => 'non lu',
             'Client_idClient' => $validated['Client_idClient'] ?? null,
             'Vendeur_idVendeur' => $validated['Vendeur_idVendeur'] ?? Auth::guard('vendeur')->id(),
         ]);
@@ -56,7 +56,7 @@ class MessageController extends Controller
         if (Schema::hasColumn('messages', 'Lu')) {
             $message->Lu = true;
         } elseif (Schema::hasColumn('messages', 'Statut')) {
-            $message->Statut = 1;
+            $message->Statut = 'lu';
         }
 
         $message->save();
