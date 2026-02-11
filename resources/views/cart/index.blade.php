@@ -83,7 +83,7 @@
         </table>
         </div>
         <div class="text-end mt-2">
-            <strong id="cart-total">Total: {{ number_format($total,0,',',' ') }} FCFA</strong>
+            <strong id="cart-total">Total: 0 FCFA</strong>
         </div>
     @endif
 </div>
@@ -246,11 +246,8 @@ function updateCartTotal(){
     var selected = document.querySelectorAll('.select-product:checked');
     var total = 0;
     if(selected.length === 0){
-        // No selections: sum all subtotals
-        var allSubs = document.querySelectorAll('.select-product');
-        allSubs.forEach(function(cb){
-            total += parseFloat(cb.getAttribute('data-subtotal')) || 0;
-        });
+        // No selections: set total to zero
+        total = 0;
     } else {
         // Sum subtotals of selected items
         selected.forEach(function(cb){
