@@ -11,6 +11,9 @@ use App\Models\Vendeur;
 use App\Models\Client;
 use App\Models\Ia_alerte;
 use App\Models\Message;
+use App\Models\Commande;
+use App\Models\Produitcommande;
+use Illuminate\Support\Facades\Storage;
 
 
 class AdministrateurController extends Controller
@@ -68,7 +71,9 @@ class AdministrateurController extends Controller
             'administrateurs' => Administrateur::count(),
             'ia_alertes' => Ia_alerte::count(),
         ];
-        return view('admin.dashboard', compact('counts', 'admin'));
+        $client = \App\Models\Client::where('email', $admin->email)->first();
+        $commandes = $client ? $client->commandes()->with(['produitcommandes.produit'])->orderBy('DateCommande', 'desc')->take(5)->get() : collect();
+        return view('admin.dashboard', compact('counts', 'admin', 'commandes'));
     }
 
     public function iaAlerts()
@@ -212,6 +217,84 @@ class AdministrateurController extends Controller
     {
         $vendeurs = Vendeur::orderBy('Nom')->get();
         return view('admin.vendeurs', compact('vendeurs'));
+    }
+
+    public function commandes(Request $request)
+    {
+        $query = \App\Models\Commande::with(['client', 'produitcommandes.produit.vendeur']);
+
+        // Filter by status if provided (case-insensitive)
+        if ($request->filled('statut')) {
+            $statut = $request->statut;
+            $query->whereRaw('LOWER(Statut) = ?', [mb_strtolower($statut)]);
+        }
+
+        // Search by client name or product name
+        if ($request->filled('recherche')) {
+            $term = $request->recherche;
+            $query->where(function($q) use ($term) {
+                $q->whereHas('client', function($clientQuery) use ($term) {
+                    $clientQuery->where('Nom', 'like', '%' . $term . '%')
+                               ->orWhere('Prenom', 'like', '%' . $term . '%');
+                })
+                ->orWhereHas('produitcommandes.produit', function($produitQuery) use ($term) {
+                    $produitQuery->where('Nom', 'like', '%' . $term . '%');
+                });
+            });
+        }
+
+        $commandes = $query->orderBy('DateCommande', 'desc')->get();
+        return view('admin.commandes', compact('commandes'));
+    }
+
+    public function mesCommandes(Request $request)
+    {
+        $admin = Auth::guard('administrateur')->user();
+        if (!$admin) {
+            return redirect()->route('admin.login')->withErrors('Veuillez vous connecter.');
+        }
+        $client = \App\Models\Client::where('email', $admin->email)->first();
+        $commandes = $client ? $client->commandes()->with(['produitcommandes.produit'])->orderBy('DateCommande', 'desc')->get() : collect();
+        return view('admin.mes-commandes', compact('commandes', 'admin'));
+    }
+
+    /**
+     * Affiche les détails d'une commande pour l'administrateur.
+     */
+    public function showCommande($id)
+    {
+        $commande = \App\Models\Commande::with(['client', 'produitcommandes.produit.vendeur'])->find($id);
+        if (!$commande) {
+            return response()->json(['error' => 'Commande introuvable'], 404);
+        }
+
+        // Format the response to avoid null reference errors
+        $formattedCommande = [
+            'idCommande' => $commande->idCommande,
+            'DateCommande' => $commande->DateCommande ? $commande->DateCommande->toISOString() : null,
+            'montant_total' => $commande->montant_total,
+            'Statut' => $commande->Statut,
+            'client' => $commande->client ? [
+                'Nom' => $commande->client->Nom,
+                'Prenom' => $commande->client->Prenom,
+                'email' => $commande->client->email,
+                'TelClient' => $commande->client->TelClient,
+                'Adresse' => $commande->client->Adresse,
+            ] : null,
+            'produitcommandes' => $commande->produitcommandes->map(function($pc) {
+                return [
+                    'Quantite' => $pc->Quantite,
+                    'PrixUnitaire' => $pc->PrixUnitaire,
+                    'produit' => $pc->produit ? [
+                        'idProduit' => $pc->produit->idProduit ?? null,
+                        'Nom' => $pc->produit->Nom ?? null,
+                        'Image' => ($pc->produit->Image) ? Storage::url($pc->produit->Image) : null,
+                    ] : null,
+                ];
+            })->toArray(),
+        ];
+
+        return response()->json($formattedCommande);
     }
 
     /**
@@ -593,5 +676,192 @@ class AdministrateurController extends Controller
         $model->Bloque = false;
         $model->save();
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Show admin's cart page.
+     */
+    public function cart(Request $request)
+    {
+        $admin = Auth::guard('administrateur')->user();
+        $key = 'cart_admin_' . $admin->idAdmi;
+        $cart = session($key, []);
+        $items = [];
+        $total = 0;
+        foreach ($cart as $id => $qty) {
+            $p = Produit::where('idProduit', $id)->first();
+            if (!$p) continue;
+            $subtotal = ($p->Prix ?? 0) * $qty;
+            $items[] = ['produit' => $p, 'qty' => $qty, 'subtotal' => $subtotal];
+            $total += $subtotal;
+        }
+        return view('admin.cart', compact('items', 'total', 'admin'));
+    }
+
+    /**
+     * Add a product to admin's session cart (AJAX-friendly).
+     */
+    public function addToCart(Request $request)
+    {
+        $admin = Auth::guard('administrateur')->user();
+        if (!$admin) return response()->json(['success' => false, 'message' => 'Non authentifié'], 401);
+        $id = $request->input('id');
+        $qty = max(1, intval($request->input('qty', 1)));
+        $key = 'cart_admin_' . $admin->idAdmi;
+        $cart = session($key, []);
+        if (isset($cart[$id])) $cart[$id] = $cart[$id] + $qty; else $cart[$id] = $qty;
+        session([$key => $cart]);
+
+        // compute totals
+        $count = array_sum(array_values($cart));
+        $total = 0;
+        foreach ($cart as $pid => $q) {
+            $p = Produit::where('idProduit', $pid)->first();
+            if ($p) $total += ($p->Prix ?? 0) * $q;
+        }
+
+        if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => true, 'count' => $count, 'total' => $total]);
+        return redirect()->back();
+    }
+
+    /**
+     * Remove a product from admin's session cart.
+     */
+    public function removeFromCart(Request $request)
+    {
+        $admin = Auth::guard('administrateur')->user();
+        if (!$admin) return response()->json(['success' => false, 'message' => 'Non authentifié'], 401);
+        $id = $request->input('id');
+        $key = 'cart_admin_' . $admin->idAdmi;
+        $cart = session($key, []);
+        if (isset($cart[$id])) unset($cart[$id]);
+        session([$key => $cart]);
+
+        $count = array_sum(array_values($cart));
+        $total = 0; foreach ($cart as $pid => $q) { $p = Produit::where('idProduit', $pid)->first(); if ($p) $total += ($p->Prix ?? 0) * $q; }
+
+        if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => true, 'count' => $count, 'total' => $total]);
+        return redirect()->back();
+    }
+
+    /**
+     * Update quantity for a product in admin's cart.
+     */
+    public function updateCart(Request $request)
+    {
+        $admin = Auth::guard('administrateur')->user();
+        if (!$admin) return response()->json(['success' => false, 'message' => 'Non authentifié'], 401);
+        $id = $request->input('id');
+        $qty = intval($request->input('qty', 0));
+        $key = 'cart_admin_' . $admin->idAdmi;
+        $cart = session($key, []);
+        if ($qty <= 0) { if (isset($cart[$id])) unset($cart[$id]); }
+        else { $cart[$id] = $qty; }
+        session([$key => $cart]);
+
+        $count = array_sum(array_values($cart));
+        $total = 0; foreach ($cart as $pid => $q) { $p = Produit::where('idProduit', $pid)->first(); if ($p) $total += ($p->Prix ?? 0) * $q; }
+
+        if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => true, 'count' => $count, 'total' => $total]);
+        return redirect()->back();
+    }
+
+    /**
+     * Place an order for selected products.
+     */
+    public function placeOrder(Request $request)
+    {
+        $admin = Auth::guard('administrateur')->user();
+        if (!$admin) return response()->json(['success' => false, 'message' => 'Non authentifié'], 401);
+        $selected = $request->input('selected_products', []);
+        $key = 'cart_admin_' . $admin->idAdmi;
+        $cart = session($key, []);
+        if (empty($selected)) return response()->json(['success' => false, 'message' => 'Aucun produit sélectionné'], 422);
+
+        // Find or create client record for admin
+        $client = Client::where('email', $admin->email)->first();
+        if (!$client) {
+            $client = Client::create([
+                'Nom' => $admin->Nom,
+                'Prenom' => $admin->Prenom ?? '',
+                'email' => $admin->email,
+                'MotDePasse' => $admin->MotDePasse,
+                'TelClient' => $admin->TelAdmin ?? '',
+                'Adresse' => $admin->Adresse ?? '',
+                'active' => true,
+            ]);
+        }
+
+        $totalAmount = 0;
+        $orderItems = [];
+
+        // Calculate total and prepare order items.
+        // Allow selected product ids even if they are not present in the session cart (fallback to qty = 1).
+        foreach ($selected as $productId) {
+            $productId = intval($productId);
+            $product = Produit::find($productId);
+            if (!$product) continue;
+
+            $qty = isset($cart[$productId]) ? intval($cart[$productId]) : 1;
+
+            $subtotal = ($product->Prix ?? 0) * $qty;
+            $totalAmount += $subtotal;
+
+            $orderItems[] = [
+                'product' => $product,
+                'qty' => $qty,
+                'prix_unitaire' => $product->Prix,
+                'vendeur_id' => $product->Vendeur_idVendeur,
+            ];
+        }
+
+        if (empty($orderItems)) {
+            // Return debug info to help identify why selected ids don't match session cart
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun produit valide sélectionné',
+                'selected' => $selected,
+                'cart' => $cart,
+                'admin_id' => $admin->idAdmi ?? null,
+                'session_id' => session()->getId(),
+                'session_key' => $key
+            ], 422);
+        }
+
+        // Create the order (use the column name defined in migrations: MontantTotal)
+        $commande = Commande::create([
+            'DateCommande' => now(),
+            'Statut' => 'En cours',
+            'MontantTotal' => $totalAmount,
+            'Client_idClient' => $client->idClient,
+            'Vendeur_idVendeur' => $orderItems[0]['vendeur_id'], // Use first product's seller
+        ]);
+
+        // Create produitcommande records
+        foreach ($orderItems as $item) {
+            Produitcommande::create([
+                'Produit_idProduit' => $item['product']->idProduit,
+                'Commande_idCommande' => $commande->idCommande,
+                'Quantite' => $item['qty'],
+                'PrixUnitaire' => $item['prix_unitaire'],
+                'DateAjout' => now(),
+            ]);
+        }
+
+        // Keep items in cart after placing order
+        $count = array_sum(array_values($cart));
+        $total = 0;
+        foreach ($cart as $pid => $q) {
+            $p = Produit::where('idProduit', $pid)->first();
+            if ($p) $total += ($p->Prix ?? 0) * $q;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Commande passée avec succès.',
+            'order_id' => $commande->idCommande,
+            'count' => $count,
+            'total' => $total
+        ]);
     }
 }

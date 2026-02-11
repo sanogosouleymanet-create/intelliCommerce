@@ -13,6 +13,7 @@ class Commande extends Model
     protected $fillable = [
         'DateCommande',
         'Statut',
+        'montant_total',
         'MontantTotal',
         'Client_idClient',
         'Vendeur_idVendeur',
@@ -24,17 +25,31 @@ class Commande extends Model
     protected $keyType = 'int';
     public $timestamps = false;
 
-    public function Client()
+    protected $casts = [
+        'DateCommande' => 'datetime',
+    ];
+
+    public function getMontantTotalAttribute()
+    {
+        return $this->attributes['MontantTotal'] ?? $this->attributes['montant_total'] ?? 0;
+    }
+
+    public function client()
     {
         return $this->belongsTo(Client::class, 'Client_idClient');
     }
 
-    public function Produit()
+    public function produit()
     {
         return $this->belongsToMany(Produit::class, 'Produitcommande', 'Commande_idCommande', 'Produit_idProduit')->withPivot('Quantite', 'PrixUnitaire');
     }
 
-    public function Vendeur()
+    public function produitcommandes()
+    {
+        return $this->hasMany(\App\Models\Produitcommande::class, 'Commande_idCommande');
+    }
+
+    public function vendeur()
     {
         return $this->belongsTo(Vendeur::class, 'Vendeur_idVendeur');
     }
