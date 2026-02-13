@@ -43,18 +43,7 @@ class VendeurController extends Controller
             'MotDePasse' => Hash::make($request->motdepasse),
             'DateCreation' => now(),
         ]);
-
-        // Créer également un compte client pour permettre au vendeur d'acheter des produits
-        $client = Client::create([
-            'Nom' => $request->nom,
-            'Prenom' => $request->prenom,
-            'DateDeNaissance' => now()->subYears(25)->toDateString(), // Default birthdate
-            'Adresse' => $request->adresse,
-            'TelClient' => $request->tel,
-            'email' => $request->mail,
-            'MotDePasse' => Hash::make($request->motdepasse),
-            'DateCreation' => now(),
-        ]);
+        // Ne pas créer automatiquement de compte `Client` ici.
 
             // Connecte automatiquement le vendeur créé et redirige vers son tableau de bord
             Auth::guard('vendeur')->login($vend);
@@ -183,7 +172,7 @@ class VendeurController extends Controller
             } elseif ($conv['senderType'] === 'admin') {
                 $query->where('Administrateur_idAdministrateur', $conv['sender']->idAdmi);
             }
-            $conv['unreadCount'] = $query->where('sender_type', '!=', 'vendeur')->where('Statut', 'envoye')->count();
+            $conv['unreadCount'] = $query->where('sender_type', '!=', 'vendeur')->unread()->count();
         }
 
         // Trier les conversations par date du dernier message
@@ -241,11 +230,13 @@ class VendeurController extends Controller
             ->orderBy('DateEnvoi', 'asc')
             ->get();
 
-        // Marquer comme lus
+        // Marquer comme lus uniquement pour les messages entrants non lus
         foreach ($messages as $message) {
-            if ($message->Statut === 'envoye') {
-                $message->Statut = 'lu';
-                $message->save();
+            $isFromOther = (isset($message->sender_type) && $message->sender_type !== 'vendeur')
+                || (!isset($message->sender_type) && ($message->Client_idClient ?? null) !== null);
+
+            if ($isFromOther && $message->isUnread()) {
+                $message->markAsRead();
             }
         }
 
@@ -315,7 +306,8 @@ class VendeurController extends Controller
         $m = new Message();
         $m->Contenu = trim($data['body']);
         $m->DateEnvoi = now();
-        $m->Statut = 'envoye';
+        // Store as 'non lu' so recipient sees it as unread until opened
+        $m->Statut = 'non lu';
         $m->Vendeur_idVendeur = $vendeur->idVendeur;
         if ($targetType === 'client') {
             $m->Client_idClient = $targetId;

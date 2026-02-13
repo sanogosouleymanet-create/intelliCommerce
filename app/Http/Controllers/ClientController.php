@@ -88,11 +88,13 @@ class ClientController extends Controller
             ->orderBy('DateEnvoi', 'asc')
             ->get();
 
-        // Marquer comme lus
+        // Marquer comme lus uniquement pour les messages entrants non lus
         foreach ($messages as $message) {
-            if ($message->Statut === 'envoye') {
-                $message->Statut = 'lu';
-                $message->save();
+            $isFromOther = (isset($message->sender_type) && $message->sender_type !== 'client')
+                || (!isset($message->sender_type) && ($message->Vendeur_idVendeur ?? null) !== null);
+
+            if ($isFromOther && $message->isUnread()) {
+                $message->markAsRead();
             }
         }
 
@@ -162,7 +164,8 @@ class ClientController extends Controller
         $m = new Message();
         $m->Contenu = trim($data['body']);
         $m->DateEnvoi = now();
-        $m->Statut = 'envoye';
+        // Store as 'non lu' so recipient sees it as unread until opened
+        $m->Statut = 'non lu';
         $m->Client_idClient = $client->idClient;
         if ($targetType === 'vendeur') {
             $m->Vendeur_idVendeur = $targetId;

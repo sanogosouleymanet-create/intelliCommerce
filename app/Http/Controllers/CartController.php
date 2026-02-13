@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Produit;
 use Illuminate\Support\Facades\Auth;
+use App\Models\SavedCart;
 
 class CartController extends Controller
 {
     // show cart
     public function index(Request $request)
     {
+        $this->restoreSavedCartToSession($request);
         $key = $this->cartKey($request);
         $cart = session($key, []);
         $items = [];
@@ -49,6 +51,9 @@ class CartController extends Controller
         if (isset($cart[$id])) $cart[$id] += $qty; else $cart[$id] = $qty;
         session([$key => $cart]);
 
+        // persist for authenticated users
+        $this->persistCartIfAuthenticated($request, $cart);
+
         // compute summary
         $count = array_sum($cart);
         $total = 0;
@@ -68,6 +73,9 @@ class CartController extends Controller
         $cart = session($key, []);
         if (isset($cart[$id])) unset($cart[$id]);
         session([$key => $cart]);
+
+        // persist for authenticated users
+        $this->persistCartIfAuthenticated($request, $cart);
         return response()->json(['success' => true, 'count' => array_sum($cart), 'total' => $this->computeTotal($cart)]);
     }
 
@@ -85,7 +93,65 @@ class CartController extends Controller
             $cart[$id] = $qty;
         }
         session([$key => $cart]);
+        // persist for authenticated users
+        $this->persistCartIfAuthenticated($request, $cart);
         return response()->json(['success' => true, 'count' => array_sum($cart), 'total' => $this->computeTotal($cart)]);
+    }
+
+    /**
+     * If the requester is authenticated, save the cart to DB (upsert).
+     */
+    protected function persistCartIfAuthenticated(Request $request, array $cart)
+    {
+        $guard = null;
+        $userId = null;
+        if (Auth::guard('client')->check()) {
+            $guard = 'client';
+            $userId = (string) Auth::guard('client')->user()->getAuthIdentifier();
+        } elseif (Auth::guard('vendeur')->check()) {
+            $guard = 'vendeur';
+            $userId = (string) Auth::guard('vendeur')->user()->getAuthIdentifier();
+        } elseif (Auth::guard('administrateur')->check()) {
+            $guard = 'administrateur';
+            $userId = (string) Auth::guard('administrateur')->user()->getAuthIdentifier();
+        }
+
+        if ($guard && $userId) {
+            SavedCart::updateOrCreate(
+                ['guard' => $guard, 'user_id' => $userId],
+                ['cart' => $cart]
+            );
+        }
+    }
+
+    /**
+     * Restore saved cart from DB into session if session cart is empty.
+     */
+    protected function restoreSavedCartToSession(Request $request)
+    {
+        $guard = null;
+        $userId = null;
+        if (Auth::guard('client')->check()) {
+            $guard = 'client';
+            $userId = (string) Auth::guard('client')->user()->getAuthIdentifier();
+        } elseif (Auth::guard('vendeur')->check()) {
+            $guard = 'vendeur';
+            $userId = (string) Auth::guard('vendeur')->user()->getAuthIdentifier();
+        } elseif (Auth::guard('administrateur')->check()) {
+            $guard = 'administrateur';
+            $userId = (string) Auth::guard('administrateur')->user()->getAuthIdentifier();
+        }
+
+        if ($guard && $userId) {
+            $saved = SavedCart::where('guard', $guard)->where('user_id', $userId)->first();
+            if ($saved && $saved->cart) {
+                $key = $this->cartKey($request);
+                $sessionCart = session($key, []);
+                if (empty($sessionCart)) {
+                    session([$key => $saved->cart]);
+                }
+            }
+        }
     }
 
     protected function computeTotal($cart)

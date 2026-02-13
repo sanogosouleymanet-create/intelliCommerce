@@ -21,6 +21,112 @@
             /* Ensure select column has fixed width so header checkbox doesn't overlap rows */
             .col-select{ width:48px; }
             .select-product{ margin-left:6px; }
+
+            /* Table-specific styles only: rows, columns, cells and small responsive tweaks */
+            /* Compact table: reduce max width, paddings and image sizes to avoid scrollbars */
+            /* Make the cart fragment span the page and align to the left (remove left gutter) */
+            .mini-cart-fragment.container { max-width: none !important; width: calc(100% - 16px) !important; box-sizing: border-box; padding-left: 8px !important; padding-right: 8px !important; margin-left: 0 !important; margin-right: 0 !important; position: relative; }
+                /* Make table scrollable within the cart fragment and keep the header visible */
+            .table-responsive {
+                overflow-x: hidden;
+                overflow-y: auto;
+                max-width: 100%;
+                -webkit-overflow-scrolling: touch;
+                /* leave room for header: adjust if needed */
+                max-height: calc(100vh - 180px);
+            }
+                /* Shrink table slightly from the right to create inner gutter
+                    without affecting button/total field. Keeps full width on small screens. */
+                /* Full-width table: use all available space inside the fragment */
+                .table { margin-bottom: 0; table-layout: auto; width: 100% !important; max-width: 100% !important; }
+            .table td, .table th {
+                vertical-align: middle !important;
+                padding: 6px 6px;
+                border-bottom: 1px solid #f1f3f4;
+                white-space: normal;
+                word-break: break-word;
+                line-height: 1.2;
+            }
+            .table thead th {
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                font-weight: 700;
+                color: #495057;
+                border-bottom: 2px solid #dee2e6;
+                font-size: 0.9rem;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+                padding: 8px 6px;
+                position: sticky;
+                top: 0;
+                z-index: 6;
+            }
+            .table tbody tr { transition: background 0.18s ease, transform 0.15s ease; }
+            .table tbody tr:hover { background-color: #f8f9fa; transform: translateY(-1px); box-shadow: 0 3px 6px rgba(0,0,0,0.04); }
+                /* Product thumbnail sizing — match the provided sample: narrow portrait thumbnails.
+                    Use fixed width, auto height, and contain to show full image without stretching. */
+                .cart-thumb { width: 96px; height: auto; max-height: 140px; object-fit: contain; border-radius: 8px; display: block; }
+                .col-img { width: 110px; }
+            /* Ensure mini-cart modal uses same large thumbnails (override global/minified CSS if present) */
+            .mini-cart-fragment .cart-thumb { width: 96px !important; height: auto !important; max-height: 140px !important; object-fit: contain !important; }
+            .mini-cart-fragment .col-img { width: 110px !important; }
+            .cart-prod-name { font-weight: 600; max-width: 260px; color: #212529; font-size: 1rem; }
+            .cart-prod-price, .cart-subtotal { text-align: right; white-space: nowrap; font-weight: 600; color: #1e88e5; font-size: 0.98rem; }
+                /* Column sizing and alignment for product/price/qty/subtotal */
+                .col-prod { text-align: left; padding-left: 8px; }
+                .col-price { width: 140px; text-align: center; }
+                .col-qty { width: 110px; text-align: center; }
+                .col-subtotal { width: 140px; text-align: center; }
+            .cart-qty-input { width: 56px; padding: 4px 6px; border: 1px solid #dee2e6; border-radius: 6px; text-align: center; }
+            .cart-qty-input:focus { border-color: #007bff; box-shadow: 0 0 0 0.08rem rgba(0,123,255,0.08); }
+            .col-action { width: 72px; text-align: center; }
+                /* Strong, broad override: force horizontal layout for all elements inside the cart fragment.
+                   This undoes any global rotations, writing-mode changes, pseudo-element transforms,
+                   and prevents letter-stacking. Scoped strictly to the cart fragment so global styles stay intact. */
+                .mini-cart-fragment,
+                .mini-cart-fragment *,
+                .mini-cart-fragment *::before,
+                .mini-cart-fragment *::after,
+                .mini-cart-fragment th,
+                .mini-cart-fragment td {
+                    -webkit-transform: none !important;
+                            transform: none !important;
+                    -webkit-writing-mode: horizontal-tb !important;
+                            writing-mode: horizontal-tb !important;
+                    -webkit-text-orientation: mixed !important;
+                            text-orientation: mixed !important;
+                    white-space: normal !important;
+                    word-break: normal !important;
+                    text-align: left !important;
+                    line-height: 1.2 !important;
+                }
+
+                /* Keep action buttons on one line and center them */
+                .mini-cart-fragment .btn,
+                .mini-cart-fragment .shiny-button,
+                .mini-cart-fragment .group-close {
+                    white-space: nowrap !important;
+                    display: inline-block !important;
+                    text-align: center !important;
+                }
+
+                /* Ensure headers and product names are horizontal and not letter-stacked */
+                .mini-cart-fragment .table thead th,
+                .mini-cart-fragment .cart-prod-name,
+                .mini-cart-fragment .cart-title {
+                    writing-mode: horizontal-tb !important;
+                    text-orientation: mixed !important;
+                    white-space: nowrap !important;
+                    overflow: visible !important;
+                }
+                
+                /* Floating total removed; total will be displayed inline at the bottom */
+            @media (max-width: 768px) {
+                .col-img, .cart-thumb { display: none; }
+                .cart-prod-name { max-width: 160px; font-size: 0.98rem; }
+                .cart-prod-price, .cart-subtotal { text-align: left; }
+                .table td, .table th { padding: 8px 6px; }
+                .table { width: 100% !important; max-width: 100% !important; }
+            }
         </style>
         <div class="table-responsive">
         <table class="table table-sm table-hover align-middle">
@@ -28,7 +134,7 @@
                 <tr>
                     <th class="col-select"><input type="checkbox" id="select-all" title="Tout sélectionner"></th>
                     <th class="col-img"></th>
-                    <th>Produit</th>
+                    <th class="col-prod">Produit</th>
                     <th class="col-price">Prix</th>
                     <th class="col-qty">Quantité</th>
                     <th class="col-subtotal">Sous-total</th>
@@ -39,17 +145,43 @@
             @foreach($items as $it)
                 @php
                     $p = $it['produit'];
-                    $imgUrl = 'https://via.placeholder.com/80x60?text=No';
+                    // Use a thumbnail-size placeholder by default
+                    $imgUrl = 'https://via.placeholder.com/140x100?text=No';
                     $img = trim((string)($p->Image ?? ''));
-                    if($img !== ''){
-                        if(preg_match('/^https?:\/\//i', $img)){
+                    if ($img !== '') {
+                        // Absolute URL stored in DB
+                        if (preg_match('/^https?:\/\//i', $img)) {
                             $imgUrl = $img;
-                        } elseif(\Illuminate\Support\Facades\Storage::exists('public/'. $img)){
-                            $imgUrl = asset('storage/'. $img);
-                        } elseif(file_exists(public_path($img))){
-                            $imgUrl = asset($img);
-                        } elseif(file_exists(public_path('images/'.basename($img)))){
-                            $imgUrl = asset('images/'.basename($img));
+                        } else {
+                            try {
+                                // Prefer the public disk (storage/app/public)
+                                if (\Illuminate\Support\Facades\Storage::disk('public')->exists(ltrim($img, '/'))) {
+                                    $imgUrl = asset('storage/' . ltrim($img, '/'));
+                                }
+                                // direct public path (e.g., 'images/foo.jpg' or '/images/foo.jpg')
+                                elseif (file_exists(public_path(ltrim($img, '/')))) {
+                                    $imgUrl = asset(ltrim($img, '/'));
+                                }
+                                // file published to public/storage
+                                elseif (file_exists(public_path('storage/' . ltrim($img, '/')))) {
+                                    $imgUrl = asset('storage/' . ltrim($img, '/'));
+                                }
+                                // common images folder fallback
+                                elseif (file_exists(public_path('images/' . basename($img)))) {
+                                    $imgUrl = asset('images/' . basename($img));
+                                }
+                                // other common upload folders
+                                elseif (file_exists(public_path('uploads/' . ltrim($img, '/')))) {
+                                    $imgUrl = asset('uploads/' . ltrim($img, '/'));
+                                }
+                                // last-resort: try storage/images
+                                elseif (file_exists(public_path('storage/images/' . basename($img)))) {
+                                    $imgUrl = asset('storage/images/' . basename($img));
+                                }
+                            } catch (\Throwable $e) {
+                                // keep placeholder on any error
+                                $imgUrl = 'https://via.placeholder.com/140x100?text=No';
+                            }
                         }
                     }
                 @endphp
@@ -82,9 +214,11 @@
             </tbody>
         </table>
         </div>
+
         <div class="text-end mt-2">
             <strong id="cart-total">Total: 0 FCFA</strong>
         </div>
+        
     @endif
 </div>
 <!-- Hidden form used to send selected products to checkout -->
@@ -114,8 +248,8 @@
                     // update header counters if helper exists, otherwise update DOM directly
                     if(window.updateHeaderCart) updateHeaderCart(json.count || 0, json.total || 0);
                     else {
-                        document.querySelectorAll('.item-number').forEach(function(el){ el.textContent = (json.count || 0); });
-                        var ct = document.querySelector('.cart-total'); if(ct) ct.textContent = (json.total ? Number(json.total).toLocaleString('fr-FR') + ' FCFA' : '0 FCFA');
+                        document.querySelectorAll('.iscart .item-number').forEach(function(el){ el.textContent = (json.count || 0); });
+                        var ct = document.getElementById('cart-total'); if(ct) ct.textContent = (json.total ? 'Total: ' + Number(json.total).toLocaleString('fr-FR') + ' FCFA' : 'Total: 0 FCFA');
                     }
 
                     // If currently shown inside the mini-cart modal, refresh its content without navigating
@@ -131,7 +265,7 @@
                     // Update header counters first
                     if(window.updateHeaderCart) updateHeaderCart(json.count || 0, json.total || 0);
                     else {
-                        document.querySelectorAll('.item-number').forEach(function(el){ el.textContent = (json.count || 0); });
+                        document.querySelectorAll('.iscart .item-number').forEach(function(el){ el.textContent = (json.count || 0); });
                     }
                     fetch('/cart', { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
                         .then(function(r){ return r.text(); })
@@ -143,6 +277,8 @@
                                 if(frag){
                                     var current = document.querySelector('.mini-cart-fragment');
                                     if(current){ current.innerHTML = frag.innerHTML; }
+                                    try{ if(typeof window.restoreCartSelection === 'function') window.restoreCartSelection(); }catch(e){}
+                                    try{ if(typeof updateCartTotal === 'function') updateCartTotal(); }catch(e){}
                                 }
                             }catch(e){ console.error('Failed to refresh cart fragment', e); }
                         }).catch(function(err){ console.error('Refresh cart fragment failed', err); });
@@ -155,6 +291,36 @@
     var mo = new MutationObserver(function(){ initCartForms(); });
     mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
     })();
+</script>
+
+<script>
+// Inline checkout button behavior (same as floating checkout)
+document.addEventListener('click', function(e){
+    var btn = e.target.closest && e.target.closest('#checkout-inline-btn');
+    if(!btn) return;
+    e.preventDefault();
+    try{
+        var checked = Array.from(document.querySelectorAll('.select-product:checked')).map(function(i){ return i.value; });
+        if(!checked.length){ alert('Sélectionnez au moins un produit à commander'); return; }
+        var tokenEl = document.querySelector('meta[name="csrf-token"]');
+        var token = tokenEl ? tokenEl.getAttribute('content') : null;
+        var fd = new FormData();
+        checked.forEach(function(id){ fd.append('selected_products[]', id); });
+        if(token) fd.append('_token', token);
+        var headers = { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' };
+        if(token) headers['X-CSRF-TOKEN'] = token;
+        try{ var xsrf = document.cookie.replace(/(?:(?:^|.*;\s*)XSRF-TOKEN\s*\=\s*([^;]*).*$)|^.*$/, "$1"); if(xsrf) headers['X-XSRF-TOKEN'] = decodeURIComponent(xsrf); }catch(e){}
+        fetch('/passer-commande', { method: 'POST', headers: headers, body: fd, credentials: 'same-origin' })
+            .then(function(r){ var ct = r.headers.get('content-type') || ''; if (ct.indexOf('application/json') === -1) { return r.text().then(function(text){ throw new Error('Réponse inattendue du serveur: ' + text); }); } return r.json().then(function(json){ if(!r.ok) throw new Error(json.message || 'Erreur serveur'); return json; }); })
+            .then(function(json){ if(!json || !json.success){ alert(json && json.message ? json.message : 'Erreur lors de la commande'); return; } var toast = document.createElement('div'); toast.className = 'order-toast alert alert-success'; toast.style.position = 'fixed'; toast.style.top = '20px'; toast.style.left = '50%'; toast.style.transform = 'translateX(-50%)'; toast.style.zIndex = 99999; toast.style.minWidth = '240px'; toast.style.textAlign = 'center'; toast.textContent = json.message || 'Commande passée'; document.body.appendChild(toast); setTimeout(function(){ toast.remove(); }, 3500);
+                // refresh fragment
+                fetch('/cart', { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+                    .then(function(r){ return r.text(); })
+                    .then(function(html){ try{ var tmp=document.createElement('div'); tmp.innerHTML=html; var frag=tmp.querySelector('.mini-cart-fragment'); if(frag){ var cur=document.querySelector('.mini-cart-fragment'); if(cur) cur.innerHTML=frag.innerHTML; try{ if(typeof window.restoreCartSelection === 'function') window.restoreCartSelection(); }catch(e){} try{ if(typeof updateCartTotal === 'function') updateCartTotal(); }catch(e){} } }catch(e){ console.error(e); } });
+            })
+            .catch(function(err){ console.error('checkout error', err); alert(err.message || 'Erreur lors de la commande'); });
+    }catch(err){ console.error(err); alert('Erreur interne: ' + (err.message || err)); }
+});
 </script>
 <script>
 // Add a floating close button when viewing the full cart page (/cart)
@@ -194,7 +360,19 @@
                         .then(function(json){ console.log('response json', json); if(!json || !json.success){ alert(json && json.message ? json.message : 'Erreur lors de la commande'); return; } var toast = document.createElement('div'); toast.className = 'order-toast alert alert-success'; toast.style.position = 'fixed'; toast.style.top = '20px'; toast.style.left = '50%'; toast.style.transform = 'translateX(-50%)'; toast.style.zIndex = 99999; toast.style.minWidth = '240px'; toast.style.textAlign = 'center'; toast.textContent = json.message || 'Commande passée'; document.body.appendChild(toast); setTimeout(function(){ toast.remove(); }, 3500); // update mini-cart fragment
                             fetch('/cart', { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
                                 .then(function(r){ return r.text(); })
-                                .then(function(html){ try{ var tmp=document.createElement('div'); tmp.innerHTML=html; var frag=tmp.querySelector('.mini-cart-fragment'); if(frag){ var cur=document.querySelector('.mini-cart-fragment'); if(cur) cur.innerHTML=frag.innerHTML; } }catch(e){ console.error(e); } });
+                                .then(function(html){
+                                    try{
+                                        var tmp = document.createElement('div');
+                                        tmp.innerHTML = html;
+                                        var frag = tmp.querySelector('.mini-cart-fragment');
+                                        if(frag){
+                                            var cur = document.querySelector('.mini-cart-fragment');
+                                            if(cur){ cur.innerHTML = frag.innerHTML; }
+                                            try{ if(typeof window.restoreCartSelection === 'function') window.restoreCartSelection(); }catch(e){}
+                                            try{ if(typeof updateCartTotal === 'function') updateCartTotal(); }catch(e){}
+                                        }
+                                    }catch(e){ console.error(e); }
+                                });
                         })
                         .catch(function(err){ console.error('fetch error', err); alert(err.message || 'Erreur lors de la commande'); });
                 }catch(err){ console.error('checkout handler error', err); alert('Erreur interne: ' + (err.message || err)); }
@@ -221,6 +399,8 @@
             var list = document.querySelectorAll('.select-product');
             list.forEach(function(cb){ cb.checked = selectAll.checked; });
             updateCartTotal(); // update total when select-all changes
+            // persist selection
+            try{ if(typeof window.saveCartSelection === 'function') window.saveCartSelection(); }catch(e){}
         });
         // clicking individual checkboxes should update the select-all state
         document.addEventListener('change', function(e){
@@ -231,6 +411,8 @@
                 var allChecked = all.every(function(cb){ return cb.checked; });
                 selectAll.checked = allChecked;
                 updateCartTotal(); // update total when individual checkbox changes
+                // persist selection
+                try{ if(typeof window.saveCartSelection === 'function') window.saveCartSelection(); }catch(e){}
             }
         }, true);
     }
@@ -239,6 +421,27 @@
     mo2.observe(document.documentElement || document.body, { childList: true, subtree: true });
     updateCartTotal(); // initialize total on load
 })();
+</script>
+<script>
+// Persist selected products across fragment refreshes using localStorage
+window.saveCartSelection = function(){
+    try{
+        var vals = Array.from(document.querySelectorAll('.select-product:checked')).map(function(cb){ return cb.value; });
+        localStorage.setItem('selected_cart_items', JSON.stringify(vals));
+    }catch(e){ console.warn('saveCartSelection failed', e); }
+};
+
+window.restoreCartSelection = function(){
+    try{
+        var s = localStorage.getItem('selected_cart_items');
+        var arr = s ? JSON.parse(s) : [];
+        document.querySelectorAll('.select-product').forEach(function(cb){ cb.checked = arr.indexOf(cb.value) !== -1; });
+        // ensure select-all is synced
+        var all = Array.from(document.querySelectorAll('.select-product'));
+        var selectAll = document.getElementById('select-all');
+        if(selectAll && all.length) selectAll.checked = all.every(function(cb){ return cb.checked; });
+    }catch(e){ console.warn('restoreCartSelection failed', e); }
+};
 </script>
 <script>
 // Function to update the cart total based on selected products
@@ -255,9 +458,7 @@ function updateCartTotal(){
         });
     }
     var totalEl = document.getElementById('cart-total');
-    if(totalEl){
-        totalEl.innerHTML = 'Total: ' + total.toLocaleString('fr-FR') + ' FCFA';
-    }
+    if(totalEl){ totalEl.innerHTML = 'Total: ' + total.toLocaleString('fr-FR') + ' FCFA'; }
 }
 </script>
 <script>
