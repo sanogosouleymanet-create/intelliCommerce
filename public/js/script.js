@@ -262,7 +262,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function updateHeaderCart(count, total){
-            document.querySelectorAll('.item-number').forEach(function(el){ el.textContent = count; });
+            // Only update cart badge(s) to avoid clobbering other counters (e.g. messages)
+            document.querySelectorAll('.iscart .item-number').forEach(function(el){ el.textContent = count; });
             var cartTotal = document.querySelector('.cart-total');
             if(cartTotal) cartTotal.textContent = (total ? (Number(total).toLocaleString('fr-FR') + ' FCFA') : '0 FCFA');
         }
@@ -404,6 +405,9 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('Mini-cart HTML response:', html);
                 // replace body with server returned markup
                 body.innerHTML = html;
+                // restore previously selected products after fragment replacement (if helper exists)
+                try{ if(typeof window.restoreCartSelection === 'function') window.restoreCartSelection(); }catch(e){ console.warn(e); }
+                try{ if(typeof updateCartTotal === 'function') updateCartTotal(); }catch(e){}
                 // try to extract total displayed in returned HTML
                 var totalEl = document.querySelector('#cart-total');
                 if(totalEl) footerTotal.textContent = totalEl.textContent.replace('Total: ','');

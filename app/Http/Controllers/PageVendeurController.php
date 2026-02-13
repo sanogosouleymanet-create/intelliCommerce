@@ -24,18 +24,9 @@ class PageVendeurController extends Controller
             $q->where('Vendeur_idVendeur', $vendeur->idVendeur);
         });
 
-        // Determine how to count unread messages depending on the actual message columns
-        if (Schema::hasColumn('messages', 'Lu')) {
-            $messagesNonLus = $vendeur->messages()->where('Lu', false)->count();
-            $messagesRecents = $vendeur->messages()->orderBy('DateEnvoi', 'desc')->take(5)->get();
-        } elseif (Schema::hasColumn('messages', 'Statut')) {
-            // assume Statut==0 means unread when 'Lu' doesn't exist
-            $messagesNonLus = $vendeur->messages()->where('Statut', 0)->count();
-            $messagesRecents = $vendeur->messages()->orderBy('DateEnvoi', 'desc')->take(5)->get();
-        } else {
-            $messagesNonLus = $vendeur->messages()->count();
-            $messagesRecents = $vendeur->messages()->orderBy('DateEnvoi', 'desc')->take(5)->get();
-        }
+        // Count unread messages using the model scope (handles both 'Lu' and 'Statut' schemas)
+        $messagesNonLus = $vendeur->messages()->unread()->count();
+        $messagesRecents = $vendeur->messages()->orderBy('DateEnvoi', 'desc')->take(5)->get();
 
         // Detect AJAX/partial requests robustly (X-Requested-With or X-Partial custom header or JSON expectations)
         $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest' || $request->header('X-Partial') === 'true' || $request->ajax() || $request->wantsJson();

@@ -18,22 +18,23 @@
             <ul id="conversations-list" style="list-style:none;padding:0;">
                 @foreach($conversations as $key => $conv)
                     <li class="conversation-item" data-type="{{ $conv['senderType'] }}" data-id="{{ $conv['senderType'] === 'vendeur' ? $conv['sender']->idVendeur : $conv['sender']->idAdmi }}" data-name="{{ $conv['senderType'] === 'admin' ? 'Administrateur' : ($conv['sender']->Nom . ' ' . $conv['sender']->Prenom) }}" data-blocked="{{ ($conv['isBlocked'] ?? false) ? 'true' : 'false' }}" style="padding:8px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
-                        <div style="display:flex;justify-content:space-between;">
-                            <strong>
-                                @if($conv['isBlocked'] ?? false)
-                                    <i class="fas fa-ban" style="color:red;margin-right:4px;"></i>
-                                    
-                                @endif
-                                {{ $conv['sender']->Nom }} {{ $conv['sender']->Prenom }}
-                            </strong>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
                             <div>
+                                <strong>
+                                    @if($conv['isBlocked'] ?? false)
+                                        <i class="fas fa-ban" style="color:red;margin-right:4px;"></i>
+                                    @endif
+                                    {{ $conv['sender']->Nom }} {{ $conv['sender']->Prenom }}
+                                </strong>
+                                <div><small style="color:#6b7280;">{{ \Carbon\Carbon::parse($conv['lastMessageDate'])->format('d/m H:i') }}</small></div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px">
+                                @if($conv['unreadCount'] > 0 && !($conv['isBlocked'] ?? false))
+                                    <span class="unread-badge" style="background:#25D366;color:#fff;padding:6px 10px;border-radius:999px;font-size:0.85rem;min-width:28px;text-align:center;display:inline-block;">{{ $conv['unreadCount'] }}</span>
+                                @endif
                             </div>
                         </div>
-                        <small style="color:#6b7280;">{{ \Carbon\Carbon::parse($conv['lastMessageDate'])->format('d/m H:i') }}</small>
                         <!--<div style="color:#6b7280;font-size:0.9rem;">{{ Str::limit($conv['lastMessage']->Contenu ?? '', 50) }}</div>-->
-                        @if($conv['unreadCount'] > 0 && !($conv['isBlocked'] ?? false))
-                            <span class="badge badge-danger">{{ $conv['unreadCount'] }}</span>
-                        @endif
                     </li>
                 @endforeach
             </ul>

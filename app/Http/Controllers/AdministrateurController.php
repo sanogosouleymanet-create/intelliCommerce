@@ -75,7 +75,7 @@ class AdministrateurController extends Controller
         try {
             $messagesUnread = Message::where('Administrateur_idAdministrateur', $admin->idAdministrateur)
                 ->where('sender_type', '!=', 'administrateur')
-                ->where('Statut', 'non lu')
+                ->unread()
                 ->count();
             $counts['messages_unread'] = $messagesUnread;
         } catch (\Throwable $e) {
@@ -371,7 +371,7 @@ class AdministrateurController extends Controller
                     'sender' => $sender,
                     'senderType' => $senderType,
                     'lastMessage' => $message,
-                    'unreadCount' => $message->Statut === 'non lu' ? 1 : 0,
+                    'unreadCount' => $message->isUnread() ? 1 : 0,
                     'lastMessageDate' => $message->DateEnvoi,
                 ];
             } elseif ($key) {
@@ -380,7 +380,7 @@ class AdministrateurController extends Controller
                     $conversations[$key]['lastMessage'] = $message;
                     $conversations[$key]['lastMessageDate'] = $message->DateEnvoi;
                 }
-                if ($message->Statut === 'non lu') {
+                if ($message->isUnread()) {
                     $conversations[$key]['unreadCount']++;
                 }
             }
@@ -433,11 +433,13 @@ class AdministrateurController extends Controller
             ->orderBy('DateEnvoi', 'asc')
             ->get();
 
-        // Marquer comme lus
+        // Marquer comme lus uniquement pour les messages entrants non lus
         foreach ($messages as $message) {
-            if ($message->Statut === 'non lu') {
-                $message->Statut = 'lu';
-                $message->save();
+            $isFromOther = (isset($message->sender_type) && $message->sender_type !== 'administrateur')
+                || (!isset($message->sender_type) && (($message->Client_idClient ?? null) !== null || ($message->Vendeur_idVendeur ?? null) !== null));
+
+            if ($isFromOther && $message->isUnread()) {
+                $message->markAsRead();
             }
         }
 
@@ -583,7 +585,7 @@ class AdministrateurController extends Controller
                 $m = new Message();
                 $m->Contenu = $content;
                 $m->DateEnvoi = $now;
-                $m->Statut = 'envoye';
+                $m->Statut = 'non lu';
                 $m->Vendeur_idVendeur = $id;
                 if ($sender) $m->Administrateur_idAdministrateur = $sender->idAdmi;
                 $m->save();
@@ -605,13 +607,13 @@ class AdministrateurController extends Controller
                 $clients = Client::all();
                 foreach ($clients as $c) {
                     if (!empty($c->Bloque)) continue; // skip blocked recipients
-                    $m = new Message();
-                    $m->Contenu = $content;
-                    $m->DateEnvoi = $now;
-                    $m->Statut = 'envoye';
-                    $m->Client_idClient = $c->idClient;
-                    if ($sender) $m->Administrateur_idAdministrateur = $sender->idAdmi;
-                    $m->save();
+                $m = new Message();
+                $m->Contenu = $content;
+                $m->DateEnvoi = $now;
+                $m->Statut = 'non lu';
+                $m->Client_idClient = $c->idClient;
+                if ($sender) $m->Administrateur_idAdministrateur = $sender->idAdmi;
+                $m->save();
                     $created++;
                 }
             }
