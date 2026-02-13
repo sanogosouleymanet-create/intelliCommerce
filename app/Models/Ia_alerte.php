@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Ia_alerte extends Model
 {
@@ -18,11 +19,24 @@ class Ia_alerte extends Model
         'Description',
         'DateCreation',
         'NiveauGravité',
-        'idAdmi',
+        'destinataire_type',
+        'destinataire_id',
+        'lu',
+        'Expediteur_type',
+        'Expediteur_id',
+        'Message',
     ];
 
-    public function administrateur()
+    public function destinataire()
     {
-        return $this->belongsTo(Administrateur::class, 'idAdmi');
+        return $this->morphTo();
+    }
+
+    public function source()
+    {
+        // Support both old (source_type/source_id) and new (Expediteur_type/Expediteur_id) column names
+        $typeColumn = Schema::hasColumn($this->getTable(), 'Expediteur_type') ? 'Expediteur_type' : 'source_type';
+        $idColumn = Schema::hasColumn($this->getTable(), 'Expediteur_id') ? 'Expediteur_id' : 'source_id';
+        return $this->morphTo('source', $typeColumn, $idColumn);
     }
 }

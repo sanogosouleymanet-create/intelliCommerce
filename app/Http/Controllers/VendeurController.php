@@ -10,6 +10,8 @@ use App\Models\Message;
 use App\Models\Client;
 use App\Models\Administrateur;
 use App\Models\Commande;
+use App\Models\Ia_alerte;
+
 
 class VendeurController extends Controller
 {
@@ -517,6 +519,37 @@ class VendeurController extends Controller
             'partial' => 'vendeurs.client_show',
             'vendeur' => $vendeur,
             'client' => $client
+        ]);
+    }
+
+    /**
+     * Affiche les alertes IA pour le vendeur.
+     */
+    public function iaAlerts(Request $request)
+    {
+        $vendeur = Auth::guard('vendeur')->user();
+        if (!$vendeur) {
+            return redirect()->route('connexion');
+        }
+
+        // Récupérer les alertes IA destinées au vendeur
+        $alerts = Ia_alerte::where('destinataire_type', 'vendeur')
+            ->where('destinataire_id', $vendeur->idVendeur)
+            ->orderBy('DateCreation', 'desc')
+            ->get();
+
+        // Detect AJAX/partial requests and return only the partial when appropriate
+        $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest' || $request->ajax() || $request->wantsJson();
+
+        if ($isAjax) {
+            return view('vendeurs.ia_alertes', compact('vendeur', 'alerts'));
+        }
+
+        // Full page request -> render PageVendeur with the ia_alertes partial
+        return view('PageVendeur', [
+            'partial' => 'vendeurs.ia_alertes',
+            'vendeur' => $vendeur,
+            'alerts' => $alerts
         ]);
     }
 }

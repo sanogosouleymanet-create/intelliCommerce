@@ -69,7 +69,11 @@ class AdministrateurController extends Controller
             'vendeurs' => Vendeur::count(),
             'clients' => Client::count(),
             'administrateurs' => Administrateur::count(),
-            'ia_alertes' => Ia_alerte::count(),
+            // Exclude IA alerts targeted to vendeurs — admin should not see vendor-specific alerts
+            'ia_alertes' => Ia_alerte::where(function($q) {
+                $q->where('destinataire_type', '!=', 'vendeur')
+                  ->orWhereNull('destinataire_type');
+            })->count(),
         ];
         // Count unread messages for this administrator (messages sent by others)
         try {
@@ -88,8 +92,45 @@ class AdministrateurController extends Controller
 
     public function iaAlerts()
     {
-        $alerts = Ia_alerte::orderBy('DateCreation', 'desc')->get();
+        // Only show alerts not targeted at vendeurs (i.e. admin/global alerts)
+        // Eager-load source and destinataire to show message details when available
+        $alerts = Ia_alerte::with(['source', 'destinataire'])->where(function($q) {
+            $q->where('destinataire_type', '!=', 'vendeur')
+              ->orWhereNull('destinataire_type');
+        })->orderBy('DateCreation', 'desc')->get();
         return view('admin.ia_alertes', compact('alerts'));
+    }
+
+    /**
+     * Affiche une alerte IA en détail pour l'administrateur.
+     */
+    public function showAlerte($id)
+    {
+        $alert = Ia_alerte::with(['source', 'destinataire'])->where('idAlerte', $id)->first();
+        if (!$alert) {
+            abort(404);
+        }
+        return view('admin.ia_alerte_show', compact('alert'));
+    }
+
+    /**
+     * Supprime plusieurs alertes IA sélectionnées.
+     */
+    public function deleteAlerts(Request $request)
+    {
+        $this->validate($request, [
+            'ids' => 'required|array',
+            'ids.*' => 'integer'
+        ]);
+
+        $ids = $request->input('ids', []);
+        try {
+            \App\Models\Ia_alerte::whereIn('idAlerte', $ids)->delete();
+        } catch (\Throwable $e) {
+            return back()->withErrors(['message' => 'Impossible de supprimer les alertes sélectionnées.']);
+        }
+
+        return redirect()->route('admin.ia_alertes')->with('status', 'Alertes supprimées');
     }
     
 
@@ -344,22 +385,33 @@ class AdministrateurController extends Controller
      */
     public function messages()
     {
-        // Récupérer tous les messages avec relations
-        $messages = Message::with(['client','vendeur','administrateur'])->orderBy('DateEnvoi', 'desc')->get();
+        // Récupérer uniquement les messages impliquant l'administrateur connecté
+        $admin = Auth::guard('administrateur')->user();
+        if (!$admin) {
+            return redirect()->route('connexion');
+        }
+        // Les messages impliquant l'admin auront la colonne Administrateur_idAdministrateur
+        // égale à l'id de l'admin (que ce soit en tant qu'expéditeur ou destinataire selon le flux).
+        $messages = Message::with(['client','vendeur','administrateur'])
+            ->where('Administrateur_idAdministrateur', $admin->idAdmi)
+            ->orderBy('DateEnvoi', 'desc')
+            ->get();
 
         // Grouper les messages en conversations par expéditeur
         $conversations = [];
         foreach ($messages as $message) {
             $key = '';
             $sender = null;
-            if ($message->client) {
-                $key = 'client_' . $message->client->idClient;
-                $sender = $message->client;
-                $senderType = 'client';
-            } elseif ($message->vendeur) {
+            // Prioritize vendeur when both client and vendeur are set so client↔vendeur
+            // conversations appear under the vendor rather than always under the client.
+            if ($message->vendeur) {
                 $key = 'vendeur_' . $message->vendeur->idVendeur;
                 $sender = $message->vendeur;
                 $senderType = 'vendeur';
+            } elseif ($message->client) {
+                $key = 'client_' . $message->client->idClient;
+                $sender = $message->client;
+                $senderType = 'client';
             } elseif ($message->administrateur) {
                 $key = 'admin_' . $message->administrateur->idAdmi;
                 $sender = $message->administrateur;
@@ -417,21 +469,29 @@ class AdministrateurController extends Controller
         if (!in_array($type, ['client', 'vendeur', 'admin'])) {
             return response()->json(['error' => 'Type invalide'], 400);
         }
-
         $admin = Auth::guard('administrateur')->user();
+        if (!$admin) return response()->json(['error' => 'Non authentifié'], 401);
 
-        $messages = Message::with(['client','vendeur','administrateur'])
-            ->where(function($query) use ($type, $id) {
-                if ($type === 'client') {
-                    $query->where('Client_idClient', $id);
-                } elseif ($type === 'vendeur') {
-                    $query->where('Vendeur_idVendeur', $id);
-                } elseif ($type === 'admin') {
-                    $query->where('Administrateur_idAdministrateur', $id);
-                }
-            })
-            ->orderBy('DateEnvoi', 'asc')
-            ->get();
+        // Only return messages between this admin and the target (client or vendor),
+        // or messages targeted to this admin when type==='admin'. This prevents the admin
+        // from seeing client<->vendor conversations that don't involve the admin.
+        $query = Message::with(['client','vendeur','administrateur'])->orderBy('DateEnvoi', 'asc');
+        if ($type === 'client') {
+            $query->where('Client_idClient', $id)
+                  ->where('Administrateur_idAdministrateur', $admin->idAdmi);
+        } elseif ($type === 'vendeur') {
+            $query->where('Vendeur_idVendeur', $id)
+                  ->where('Administrateur_idAdministrateur', $admin->idAdmi);
+        } elseif ($type === 'admin') {
+            // conversation with an admin: only allow if it's this admin (or the other admin id)
+            if ($id != $admin->idAdmi) {
+                // prevent accessing other admins' inboxes
+                return response()->json(['error' => 'Accès refusé'], 403);
+            }
+            $query->where('Administrateur_idAdministrateur', $id);
+        }
+
+        $messages = $query->get();
 
         // Marquer comme lus uniquement pour les messages entrants non lus
         foreach ($messages as $message) {
@@ -444,11 +504,16 @@ class AdministrateurController extends Controller
         }
 
         return response()->json($messages->map(function($m) use ($admin) {
+            // provide sender_type and sender_id to make client-side alignment robust
+            $senderType = $m->sender_type ?? null;
+            $senderId = $m->Administrateur_idAdministrateur ?? ($m->Vendeur_idVendeur ?? $m->Client_idClient);
             return [
                 'id' => $m->idMessage,
                 'content' => $m->Contenu,
                 'date' => $m->DateEnvoi->format('d/m/Y H:i'),
-                'isOutgoing' => $m->Administrateur_idAdministrateur == $admin->idAdmi,
+                'isOutgoing' => ($m->Administrateur_idAdministrateur == $admin->idAdmi),
+                'sender_type' => $senderType,
+                'sender_id' => $senderId,
             ];
         }));
     }

@@ -173,19 +173,21 @@
             return res.json();
         })
         .then(messages => {
+            console.log('admin conversation messages:', messages);
             const container = document.getElementById('messages-container');
             container.innerHTML = '';
             messages.forEach(msg => {
-                const msgDiv = document.createElement('div');
-                const isAdmin = msg.isOutgoing;
-                msgDiv.style.cssText = `margin-bottom:12px;padding:8px;border-radius:8px;max-width:70%;word-wrap:break-word;${isAdmin ? 'margin-left:auto;background:#007bff;color:white;' : 'margin-right:auto;background:#f1f1f1;'}`;
-                msgDiv.innerHTML = `<div style="white-space:pre-wrap;">${msg.content || ''}</div><small style="color:${isAdmin ? '#e0e0e0' : '#666'};">${msg.date || ''}</small><button class="btn btn-sm delete-msg" data-id="${msg.id}" style="margin-left:8px;color:red;" title="Supprimer">&times;</button>`;
-                container.appendChild(msgDiv);
+                // prefer explicit sender_type when available, fallback to isOutgoing
+                const isAdmin = (msg.sender_type ? (msg.sender_type === 'administrateur') : !!msg.isOutgoing);
+                const bubble = document.createElement('div');
+                bubble.style.cssText = `margin-bottom:12px;padding:8px;border-radius:8px;max-width:70%;word-wrap:break-word;${isAdmin ? 'margin-left:auto;background:#007bff;color:white;' : 'margin-right:auto;background:#f1f1f1;color:#333;'}`;
+                bubble.innerHTML = `<div style="white-space:pre-wrap;">${msg.content || ''}</div><div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><small style="color:${isAdmin ? '#e0e0e0' : '#666'};">${msg.date || ''}</small><button class="btn btn-sm delete-msg" data-id="${msg.id}" style="background:transparent;border:none;color:red;margin-left:8px;" title="Supprimer">&times;</button></div>`;
+                container.appendChild(bubble);
             });
             container.scrollTop = container.scrollHeight;
             document.getElementById('chat-title').textContent = name;
             document.getElementById('chat-header').style.display = 'block';
-            document.getElementById('messages-container').style.display = 'block';
+            document.getElementById('messages-container').style.display = 'flex';
             document.getElementById('reply-area').style.display = 'block';
             currentConversation = {type, id, name, blocked};
             updateMenuOptions();

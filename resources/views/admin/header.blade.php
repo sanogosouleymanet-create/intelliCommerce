@@ -19,7 +19,7 @@
                         <path d="M9.5 21C9.5 22.1046 10.3954 23 11.5 23H12.5C13.6046 23 14.5 22.1046 14.5 21" stroke="#000" stroke-width="1"/>
                     </svg>
                     @if(($counts['ia_alertes'] ?? 0) > 0)
-                        <span style="position:absolute;top:-6px;right:-6px;background:#c0392b;color:#fff;border-radius:999px;padding:2px 6px;font-size:12px;min-width:20px;text-align:center">{{ $counts['ia_alertes'] ?? 0 }}</span>
+                        <span style="position:absolute;top:-6px;right:-6px;background: #c0392b;color: #fff;border-radius:999px;padding:2px 6px;font-size:12px;min-width:20px;text-align:center">{{ $counts['ia_alertes'] ?? 0 }}</span>
                     @endif
                 </a>
                 <a href="{{ route('admin.messages') }}" id="header-messages" title="Messages" style="position:relative;display:inline-flex;align-items:center;margin-left:8px">

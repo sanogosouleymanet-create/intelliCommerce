@@ -155,6 +155,7 @@ Route::middleware(['auth:vendeur'])->group(function () {
             ]);
         }
     });
+    Route::get('/vendeur/ia-alertes', [VendeurController::class, 'iaAlerts'])->name('vendeurs.ia_alertes');
 
     // Vendeur message routes
     Route::get('/messages/conversation/{type}/{id}', [VendeurController::class, 'getConversation'])->name('vendeur.messages.conversation');
@@ -506,6 +507,8 @@ Route::prefix('admin')->middleware('auth:administrateur')->group(function () {
     Route::get('/parametres', [AdministrateurController::class, 'parametres'])->name('admin.parametres');
     Route::post('/parametres', [AdministrateurController::class, 'updateSettings'])->name('admin.parametres.update');
     Route::get('/ia-alertes', [AdministrateurController::class, 'iaAlerts'])->name('admin.ia_alertes');
+    Route::get('/ia-alertes/{id}', [AdministrateurController::class, 'showAlerte'])->name('admin.ia_alertes.show');
+    Route::post('/ia-alertes/delete-multiple', [AdministrateurController::class, 'deleteAlerts'])->name('admin.ia_alertes.delete');
     Route::get('/cart', [AdministrateurController::class, 'cart'])->name('admin.cart');
     Route::post('/cart/add', [AdministrateurController::class, 'addToCart'])->name('admin.cart.add');
     Route::post('/cart/remove', [AdministrateurController::class, 'removeFromCart'])->name('admin.cart.remove');
