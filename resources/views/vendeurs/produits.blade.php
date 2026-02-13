@@ -38,7 +38,7 @@
             </select>
             <div class="d-flex gap-2 ms-auto filters-actions">
                 <button type="submit" class="btn btn-primary">Appliquer</button>
-                <a href="{{ url('/vendeur/produits') }}" class="btn btn-outline-secondary">Réinitialiser</a>
+                <a href="{{ url('/vendeur/produits') }}" class="btn btn-outline-secondary" style="color: black !important;">Réinitialiser</a>
             </div>
         </form>
     </div>
@@ -102,8 +102,8 @@
                                         <div class="mt-auto d-flex justify-content-between align-items-center">
                                             <div class="product-price fw-bold">{{ number_format($produit->Prix ?? 0, 0, ',', ' ') }} FCFA</div>
                                             <div class="d-flex gap-2">
-                                                <button type="button" class="btn btn-sm btn-outline-secondary product-open" data-id="{{ $produit->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" data-vendor-name="{{ $vendorName }}" data-vendor-address="{{ $vendorAddress }}" data-stock="{{ $produit->Stock ?? 0 }}" data-category="{{ $produit->Categorie ?? '' }}" data-similar='{{ $dataSimilar }}'>Voir</button>
-                                                <a href="/produits/{{ $produit->idProduit ?? $produit->id }}/edit" class="btn btn-sm btn-outline-primary">Modifier</a>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary product-open" data-id="{{ $produit->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" data-vendor-name="{{ $vendorName }}" data-vendor-address="{{ $vendorAddress }}" data-stock="{{ $produit->Stock ?? 0 }}" data-category="{{ $produit->Categorie ?? '' }}" data-similar='{{ $dataSimilar }} ' style="color: black !important;">Voir</button>
+                                                <a href="/produits/{{ $produit->idProduit ?? $produit->id }}/edit" class="btn btn-sm btn-outline-primary" style="color: black !important;">Modifier</a>
                                             </div>
                                         </div>
                                     </div>
@@ -121,7 +121,7 @@
 </section>
 
 <!-- Floating add button -->
-<a href="#openAdd" id="fabAdd" class="fab-add btn btn-primary">+ Ajouter un produit</a>
+<a href="#openAdd" id="fabAdd" class="fab-add btn btn-primary" style="color: white !important;">+ Ajouter un produit</a>
 
 <!-- Modal d'ajout (simple) -->
 <div id="addModal" class="modal" aria-hidden="true" style="display:none;position:fixed;left:0;top:0;width:100%;height:100%;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);z-index:9999;">

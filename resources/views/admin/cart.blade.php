@@ -187,6 +187,27 @@
         .cart-footer #cart-total{ font-size:1.1rem; font-weight:800; color: #1e88e5; background: rgba(255,255,255,0.0); padding:6px 8px; border-radius:6px }
         /* Cart page header styling */
         .cart-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; max-width: 1200px; margin-left: auto; margin-right: auto; }
+
+        .cart-total-bar {
+    position: fixed;
+    bottom: 0;
+    left: 20%;
+    width: 100%;
+
+    background: transparent;
+    padding: 15px 20px;
+
+    /* Effet visuel "glisse en dessous" */
+    border-top: 1px solid #ddd;
+    box-shadow: 0 -6px 12px rgba(0, 0, 0, 0.08);
+
+    z-index: 1000;
+}
+
+/* Important : laisser de la place au contenu */
+body {
+    padding-bottom: 80px;
+}
     </style>
     
        
@@ -258,9 +279,10 @@
 
         <div style="display: flex; margin-top: 10px; align-items: center;">
             
-            <div style="min-width: 200px; text-align: left;">
-                    <h3 style="margin:0;"><strong>Total: </strong><strong id="cart-total">0 FCFA</strong></h3>
-            </div>
+            <div class="cart-total-bar">
+    <h3><strong>Total :</strong>
+    <strong id="cart-total">0 FCFA</strong></h3>
+</div>
            
         </div>
 

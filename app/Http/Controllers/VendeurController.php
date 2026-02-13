@@ -533,8 +533,11 @@ class VendeurController extends Controller
         }
 
         // Récupérer les alertes IA destinées au vendeur
+        // Exclure les alertes de type 'Message' (messages insultants ne doivent pas
+        // s'afficher chez les vendeurs — redirigées vers l'admin pour modération)
         $alerts = Ia_alerte::where('destinataire_type', 'vendeur')
             ->where('destinataire_id', $vendeur->idVendeur)
+            ->where('TypeAlerte', '!=', 'Message')
             ->orderBy('DateCreation', 'desc')
             ->get();
 
