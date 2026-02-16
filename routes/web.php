@@ -1,4 +1,5 @@
 
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -474,12 +475,17 @@ Route::middleware(['auth:client'])->group(function () {
     })->middleware('auth:client');
 });
 
+// Route nommée PageAdmin pour compatibilité avec la page principale
+Route::get('/PageAdmin', function () {
+    return redirect()->route('admin.dashboard');
+})->name('PageAdmin');
+
 // Admin authentication and dashboard
 Route::get('/admin/login', [AdministrateurController::class, 'showLogin'])->name('admin.login');
 Route::post('/admin/login', [AdministrateurController::class, 'login'])->name('admin.login.post');
 Route::post('/admin/logout', [AdministrateurController::class, 'logout'])->name('admin.logout');
 
-Route::prefix('admin')->middleware('auth:administrateur')->group(function () {
+Route::prefix('admin')->middleware('auth.administrateur')->group(function () {
     Route::get('/', [AdministrateurController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/produits', [AdministrateurController::class, 'produits'])->name('admin.produits');
     // Admin product detail (AJAX-friendly partial)
@@ -506,6 +512,7 @@ Route::prefix('admin')->middleware('auth:administrateur')->group(function () {
     Route::get('/commandes/{id}', [AdministrateurController::class, 'showCommande'])->name('admin.commandes.show');
     Route::get('/parametres', [AdministrateurController::class, 'parametres'])->name('admin.parametres');
     Route::post('/parametres', [AdministrateurController::class, 'updateSettings'])->name('admin.parametres.update');
+    Route::patch('/admin/update-info', [AdministrateurController::class, 'updateAdminInfo'])->name('admin.update.info');
     Route::get('/ia-alertes', [AdministrateurController::class, 'iaAlerts'])->name('admin.ia_alertes');
     Route::get('/ia-alertes/{id}', [AdministrateurController::class, 'showAlerte'])->name('admin.ia_alertes.show');
     Route::post('/ia-alertes/delete-multiple', [AdministrateurController::class, 'deleteAlerts'])->name('admin.ia_alertes.delete');
@@ -516,9 +523,15 @@ Route::prefix('admin')->middleware('auth:administrateur')->group(function () {
     Route::post('/cart/place-order', [AdministrateurController::class, 'placeOrder'])->name('admin.cart.place-order');
 });
 
+
 Route::get('/ConnexionAdmin', function () {
     return view('ConnexionAdmin');
 });
+
+/* Route principale d'administration (PageAdmin)
+Route::get('/admin', function () {
+    return view('admin.PageAdmin');
+})->name('PageAdmin');*/
 
 Route::post('/deconnexion', function (Request $request) {
     Auth::guard('vendeur')->logout();

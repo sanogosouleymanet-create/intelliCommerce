@@ -1,3 +1,4 @@
+<div class="main-content">
 <h2>Vendeurs</h2>
 
 @php /** Partial: admin.vendeurs - Vue stylée pour la gestion des vendeurs */ @endphp
@@ -83,3 +84,4 @@ td a:hover{ background-color: #f0f0f0; border-color: #d1d5db; }
     clear?.addEventListener('click', ()=>{ search.value=''; filter(); });
 })();
 </script>
+</div>

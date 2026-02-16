@@ -1,3 +1,4 @@
+<div class="main-content">
 @if(!request()->ajax())
     <link rel="stylesheet" href="{{ asset('css/StylePagePrincipale.css') }}">
 @endif
@@ -298,3 +299,4 @@ body {
 try{ if(window && window.adminInitPartials) window.adminInitPartials(); }catch(e){ /* no-op */ }
 </script>
 @endif
+</div>

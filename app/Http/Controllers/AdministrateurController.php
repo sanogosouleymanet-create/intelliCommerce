@@ -69,13 +69,11 @@ class AdministrateurController extends Controller
             'vendeurs' => Vendeur::count(),
             'clients' => Client::count(),
             'administrateurs' => Administrateur::count(),
-            // Exclude IA alerts targeted to vendeurs — admin should not see vendor-specific alerts
             'ia_alertes' => Ia_alerte::where(function($q) {
                 $q->where('destinataire_type', '!=', 'vendeur')
                   ->orWhereNull('destinataire_type');
             })->count(),
         ];
-        // Count unread messages for this administrator (messages sent by others)
         try {
             $messagesUnread = Message::where('Administrateur_idAdministrateur', $admin->idAdministrateur)
                 ->where('sender_type', '!=', 'administrateur')
@@ -87,7 +85,14 @@ class AdministrateurController extends Controller
         }
         $client = \App\Models\Client::where('email', $admin->email)->first();
         $commandes = $client ? $client->commandes()->with(['produitcommandes.produit'])->orderBy('DateCommande', 'desc')->take(5)->get() : collect();
-        return view('admin.dashboard', compact('counts', 'admin', 'commandes'));
+        $clients = Client::orderBy('Nom')->get();
+        $vendeurs = Vendeur::orderBy('Nom')->get();
+        $admins = Administrateur::orderBy('Nom')->get();
+        // Si AJAX, renvoie la partial, sinon le layout principal
+        if ($request->ajax()) {
+            return view('admin.dashboard', compact('counts', 'admin', 'commandes', 'clients', 'vendeurs', 'admins'));
+        }
+        return view('admin.PageAdmin', compact('counts', 'admin', 'commandes', 'clients', 'vendeurs', 'admins'));
     }
 
     public function iaAlerts()
@@ -940,5 +945,30 @@ class AdministrateurController extends Controller
             'count' => $count,
             'total' => $total
         ]);
+    }
+
+        /**
+     * Met à jour les informations de l'administrateur connecté.
+     */
+    public function updateAdminInfo(Request $request)
+    {
+        $admin = Auth::guard('administrateur')->user();
+        if (!$admin) {
+            return redirect()->back()->withErrors(['admin' => 'Non authentifié']);
+        }
+        $validated = $request->validate([
+            'Prenom' => 'required|string|max:50',
+            'Nom' => 'required|string|max:50',
+            'email' => 'required|email|max:100|unique:administrateurs,email,' . $admin->idAdmi . ',idAdmi',
+            'MotDePasse' => 'nullable|string|min:6',
+        ]);
+        $admin->Prenom = $validated['Prenom'];
+        $admin->Nom = $validated['Nom'];
+        $admin->email = $validated['email'];
+        if (!empty($validated['MotDePasse'])) {
+            $admin->MotDePasse = Hash::make($validated['MotDePasse']);
+        }
+        $admin->save();
+        return redirect()->back()->with('status', 'Informations administrateur mises à jour.');
     }
 }

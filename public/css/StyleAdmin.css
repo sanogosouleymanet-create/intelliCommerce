@@ -1,3 +1,111 @@
+/* ---- Paramètres Admin (vue partielle) ---- */
+.admin-settings-wrapper {
+    max-width: 520px;
+    margin: 32px auto 0 auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    padding: 32px 32px 24px 32px;
+}
+.settings-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: #222;
+    letter-spacing: -1px;
+}
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.form-group label {
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 2px;
+}
+.form-group input,
+.form-group textarea {
+    border: 1px solid #b3d8ea;
+    border-radius: 5px;
+    padding: 7px 10px;
+    font-size: 1rem;
+    background: #f8fafd;
+    transition: border .2s;
+}
+.form-group input:focus,
+.form-group textarea:focus {
+    border: 1.5px solid #298fcf;
+    outline: none;
+    background: #e3f4fc;
+}
+.settings-form .btn.btn-primary {
+    margin-top: 12px;
+    align-self: flex-start;
+    background: #2b7cff;
+    color: #fff;
+    border-radius: 5px;
+    padding: 8px 22px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    transition: background .2s;
+}
+.settings-form .btn.btn-primary:hover {
+    background: #155ab6;
+}
+.admin-info-section {
+    margin-top: 36px;
+    padding-top: 18px;
+    border-top: 1px solid #e0e7ef;
+}
+.admin-info-section h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #155ab6;
+}
+.admin-info-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #f8fafd;
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin-bottom: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.admin-avatar {
+    background: #b3d8ea;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #155ab6;
+    font-size: 2rem;
+}
+.admin-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.admin-details .admin-email {
+    color: #298fcf;
+    font-size: 0.98em;
+    font-weight: 400;
+}
 /*@import url('StyleProduit.css');
 @import url('StylePagePrincipale.css');*/
 * {
