@@ -24,8 +24,14 @@
                             <div>
                             </div>
                         </div>
-                        <small style="color:#6b7280;">{{ \Carbon\Carbon::parse($conv['lastMessageDate'])->format('d/m H:i') }}</small>
-                        <!--<div style="color:#6b7280;font-size:0.9rem;">{{ Str::limit($conv['lastMessage']->Contenu ?? '', 50) }}</div>-->
+                            <div style="color:#6b7280;font-size:0.9rem;display:flex;justify-content:space-between;">
+                                <span>
+                                    {{ Str::limit($conv['lastMessage']->Contenu ?? '', 50) }}
+                                </span>
+                                <span>
+                                    {{ \Carbon\Carbon::parse($conv['lastMessageDate'])->format('d/m H:i') }}
+                                </span>
+                            </div>
                         @if($conv['unreadCount'] > 0 && !($conv['isBlocked'] ?? false))
                             <span class="badge badge-danger">{{ $conv['unreadCount'] }}</span>
                         @endif

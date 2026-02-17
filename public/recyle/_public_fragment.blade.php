@@ -1,12 +1,23 @@
 <div class="product-detail-fragment" style="background-color: white; padding: 20px; border-radius: 12px; max-width: 800px; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
 	<!-- Product Main -->
 	<div style="display: flex; gap: 24px; align-items: flex-start; margin-bottom: 30px;">
-		<div style="flex: 0 0 250px;">
+		<div style="flex: 0 0 250px; position: relative;">
 			<img src="{{ $produit->Image ? asset('storage/' . $produit->Image) : asset('images/placeholder.png') }}" 
 				 alt="{{ $produit->Nom }}" 
 				 style="width: 100%; height: 250px; object-fit: cover; border-radius: 8px; border: 1px solid #eee;" />
+			<!-- Overlay boutons sur l'image, en bas à gauche -->
+			<div style="position: absolute; bottom: 12px; left: 12px; display: flex; gap: 8px; z-index: 2;">
+				<button class="btn btn-sm btn-secondary js-back" style="padding: 8px 14px; border-radius: 8px; min-width: 80px; background: rgba(255,255,255,0.92); color: #222; border: 1px solid #ddd; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+					<i class="fas fa-arrow-left"></i> Retour
+				</button>
+				<button class="add-to-cart-fragment" 
+					data-id="{{ $produit->idProduit }}" 
+					style="padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; min-width: 120px; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+					<i class="fas fa-shopping-cart"></i> Ajouter au panier
+				</button>
+			</div>
 		</div>
-		<div style="flex: 1;">
+		<div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
 			<span style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">
 				{{ $produit->Categorie ?? 'Non catégorisé' }}
 			</span>
@@ -35,15 +46,7 @@
 		</div>
 	</div>
     
-	<!-- Actions -->
-	<div style="margin-top: 16px; text-align: right; display: flex; gap: 12px; justify-content: flex-end;">
-		<button class="btn btn-sm btn-secondary js-back" style="padding: 10px 20px; border-radius: 8px;">Fermer</button>
-		<button class="add-to-cart-fragment" 
-				data-id="{{ $produit->idProduit }}" 
-				style="padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
-			<i class="fas fa-shopping-cart"></i> Ajouter au panier
-		</button>
-	</div>
+	<!-- Actions boutons (supprimé, déplacé sur l'image) -->
     
 	<!-- Similar Products (AJAX Fragment) -->
 	@if(isset($produitsSimilaires) && $produitsSimilaires->count() > 0)

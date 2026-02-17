@@ -74,7 +74,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <li data-view="commandes" class="{{ request()->routeIs('admin.commandes') ? 'active' : '' }}">
                 <a href="{{ route('admin.commandes') }}" data-view="commandes"><i class="fa-solid fa-shopping-cart"></i> Commandes</a>
             </li>
+
             <li data-view="cart" class="{{ request()->routeIs('admin.cart') ? 'active' : '' }}">
+                <a href="{{ route('admin.cart') }}" data-view="cart"><i class="fa-solid fa-cart-shopping"></i> Panier</a>
                 <!-- Lien vers la page d'acceuil -->
             <li>
                 <a href="{{ url('/PagePrincipale') }}"><i class="fa-solid fa-house"></i> Accueil</a>

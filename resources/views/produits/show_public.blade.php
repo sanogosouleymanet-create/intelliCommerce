@@ -7,6 +7,7 @@
     <script>window.isClientAuthenticated = @json(auth()->guard('client')->check());</script>
     <script>window.isAuthenticated = @json(auth()->guard('client')->check() || auth()->guard('vendeur')->check() || auth()->guard('administrateur')->check());</script>
     <title>{{ $produit->Nom }} - Détails du produit</title>
+    <link rel="stylesheet" href="{{ asset('css/StylePagePrincipale.css') }}">
     <link rel="stylesheet" href="{{ asset('css/StyleProduit.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -171,7 +172,8 @@
             display: flex;
             gap: 15px;
             margin-top: 20px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            align-items: center;
         }
         
         .btn-back {
@@ -356,8 +358,8 @@
             
             .product-actions {
                 flex-direction: column;
+                gap: 10px;
             }
-            
             .btn-add-cart, .btn-back {
                 width: 100%;
                 justify-content: center;
@@ -374,18 +376,13 @@
                      alt="{{ $produit->Nom }}" 
                      class="product-main-image">
             </div>
-            
             <div class="product-info">
                 <span class="product-category">{{ $produit->Categorie ?? 'Non catégorisé' }}</span>
-                
                 <h1 class="product-title">{{ $produit->Nom }}</h1>
-                
                 <p class="product-description">{{ $produit->Description }}</p>
-                
                 <div class="product-price">
                     {{ number_format($produit->Prix, 0, ',', ' ') }} <span>FCFA</span>
                 </div>
-                
                 <div class="product-meta">
                     <div class="meta-item">
                         <i class="fas fa-box"></i>
@@ -399,13 +396,11 @@
                             @endif
                         </span>
                     </div>
-                    
                     <div class="meta-item">
                         <i class="fas fa-calendar-alt"></i>
                         <span>Ajouté le {{ \Carbon\Carbon::parse($produit->DateAjout)->format('d/m/Y') }}</span>
                     </div>
                 </div>
-                
                 @if($vendeur)
                 <div class="vendor-info">
                     <div class="vendor-avatar">
@@ -417,32 +412,35 @@
                     </div>
                 </div>
                 @endif
-                
                 <div class="product-actions">
                     <a href="/" class="btn-back">
                         <i class="fas fa-arrow-left"></i>
                         Retour
                     </a>
-<button class="btn-add-cart add-to-cart" 
-                            title="Ajouter au panier" 
-                            data-id="{{ $produit->idProduit }}" 
-                            aria-label="Ajouter {{ $produit->Nom }} au panier"
-                            @if($produit->Stock <= 0) disabled @endif>
-                        <i class="fas fa-cart-plus"></i>&nbsp;Ajouter au panier
+                    @if($produit->Stock > 0)
+                    <button type="button" class="btn-back" data-id="{{ $produit->idProduit }}">
+                        <i class="fas fa-shopping-cart"></i>
+                        Ajouter au panier
+                    </button>
+                    @else
+                    <button type="button" class="btn-add-cart" disabled>
+                        <i class="fas fa-times-circle"></i>
+                        Rupture de stock
+                    </button>
+                    @endif
                 </div>
             </div>
         </div>
-        
-        <!-- Similar Products Section -->
+
+        <!-- Produits similaires EN DESSOUS -->
         @if(isset($produitsSimilaires) && $produitsSimilaires->count() > 0)
-        <div class="similar-products-section">
+        <div class="similar-products-section" style="margin-top: 48px;">
             <div class="section-header">
                 <h2 class="section-title">
                     <i class="fas fa-th-large"></i>
                     Produits similaires
                 </h2>
             </div>
-            
             <div class="similar-products-grid">
                 @foreach($produitsSimilaires as $produitSimilaire)
                 <a href="{{ route('produit.public', $produitSimilaire->idProduit) }}" class="similar-product-card">
@@ -470,27 +468,61 @@
     
     <script src="{{ asset('js/script.js') }}"></script>
     <script>
-        // Toast notification function
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            toastMessage.textContent = message;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-        
-        // Add to cart event handler
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('.add-to-cart');
-            if(btn) {
-                if(typeof showToast === 'function') {
-                    showToast('Clic détecté sur le panier !');
-                }
-            }
+    // Toast notification function (reste inchangé)
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        toastMessage.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    // Gestionnaire robuste pour AJAX ET injection dynamique
+    function bindAddToCartBtn() {
+        // On évite de dupliquer les handlers
+        document.querySelectorAll('.btn-back[data-id]').forEach(function(btn) {
+            if (btn._addToCartBound) return;
+            btn._addToCartBound = true;
+            btn.addEventListener('click', function(e) {
+                // Si déjà géré par le script global (add-to-cart), on laisse faire
+                if (btn.classList.contains('add-to-cart')) return;
+                e.preventDefault();
+                const produitId = btn.getAttribute('data-id');
+                fetch('/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ id: produitId, qty: 1 })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Produit ajouté au panier !');
+                    } else {
+                        showToast(data.message || 'Erreur lors de l\'ajout au panier');
+                    }
+                })
+                .catch(() => {
+                    showToast('Erreur lors de l\'ajout au panier');
+                });
+            });
         });
+    }
+
+    // Appel initial et après chaque injection AJAX (mutation observer)
+    bindAddToCartBtn();
+    // Surveille les changements dans #mainContent (injection AJAX)
+    if (window.MutationObserver && document.getElementById('mainContent')) {
+        const observer = new MutationObserver(function() {
+            bindAddToCartBtn();
+        });
+        observer.observe(document.getElementById('mainContent'), { childList: true, subtree: true });
+    }
     </script>
 </body>
 </html>

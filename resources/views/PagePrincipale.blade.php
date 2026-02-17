@@ -58,7 +58,7 @@
                                         }
                                         $cart = session($cartKey, []);
                                         if(is_array($cart) && !empty($cart)){
-                                            $cartCount = array_sum($cart);
+                                            $cartCount = count($cart); // nombre de références distinctes
                                             $prodIds = array_keys($cart);
                                             $prods = \App\Models\Produit::whereIn('idProduit', $prodIds)->get()->keyBy('idProduit');
                                             foreach($cart as $pid => $q){
@@ -791,64 +791,6 @@
         (function(){
             // history stack: each entry { html, scroll }
             window.savedStack = window.savedStack || [];
-            function renderDetail(data){
-                // parse similar products if provided as JSON string
-                let similar = [];
-                try{ if(data.similar) similar = JSON.parse(data.similar); }catch(e){ similar = []; }
-                const similarHtml = similar.length ? `<div style="margin-top:12px">
-                        <h5 style="margin:8px 0">Produits similaires</h5>
-                        <div class="product-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;">${similar.map(s => `
-                            <div class="product-card card">
-                                <div class="position-relative">
-                                    <img src="${s.img}" class="card-img-top" alt="${s.name}">
-                                    <button class="add-to-cart" title="Ajouter au panier" data-id="${s.id}" aria-label="Ajouter ${s.name} au panier">
-                                        <i class="fa fa-cart-plus"></i>
-                                    </button>
-                                </div>
-                                <div class="card-body">
-                                    <h6 class="product-title"><a href="#" class="product-open" data-id="${s.id}" data-name="${s.name.replace(/\"/g,'')}" data-desc="" data-price="${s.price}" data-img="${s.img}" data-vendor-name="" data-vendor-address="" data-stock="" data-category="" data-similar="">${s.name}</a></h6>
-                                    <p class="product-meta mb-2">${s.name.substring(0,60)}...</p>
-                                    <div class="mt-auto d-flex justify-content-between align-items-center">
-                                        <div class="product-price">${s.price}</div>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary product-open" data-id="${s.id}" data-name="${s.name.replace(/\"/g,'')}" data-desc="" data-price="${s.price}" data-img="${s.img}" data-vendor-name="" data-vendor-address="" data-stock="" data-category="" data-similar="">Voir</button>
-                                    </div>
-                                </div>
-                            </div>`).join('')}</div></div>` : '';
-
-                // details block: prix, stock, catégorie, boutique
-                const detailsHtml = `<div style="margin-top:8px;padding:12px;border-radius:6px;background:#86d0df;color:#000">
-                        <div style="font-weight:700">Prix: <span style="font-weight:400">${data.price||''}</span></div>
-                        <div style="font-weight:700;margin-top:6px">Stock: <span style="font-weight:400">${data.stock||''}</span></div>
-                        <div style="font-weight:700;margin-top:6px">Catégorie: <span style="font-weight:400">${data.category||''}</span></div>
-                        <div style="font-weight:700;margin-top:6px">Boutique: <span style="font-weight:400">${data.vendorName||''}</span></div>
-                    </div>`;
-
-                const html = `
-                    <div class="product-detail" style="display:flex;gap:18px;align-items:flex-start;padding:12px;background:#fff;border-radius:8px;">
-                        <div style="flex:1;max-width:520px;min-width:0">
-                            <img src="${data.img || ''}" alt="${data.name||''}" style="width:100%;height:auto;max-height:520px;object-fit:contain;border-radius:8px;display:block;" />
-                        </div>
-                        <div style="width:360px;display:flex;flex-direction:column;gap:12px;">
-                            <h2 style="margin:0">${data.name||''}</h2>
-                            <div style="color:#1e88e5;font-weight:700;font-size:1.1rem">${data.price||''}</div>
-                            ${detailsHtml}
-                            <p style="color:#444;flex:1;white-space:pre-wrap">${data.desc||''}</p>
-                            <div style="display:flex;gap:8px;align-items:center">
-                                <button class="btn btn-sm btn-outline-secondary js-back" style="padding:10px 14px;border-radius:8px">← Retour à la liste</button>
-                                <button class="btn btn-primary" style="padding:10px 14px;border-radius:8px"><i class="fa fa-cart-plus" aria-hidden="true"></i>&nbsp;Ajouter au panier</button>
-                            </div>
-                        </div>
-                    </div>
-                    ${similarHtml ? `<div class="similar-full" style="margin-top:18px;padding:12px;background:transparent;border-radius:6px">${similarHtml}</div>` : ''}
-                `;
-                const container = document.getElementById('mainContent');
-                if(!container) return;
-                // push current view onto stack so we can return to it
-                savedStack.push({ html: container.innerHTML, scroll: window.scrollY || window.pageYOffset || 0 });
-                container.innerHTML = html;
-                // push history state so refresh/back behavior is preserved
-                try{ history.pushState({ produitId: data.id || null }, '', data.id ? ('?produit=' + encodeURIComponent(data.id)) : window.location.pathname); }catch(e){}
-            }
             function restoreMain(){
                 const container = document.getElementById('mainContent');
                 if(!container) return;
@@ -878,25 +820,25 @@
                         similar: btn.dataset.similar || ''
                     };
 
-                    // If important details are missing (vendor, stock or similar), fetch server fragment
-                    const needsAjax = !(data.vendorName || data.vendorAddress) || data.stock === '' || !data.similar;
-                    if(needsAjax && data.id){
+                    // Toujours charger le fragment Blade via AJAX pour l'affichage du détail produit
+                    if(data.id){
                         const url = '/produit/' + encodeURIComponent(data.id);
                         const container = document.getElementById('mainContent');
-                        if(!container){ renderDetail(data); return; }
-                        // push current view so closing the fragment returns here
+                        if(!container) return;
                         window.savedStack.push({ html: container.innerHTML, scroll: window.scrollY || window.pageYOffset || 0 });
                         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                             .then(resp => resp.text())
                             .then(html => {
                                 container.innerHTML = html;
+                                // Ajoute dynamiquement l'attribut data-add-cart sur le bouton "Ajouter au panier" injecté
+                                var btns = container.querySelectorAll('.btn-back[data-id]');
+                                btns.forEach(function(btn){
+                                    btn.setAttribute('data-add-cart', '1');
+                                });
                                 try{ history.pushState({ produitId: data.id || null }, '', '?produit=' + encodeURIComponent(data.id)); }catch(e){}
                             })
-                            .catch(err => { console.error('Fetch produit fragment failed', err); renderDetail(data); });
-                        return;
+                            .catch(err => { console.error('Fetch produit fragment failed', err); });
                     }
-
-                    renderDetail(data);
                     return;
                 }
                 if(e.target.closest('.js-back')){
