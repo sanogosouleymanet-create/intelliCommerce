@@ -1,6 +1,16 @@
-# TODO: Update ia_alertes table and related code for polymorphic recipients
+# TODO - Correction du bug d'ajout multiple au panier
 
-- [x] Update app/Models/Ia_alerte.php: Modify fillable to include 'destinataire_type', 'destinataire_id', 'lu' and remove 'idAdmi'. Remove administrateur() relationship and add destinataire() morphTo relationship.
-- [x] Update app/Services/IAService.php: Change CrerAlerte method signature to accept $destinataireType and $destinataireId instead of $adminId, and adjust the create array accordingly.
-- [x] Run php artisan migrate to apply the migration.
-- [x] Test the changes by creating alerts for admins and sellers.
+## Problème identifié
+Lorsqu'on clique sur le bouton "Ajouter au panier", le produit est ajouté plusieurs fois à cause de gestionnaires d'événements redondants:
+
+1. **script.js** - Gestionnaire principal qui appelle `addToCartRequest`
+2. **PagePrincipale.blade.php** - Dispatches un custom event `product-added-to-cart`
+3. **script.js** - Écoute le custom event et appelle `addToCartRequest` une deuxième fois
+
+## Tâches à effectuer
+
+- [ ] 1. Supprimer le gestionnaire d'événements redondant dans PagePrincipale.blade.php
+- [ ] 2. Vérifier qu'il n'y a pas d'autres gestionnaires d'événements similaires
+
+## Solution
+Supprimer le code qui dispatch le custom event dans PagePrincipale.blade.php car le gestionnaire direct dans script.js est suffisant.

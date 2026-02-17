@@ -119,7 +119,7 @@ class ProduitController extends Controller
         ]);
     }
 
-    // Public-facing product detail (no vendeur auth required)
+// Public-facing product detail (no vendeur auth required)
     public function publicShow($id)
     {
         $produit = Produit::where('idProduit', $id)->firstOrFail();
@@ -130,10 +130,21 @@ class ProduitController extends Controller
         } catch (\Throwable $e) {
             $vendeur = null;
         }
-        // If this is an AJAX request, return only the fragment so it can be injected in-page
-        if (request()->ajax() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
-            return view('produits._public_fragment', compact('produit', 'vendeur'));
+        
+        // Récupérer les produits similaires (même catégorie, excluant le produit actuel)
+        $produitsSimilaires = [];
+        if (!empty($produit->Categorie)) {
+            $produitsSimilaires = Produit::where('Categorie', $produit->Categorie)
+                ->where('idProduit', '!=', $produit->idProduit)
+                ->orderBy('DateAjout', 'desc')
+                ->limit(4)
+                ->get();
         }
+        
+    // If this is an AJAX request, return the full show_public template so it can be injected in-page
+    if (request()->ajax() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
+        return view('produits.show_public', compact('produit', 'vendeur', 'produitsSimilaires'));
+    }
 
         // For non-AJAX public requests, redirect to the homepage with a query parameter
         // so the main page can load the fragment via AJAX and display the detail inline.

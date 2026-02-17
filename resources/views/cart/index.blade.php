@@ -8,12 +8,54 @@
         body { background-color: #82C8E5 !important; }
         .mini-cart-fragment { background: transparent !important; box-shadow: none !important; }
         .mini-cart-fragment .cart-header { background: transparent !important; }
+        /* Apply the full checkout button styling on the dedicated cart page
+           (mimics the global StylePagePrincipale.css floating checkout button) */
+        #cart-close-floating { position: fixed !important; top: 18px !important; right: 18px !important; z-index: 3000 !important; border-radius: 6px; display:inline-flex; align-items:center; padding:8px 14px; color:#fff; background:#256176; box-shadow: 0 6px 18px rgba(0,0,0,0.18); }
+        .group-close { position: fixed; top: 18px; right: 18px; z-index: 3000; height: 48px; padding: 0 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: #256176; color: #e6f0ef; font-weight: 600; overflow: hidden; cursor: pointer; transition: box-shadow .25s ease, transform .12s ease; }
+        .group-close:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.18); }
+        .group-close .label, .group-close .icon-wrap { transition: transform .45s ease, opacity .45s ease; will-change: transform, opacity; }
+        .group-close .label { transform: translateX(0); opacity: 1; }
+        .group-close .icon-wrap { position: absolute; transform: translateX(150%); opacity: 0; display:flex; align-items:center; }
     </style>
 @endif
 <div class="mini-cart-fragment container py-3">
     <div class="cart-header">
         <h3 class="cart-title"><i class="ri-shopping-cart-line"></i> Mon panier</h3>
+        <!-- Inline checkout button (ensured by JS) -->
+        <!-- Button is created dynamically for AJAX-inserted fragments to keep event delegation working -->
     </div>
+    <style>
+        /* Make the cart header act like a sticky header and host the checkout button */
+        :not(#mini-cart-overlay) .mini-cart-fragment .cart-header {
+            /* Make header fixed to viewport on the full cart page (not in the AJAX overlay) */
+            position: fixed;
+            /* place header flush to the top of the viewport to remove top gap */
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            /* semi-transparent background to give impression of scrolling underneath */
+            background: rgba(255,255,255,0.68) !important;
+            -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+            /* header height used to offset the sticky table head */
+            --cart-header-height: 56px;
+            min-height: var(--cart-header-height);
+            z-index: 80;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+            border-radius: 0 0 8px 8px;
+        }
+        @if(!request()->is('cart'))
+        /* When the floating checkout button is moved here (in overlays), keep it inline and nicely spaced */
+        #cart-close-floating { position: relative; margin: 0; background: rgba(255,255,255,0.18) !important; border: 0 !important; box-shadow: 0 6px 18px rgba(0,0,0,0.16) !important; }
+        .mini-cart-fragment .group-close { margin-left: 12px; background: transparent !important; }
+        /* ensure button text/icon remain clearly visible on translucent background */
+        #cart-close-floating .label { color: #0b4e78; font-weight: 600; }
+        @endif
+    </style>
     @if(empty($items))
         <div class="alert alert-info">Votre panier est vide.</div>
     @else
@@ -22,21 +64,49 @@
             .col-select{ width:48px; }
             .select-product{ margin-left:6px; }
 
-            /* Table-specific styles only: rows, columns, cells and small responsive tweaks */
-            /* Compact table: reduce max width, paddings and image sizes to avoid scrollbars */
-            /* Make the cart fragment span the page and align to the left (remove left gutter) */
-            .mini-cart-fragment.container { max-width: none !important; width: calc(100% - 16px) !important; box-sizing: border-box; padding-left: 8px !important; padding-right: 8px !important; margin-left: 0 !important; margin-right: 0 !important; position: relative; }
+        /* Make the cart fragment span the page and align to the left (remove left gutter) */
+        .mini-cart-fragment.container { max-width: none !important; width: calc(100% - 16px) !important; box-sizing: border-box; padding-left: 8px !important; padding-right: 8px !important; margin-left: 0 !important; margin-right: 0 !important; position: relative; display: flex; flex-direction: column; min-height: calc(100vh - 120px); padding-top: calc(var(--cart-header-height,56px) + 12px) !important; }
+/* Push the cart total to the bottom of the fragment */
+        .mini-cart-fragment .cart-total-container { margin-top: auto; padding-top: 12px; }
+            /* Footer total positioned at bottom of viewport and styled like the header
+               Keep it fixed to the bottom so it is always visible while browsing the cart */
+            .mini-cart-fragment .cart-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                max-width: none;
+                /* match header translucent background and blur */
+                background: rgba(255,255,255,0.68) !important;
+                -webkit-backdrop-filter: blur(6px);
+                backdrop-filter: blur(6px);
+                padding: 10px 16px;
+                border-radius: 8px 8px 0 0;
+                box-shadow: 0 -1px 8px rgba(0,0,0,0.06);
+                z-index: 80;
+                text-align: right;
+            }
+            /* Keep full-width footer on very small screens */
+            @media (max-width: 576px) {
+                .mini-cart-fragment .cart-footer { left: 8px; right: 8px; transform: none; width: calc(100% - 16px); padding: 8px 10px; bottom: 12px; text-align: center; }
+                .mini-cart-fragment .cart-footer #cart-total { display: block; }
+            }
                 /* Make table scrollable within the cart fragment and keep the header visible */
             .table-responsive {
-                overflow-x: hidden;
-                overflow-y: auto;
-                max-width: 100%;
+                /* Force no internal scrolling: let the browser handle page scroll */
+                overflow-x: hidden !important;
+                overflow-y: visible !important;
+                overflow: visible !important;
+                max-width: 100% !important;
                 -webkit-overflow-scrolling: touch;
-                /* leave room for header: adjust if needed */
-                max-height: calc(100vh - 180px);
+                max-height: none !important;
             }
-                /* Shrink table slightly from the right to create inner gutter
-                    without affecting button/total field. Keeps full width on small screens. */
+            /* Also ensure the cart fragment doesn't create its own scroll container */
+            .mini-cart-fragment, .mini-cart-fragment .table-responsive {
+                overflow: visible !important;
+                max-height: none !important;
+            }
                 /* Full-width table: use all available space inside the fragment */
                 .table { margin-bottom: 0; table-layout: auto; width: 100% !important; max-width: 100% !important; }
             .table td, .table th {
@@ -57,9 +127,61 @@
                 letter-spacing: 0.4px;
                 padding: 8px 6px;
                 position: sticky;
-                top: 0;
-                z-index: 6;
+                /* push the table head below the sticky cart header to avoid overlap */
+                top: calc(var(--cart-header-height,56px));
+                z-index: 8;
             }
+            /* AJAX overlay specific styles: when the fragment is inserted into #mini-cart-overlay */
+            /* Overlay fragment: constrain height and make content scrollable
+               Keep header and footer visible (sticky) inside the small overlay. */
+            #mini-cart-overlay .mini-cart-fragment {
+                max-width: 720px;
+                margin: 18px auto;
+                box-shadow: 0 18px 50px rgba(2,6,23,0.08);
+                border-radius: 12px;
+                padding: 0 !important;
+                background: #fff !important;
+                display: flex;
+                flex-direction: column;
+                max-height: calc(80vh);
+                overflow: hidden;
+            }
+            /* Keep header visible and inside the overlay (not fixed to viewport) */
+            #mini-cart-overlay .mini-cart-fragment .cart-header {
+                display: flex !important;
+                position: sticky !important;
+                top: 0 !important;
+                z-index: 20 !important;
+                background: rgba(255,255,255,0.95) !important;
+                padding: 12px 16px !important;
+                border-radius: 12px 12px 0 0 !important;
+                box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+            }
+            /* Footer stays visible at the bottom of the fragment */
+            #mini-cart-overlay .mini-cart-fragment .cart-footer {
+                display: flex !important;
+                position: sticky !important;
+                bottom: 0 !important;
+                z-index: 20 !important;
+                background: rgba(255,255,255,0.96) !important;
+                padding: 12px 16px !important;
+                border-radius: 0 0 12px 12px !important;
+                box-shadow: 0 -1px 8px rgba(0,0,0,0.04);
+                justify-content: space-between;
+                align-items: center;
+            }
+            /* Make the table area scrollable between header and footer */
+            #mini-cart-overlay .mini-cart-fragment .table-responsive {
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                max-height: calc(80vh - 140px);
+                padding: 12px 16px 8px 16px;
+                box-sizing: border-box;
+                flex: 1 1 auto;
+            }
+            /* Inline checkout button styling for AJAX fragment */
+            #checkout-inline-btn { background: linear-gradient(180deg,#0b7dda,#066bb3) !important; color:#fff !important; border:0 !important; padding:8px 12px !important; border-radius:8px !important; font-weight:700; box-shadow: 0 8px 22px rgba(11,125,218,0.14); cursor:pointer; }
+            #checkout-inline-btn:hover { transform: translateY(-1px); }
             .table tbody tr { transition: background 0.18s ease, transform 0.15s ease; }
             .table tbody tr:hover { background-color: #f8f9fa; transform: translateY(-1px); box-shadow: 0 3px 6px rgba(0,0,0,0.04); }
                 /* Product thumbnail sizing — match the provided sample: narrow portrait thumbnails.
@@ -71,17 +193,17 @@
             .mini-cart-fragment .col-img { width: 110px !important; }
             .cart-prod-name { font-weight: 600; max-width: 260px; color: #212529; font-size: 1rem; }
             .cart-prod-price, .cart-subtotal { text-align: right; white-space: nowrap; font-weight: 600; color: #1e88e5; font-size: 0.98rem; }
-                /* Column sizing and alignment for product/price/qty/subtotal */
+                /* Column sizing and alignment for product/boutique/price/qty/subtotal */
                 .col-prod { text-align: left; padding-left: 8px; }
+                .col-boutique { width: 180px; text-align: left; }
+                .cart-boutique { font-size: 0.95rem; color: #666; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
                 .col-price { width: 140px; text-align: center; }
                 .col-qty { width: 110px; text-align: center; }
                 .col-subtotal { width: 140px; text-align: center; }
             .cart-qty-input { width: 56px; padding: 4px 6px; border: 1px solid #dee2e6; border-radius: 6px; text-align: center; }
             .cart-qty-input:focus { border-color: #007bff; box-shadow: 0 0 0 0.08rem rgba(0,123,255,0.08); }
             .col-action { width: 72px; text-align: center; }
-                /* Strong, broad override: force horizontal layout for all elements inside the cart fragment.
-                   This undoes any global rotations, writing-mode changes, pseudo-element transforms,
-                   and prevents letter-stacking. Scoped strictly to the cart fragment so global styles stay intact. */
+            
                 .mini-cart-fragment,
                 .mini-cart-fragment *,
                 .mini-cart-fragment *::before,
@@ -135,6 +257,7 @@
                     <th class="col-select"><input type="checkbox" id="select-all" title="Tout sélectionner"></th>
                     <th class="col-img"></th>
                     <th class="col-prod">Produit</th>
+                    <th class="col-boutique">Boutique</th>
                     <th class="col-price">Prix</th>
                     <th class="col-qty">Quantité</th>
                     <th class="col-subtotal">Sous-total</th>
@@ -191,6 +314,7 @@
                     </td>
                     <td><img src="{{ $imgUrl }}" alt="{{ $p->Nom }}" class="cart-thumb"></td>
                     <td class="cart-prod-name">{{ $p->Nom }}</td>
+                    <td class="cart-boutique">{{ optional($p->vendeur)->NomBoutique ?? '—' }}</td>
                     <td class="cart-prod-price">{{ number_format($p->Prix,0,',',' ') }} FCFA</td>
                     <td>
                         <form class="cart-update-form" method="POST" action="{{ route('cart.update') }}" data-id="{{ $p->idProduit }}">
@@ -214,11 +338,13 @@
             </tbody>
         </table>
         </div>
-
-        <div class="text-end mt-2">
+    @endif
+    
+    @if(!empty($items))
+    <!-- Cart total at the bottom of the page -->
+        <div class="cart-footer">
             <strong id="cart-total">Total: 0 FCFA</strong>
         </div>
-        
     @endif
 </div>
 <!-- Hidden form used to send selected products to checkout -->
@@ -334,6 +460,10 @@ document.addEventListener('click', function(e){
             checkoutBtn.type = 'button';
             checkoutBtn.className = 'group-close shiny-button';
             checkoutBtn.innerHTML = '<div class="label">Passer la commande</div><div class="icon-wrap" aria-hidden="true"><svg viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg></div>';
+            // Place the checkout button into the document body so fixed positioning
+            // remains reliable and the button won't be accidentally clipped by parent containers.
+            var headerContainer = document.querySelector('.mini-cart-fragment .cart-header');
+            // keep reference to header for semantics but append to body to ensure visibility
             document.body.appendChild(checkoutBtn);
             checkoutBtn.addEventListener('click', function(e){
                 e.preventDefault();

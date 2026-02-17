@@ -414,16 +414,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }).catch(function(err){ body.innerHTML = '<div class="text-danger">Impossible de charger le panier.</div>'; });
     }
 
-    // click handler for cart icon
+    // click handler for cart icon - navigate to full cart page instead of showing mini-cart overlay
     document.addEventListener('click', function(e){
         var cartBtn = e.target.closest && e.target.closest('.iscart');
         if(!cartBtn) return;
         e.preventDefault();
-        var overlay = document.getElementById('mini-cart-overlay');
-        if(!overlay) return;
-        // use flex to center and show the overlay
-        overlay.style.display = 'flex';
-        refreshMiniCart();
+        // Navigate to full cart page
+        window.location.href = '/cart';
     });
 
     // close mini-cart (header close)

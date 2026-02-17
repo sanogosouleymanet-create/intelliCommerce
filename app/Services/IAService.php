@@ -144,8 +144,14 @@ class IAService
     $destId = $message->Administrateur_idAdministrateur ?? 1;
 
     if (!empty($message->Vendeur_idVendeur) && $senderType !== 'Vendeur') {
-        $destType = 'Vendeur';
-        $destId = $message->Vendeur_idVendeur;
+        // If message is for a vendeur recipient, prefer explicit destinataire if set
+        if (!empty($message->VendeurDestinataire_idVendeur)) {
+            $destType = 'Vendeur';
+            $destId = $message->VendeurDestinataire_idVendeur;
+        } else {
+            $destType = 'Vendeur';
+            $destId = $message->Vendeur_idVendeur;
+        }
     } elseif (!empty($message->Client_idClient) && $senderType !== 'Client') {
         $destType = 'Client';
         $destId = $message->Client_idClient;

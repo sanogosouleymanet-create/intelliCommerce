@@ -897,15 +897,6 @@
                     return;
                 }
 
-                // Add to cart on similar product or fragment
-                const addBtn = e.target.closest('.add-to-cart-similar, .add-to-cart-fragment');
-                if(addBtn){
-                    e.preventDefault();
-                    const id = addBtn.dataset.id;
-                    // dispatch event to add product to cart; do not change button state here
-                    document.dispatchEvent(new CustomEvent('product-added-to-cart', { detail: { id } }));
-                    return;
-                }
             });
         })();
     </script>

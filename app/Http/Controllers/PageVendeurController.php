@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\Vendeur;
 use App\Models\Ia_alerte;
 use App\Models\Produit;
+use App\Models\Message;
 
 class PageVendeurController extends Controller
 {
@@ -24,9 +25,22 @@ class PageVendeurController extends Controller
             $q->where('Vendeur_idVendeur', $vendeur->idVendeur);
         });
 
-        // Count unread messages using the model scope (handles both 'Lu' and 'Statut' schemas)
-        $messagesNonLus = $vendeur->messages()->unread()->count();
-        $messagesRecents = $vendeur->messages()->orderBy('DateEnvoi', 'desc')->take(5)->get();
+                // Count unread messages correctly for a vendeur:
+                // - messages where another vendeur sent to this vendeur (VendeurDestinataire_idVendeur)
+                // - messages where a client/admin sent to this vendeur (Vendeur_idVendeur and sender_type != 'vendeur')
+                $messagesNonLus = Message::where(function($q) use ($vendeur) {
+                        $q->where('VendeurDestinataire_idVendeur', $vendeur->idVendeur)
+                            ->orWhere(function($q2) use ($vendeur) {
+                                    $q2->where('Vendeur_idVendeur', $vendeur->idVendeur)
+                                         ->where('sender_type', '!=', 'vendeur');
+                            });
+                })->unread()->count();
+
+                // Recent messages involving this vendeur (either as sender or recipient)
+                $messagesRecents = Message::where(function($q) use ($vendeur) {
+                        $q->where('Vendeur_idVendeur', $vendeur->idVendeur)
+                            ->orWhere('VendeurDestinataire_idVendeur', $vendeur->idVendeur);
+                })->orderBy('DateEnvoi', 'desc')->take(5)->get();
 
         // Detect AJAX/partial requests robustly (X-Requested-With or X-Partial custom header or JSON expectations)
         $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest' || $request->header('X-Partial') === 'true' || $request->ajax() || $request->wantsJson();
