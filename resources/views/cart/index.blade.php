@@ -351,34 +351,38 @@
 <form id="multi-checkout-form" method="GET" action="/commande" style="display:none"></form>
 <script>
 // Ensure cart forms submit via AJAX when this fragment is loaded standalone
+// Forcer la mise à jour du compteur du panier dans le header après chaque modification
 (function(){
+    function updateHeaderCartCount(count, total) {
+        document.querySelectorAll('.iscart .item-number').forEach(function(el){ el.textContent = (count || 0); });
+        var ct = document.getElementById('cart-total');
+        if(ct) ct.textContent = (total ? 'Total: ' + Number(total).toLocaleString('fr-FR') + ' FCFA' : 'Total: 0 FCFA');
+    }
     function initCartForms(){
         document.querySelectorAll('.cart-update-form, .cart-remove-form').forEach(function(form){
-            // avoid duplicate binding
             if(form.__ajax_bound) return; form.__ajax_bound = true;
             form.addEventListener('submit', function(e){
                 e.preventDefault();
                 var url = form.getAttribute('action') || window.location.href;
                 var fd = new FormData(form);
-                // include X-Requested-With and send credentials so session is used
                 var headers = { 'X-Requested-With': 'XMLHttpRequest' };
                 var opts = { method: 'POST', headers: headers, body: fd, credentials: 'same-origin' };
-                // show loader while request is in-flight
                 if(window.showCartLoader) window.showCartLoader();
+
                 fetch(url, opts).then(function(r){ return r.json(); }).then(function(json){
                     if(!json || !json.success){
                         alert(json && json.message ? json.message : 'Erreur lors de la mise à jour du panier');
                         if(window.hideCartLoader) window.hideCartLoader();
                         return;
                     }
-                    // update header counters if helper exists, otherwise update DOM directly
-                    if(window.updateHeaderCart) updateHeaderCart(json.count || 0, json.total || 0);
-                    else {
-                        document.querySelectorAll('.iscart .item-number').forEach(function(el){ el.textContent = (json.count || 0); });
-                        var ct = document.getElementById('cart-total'); if(ct) ct.textContent = (json.total ? 'Total: ' + Number(json.total).toLocaleString('fr-FR') + ' FCFA' : 'Total: 0 FCFA');
+                    // Mise à jour du compteur du panier dans le header (nombre de références distinctes)
+                    if(json.cart && typeof json.cart === 'object') {
+                        updateHeaderCartCount(Object.keys(json.cart).length, json.total || 0);
+                    } else {
+                        updateHeaderCartCount(json.count || 0, json.total || 0);
                     }
 
-                    // If currently shown inside the mini-cart modal, refresh its content without navigating
+                    // Si affiché dans le mini-cart modal, rafraîchir le contenu
                     var overlay = document.getElementById('mini-cart-overlay');
                     var modalOpen = overlay && overlay.style.display && overlay.style.display !== 'none';
                     if(modalOpen){
@@ -387,12 +391,7 @@
                         return;
                     }
 
-                    // Otherwise refresh the cart fragment via AJAX (avoid full page reload)
-                    // Update header counters first
-                    if(window.updateHeaderCart) updateHeaderCart(json.count || 0, json.total || 0);
-                    else {
-                        document.querySelectorAll('.iscart .item-number').forEach(function(el){ el.textContent = (json.count || 0); });
-                    }
+                    // Sinon, rafraîchir le fragment panier via AJAX
                     fetch('/cart', { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
                         .then(function(r){ return r.text(); })
                         .then(function(html){

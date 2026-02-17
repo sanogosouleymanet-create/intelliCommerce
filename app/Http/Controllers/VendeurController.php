@@ -19,10 +19,20 @@ class VendeurController extends Controller
     public function index(Request $request)
     {
         $vendeurs = Vendeur::all();
+        $vendeur = Auth::guard('vendeur')->user();
+        $counts = [];
+        if ($vendeur) {
+            $messagesUnread = Message::where(function($q) use ($vendeur) {
+                $q->where('VendeurDestinataire_idVendeur', $vendeur->idVendeur);
+            })
+            ->where('Statut', 'non lu')
+            ->count();
+            $counts['messages_unread'] = $messagesUnread;
+        }
         if ($request->ajax()) {
             return view('vendeurs._main', compact('vendeurs'))->render();
         }
-        return view('vendeurs.index', compact('vendeurs'));
+        return view('vendeurs.index', compact('vendeurs', 'counts', 'vendeur'));
     }
 
 
@@ -650,12 +660,32 @@ class VendeurController extends Controller
 
         // Récupérer les alertes IA destinées au vendeur
         // Exclure les alertes de type 'Message' (messages insultants ne doivent pas
-        // s'afficher chez les vendeurs — redirigées vers l'admin pour modération)
+        // s'afficher chez les vendedores — redirigées vers l'admin pour modération)
         $alerts = Ia_alerte::where('destinataire_type', 'vendeur')
             ->where('destinataire_id', $vendeur->idVendeur)
             ->where('TypeAlerte', '!=', 'Message')
             ->orderBy('DateCreation', 'desc')
             ->get();
+
+        // Marquer toutes les alertes non lues comme lues
+        // Gère les deux colonnes (Statut - nouvelle, lu - ancienne) pour rétrocompatibilité
+        $hasStatut = \Illuminate\Support\Facades\Schema::hasColumn('ia_alertes', 'Statut');
+        
+        if ($hasStatut) {
+            // Nouvelle colonne Statut
+            Ia_alerte::where('destinataire_type', 'vendeur')
+                ->where('destinataire_id', $vendeur->idVendeur)
+                ->where('TypeAlerte', '!=', 'Message')
+                ->where('Statut', 'non lu')
+                ->update(['Statut' => 'lu']);
+        } else {
+            // Ancienne colonne lu (boolean)
+            Ia_alerte::where('destinataire_type', 'vendeur')
+                ->where('destinataire_id', $vendeur->idVendeur)
+                ->where('TypeAlerte', '!=', 'Message')
+                ->where('lu', false)
+                ->update(['lu' => true]);
+        }
 
         // Detect AJAX/partial requests and return only the partial when appropriate
         $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest' || $request->ajax() || $request->wantsJson();

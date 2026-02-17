@@ -148,17 +148,27 @@
                                 <div class="icon-large"><i class="ri-heart-line"></i></div>
                                 <div class="fly-item"><span class="item-number">0</span></div>
                             </a></li>-->
-                            <li><a href="/cart" class="iscart">
+                            <li><a href="/cart" class="iscart" style="text-decoration:none;display:inline-flex;align-items:center" title="Panier">
                                 <div class="icon-large"><i class="ri-shopping-cart-line"></i>
                                     <div class="fly-item"><span class="item-number">{{ $cartCount }}</span></div>
                                 </div>
                             </a></li>
                             <li>
-                            <a href="{{ route('vendeurs.ia_alertes') }}" class="ia-notif" title="Alerte" style="display:inline-flex;align-items:center">
-                                <div class="icon-large"><i class="ri-notification-2-line"></i>
-                                    <div class="fly-item"><span class="item-number">{{ $counts['ia_alertes'] ?? 0 }}</span></div>
-                                </div>
-                            </a>
+                                <a href="{{ route('vendeurs.ia_alertes') }}" class="ia-notif" title="Alerte" style="display:inline-flex;align-items:center; text-decoration:none">
+                                    <div class="icon-large"><i class="ri-notification-2-line"></i>
+                                        <div class="fly-item"><span class="item-number">{{ $counts['ia_alertes'] ?? 0 }}</span></div>
+                                    </div>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="/vendeur/messages" class="mail-unread-icon" style="text-decoration:none;display:inline-flex;align-items:center" title="Messages" data-vendeur-nav>
+                                    <div class="icon-large" style="position:relative;">
+                                        <i class="ri-mail-unread-line"></i>
+                                        @if(isset($counts['messages_unread']) && $counts['messages_unread'] > 0)
+                                            <div class="fly-item"><span class="item-number">{{ $counts['messages_unread'] }}</span></div>
+                                        @endif
+                                    </div>
+                                </a>
                             </li>
                         </ul>
                     </div>
@@ -175,7 +185,7 @@
                             <h5 class="mb-1">{{ $vendeur ? ($vendeur->Nom . ' ' . ($vendeur->Prenom ?? '')) : 'Vendeur' }}</h5>
                             <div class="text-muted small">Espace Vendeur</div>
                             <div class="profile-actions d-flex flex-column">
-                                <a href="{{ route('PageVendeur') }}?view=dashboard" class="btn btn-sm btn-outline-primary mb-2" data-vendeur-nav><i class="fa-solid fa-chart-line me-2"></i> Tableau de Bord</a>
+                                <a href="{{ route('PageVendeur') }}?view=dashboard" class="btn btn-sm btn-outline-secondary mb-2" data-vendeur-nav><i class="fa-solid fa-chart-line me-2" ></i> Tableau de Bord</a>
                                 <a href="/vendeur/produits" class="btn btn-sm btn-outline-secondary mb-2" data-vendeur-nav><i class="fa-solid fa-box me-2"></i> Produits</a>
                                 <a href="/vendeur/commandes" class="btn btn-sm btn-outline-secondary mb-2" data-vendeur-nav><i class="fa-solid fa-cart-shopping me-2"></i> Commandes</a>
                                 <a href="/vendeur/clients" class="btn btn-sm btn-outline-secondary mb-2" data-vendeur-nav><i class="fa-solid fa-users me-2"></i> Clients</a>

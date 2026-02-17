@@ -59,13 +59,23 @@
                                     }
                                     $cart = session($cartKey, []);
                                     if(is_array($cart) && !empty($cart)){
-                                        $cartCount = array_sum($cart);
+                                        // Compter le nombre de produits distincts (pas la quantité totale)
+                                        $cartCount = count($cart);
                                         $prodIds = array_keys($cart);
                                         $prods = \App\Models\Produit::whereIn('idProduit', $prodIds)->get()->keyBy('idProduit');
                                         foreach($cart as $pid => $q){
                                             $p = $prods->get($pid);
                                             if($p) $cartTotal += ($p->Prix ?? 0) * $q;
                                         }
+                                    }
+
+                                    // compute unread messages count for client
+                                    $totalUnread = 0;
+                                    if(auth()->guard('client')->check()){
+                                        $totalUnread = \App\Models\Message::where('Client_idClient', auth()->guard('client')->id())
+                                            ->whereIn('Statut', ['non lu','envoye'])
+                                            ->where(function($q){ $q->where('sender_type', '!=', 'client')->orWhereNull('sender_type'); })
+                                            ->count();
                                     }
                                 @endphp
                                 @if($admin || $vendeur || $client)
@@ -116,10 +126,20 @@
                                 <div class="icon-large"><i class="ri-heart-line"></i></div>
                                 <div class="fly-item"><span class="item-number">0</span></div>
                             </a></li>-->
-                            <li><a href="#" class="iscart">
-                                <div class="icon-large"><i class="ri-shopping-cart-line"></i></div>
+                            <li style="display: flex; align-items: center; gap: 8px;">
+                                <a href="#" class="iscart" style="display: flex; align-items: center;">
+                                    <div class="icon-large"><i class="ri-shopping-cart-line"></i></div>
                                     <div class="fly-item"><span class="item-number">{{ $cartCount }}</span></div>
-                            </a></li>
+                                </a>
+                                <a href="/messages" class="mail-unread-icon" style="text-decoration:none;display:inline-flex;align-items:center" title="Messages" data-client-nav>
+                                    <div class="icon-large" style="position:relative;">
+                                        <i class="ri-mail-unread-line"></i>
+                                        @if(isset($totalUnread) && $totalUnread > 0)
+                                            <div class="fly-item"><span class="item-number">{{ $totalUnread }}</span></div>
+                                        @endif
+                                    </div>
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -136,7 +156,7 @@
                             <div class="text-muted small" style="text-align: center;">Espace Client</div>
                             
                             <div class="profile-actions d-flex flex-column">
-                                <a href="/PageClient?view=dashboard" class="btn btn-sm btn-outline-primary mb-2" data-client-nav>Tableau de bord</a>
+                                <a href="/PageClient?view=dashboard" class="btn btn-sm btn-outline-secondary mb-2" data-client-nav>Tableau de bord</a>
                                 <a href="/commandes" class="btn btn-sm btn-outline-secondary mb-2" data-client-nav>Mes commandes</a>
                                 <a href="/messages" class="btn btn-sm btn-outline-secondary mb-2" data-client-nav>Messages</a>
                                 <a href="/parametres" class="btn btn-sm btn-outline-secondary" data-client-nav>Paramètres</a>

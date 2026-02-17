@@ -21,11 +21,72 @@ class Ia_alerte extends Model
         'NiveauGravité',
         'destinataire_type',
         'destinataire_id',
-        'lu',
+        'Statut',
         'Expediteur_type',
         'Expediteur_id',
         'Message',
     ];
+
+    /**
+     * Default attribute values.
+     */
+    protected $attributes = [
+        'Statut' => 'non lu',
+    ];
+
+    /**
+     * Scope a query to only include unread alerts.
+     */
+    public function scopeUnread($query)
+    {
+        // Check for Statut column first (new), fallback to lu (old)
+        if (Schema::hasColumn('ia_alertes', 'Statut')) {
+            return $query->where('Statut', 'non lu');
+        }
+        
+        // Fallback to old lu boolean column
+        return $query->where('lu', false);
+    }
+
+    /**
+     * Scope a query to only include read alerts.
+     */
+    public function scopeRead($query)
+    {
+        // Check for Statut column first (new), fallback to lu (old)
+        if (Schema::hasColumn('ia_alertes', 'Statut')) {
+            return $query->where('Statut', 'lu');
+        }
+        
+        // Fallback to old lu boolean column
+        return $query->where('lu', true);
+    }
+
+    /**
+     * Mark this alert as read and persist.
+     */
+    public function markAsRead()
+    {
+        if (Schema::hasColumn('ia_alertes', 'Statut')) {
+            $this->Statut = 'lu';
+        } elseif (Schema::hasColumn('ia_alertes', 'lu')) {
+            $this->lu = true;
+        }
+
+        return $this->save();
+    }
+
+    /**
+     * Return whether this alert is considered unread.
+     */
+    public function isUnread()
+    {
+        if (Schema::hasColumn('ia_alertes', 'Statut')) {
+            return $this->Statut === 'non lu';
+        }
+        
+        return isset($this->lu) && !$this->lu;
+    }
 
     public function destinataire()
     {

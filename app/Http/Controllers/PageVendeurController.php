@@ -25,22 +25,36 @@ class PageVendeurController extends Controller
             $q->where('Vendeur_idVendeur', $vendeur->idVendeur);
         });
 
-                // Count unread messages correctly for a vendeur:
-                // - messages where another vendeur sent to this vendeur (VendeurDestinataire_idVendeur)
-                // - messages where a client/admin sent to this vendeur (Vendeur_idVendeur and sender_type != 'vendeur')
-                $messagesNonLus = Message::where(function($q) use ($vendeur) {
-                        $q->where('VendeurDestinataire_idVendeur', $vendeur->idVendeur)
-                            ->orWhere(function($q2) use ($vendeur) {
-                                    $q2->where('Vendeur_idVendeur', $vendeur->idVendeur)
-                                         ->where('sender_type', '!=', 'vendeur');
-                            });
-                })->unread()->count();
+        // Count unread messages correctly for a vendeur:
+        // - messages where another vendeur sent to this vendeur (VendeurDestinataire_idVendeur)
+        // - messages where a client/admin sent to this vendeur (Vendeur_idVendeur and sender_type != 'vendeur')
+        $messagesNonLus = Message::where(function($q) use ($vendeur) {
+                $q->where('VendeurDestinataire_idVendeur', $vendeur->idVendeur)
+                    ->orWhere(function($q2) use ($vendeur) {
+                            $q2->where('Vendeur_idVendeur', $vendeur->idVendeur)
+                                 ->where('sender_type', '!=', 'vendeur');
+                    });
+        })->unread()->count();
 
-                // Recent messages involving this vendeur (either as sender or recipient)
-                $messagesRecents = Message::where(function($q) use ($vendeur) {
-                        $q->where('Vendeur_idVendeur', $vendeur->idVendeur)
-                            ->orWhere('VendeurDestinataire_idVendeur', $vendeur->idVendeur);
-                })->orderBy('DateEnvoi', 'desc')->take(5)->get();
+        // Count unread IA alerts for the vendor (only alerts that haven't been read)
+        // Uses the scopeUnread from Ia_alerte model which handles both Statut and lu fields
+        $iaAlertesCount = \App\Models\Ia_alerte::where('destinataire_type', 'vendeur')
+            ->where('destinataire_id', $vendeur->idVendeur)
+            ->where('TypeAlerte', '!=', 'Message')
+            ->unread()
+            ->count();
+
+        // Build counts array for the header badges
+        $counts = [
+            'messages_unread' => $messagesNonLus,
+            'ia_alertes' => $iaAlertesCount,
+        ];
+
+        // Recent messages involving this vendeur (either as sender or recipient)
+        $messagesRecents = Message::where(function($q) use ($vendeur) {
+                $q->where('Vendeur_idVendeur', $vendeur->idVendeur)
+                    ->orWhere('VendeurDestinataire_idVendeur', $vendeur->idVendeur);
+        })->orderBy('DateEnvoi', 'desc')->take(5)->get();
 
         // Detect AJAX/partial requests robustly (X-Requested-With or X-Partial custom header or JSON expectations)
         $isAjax = $request->header('X-Requested-With') === 'XMLHttpRequest' || $request->header('X-Partial') === 'true' || $request->ajax() || $request->wantsJson();
@@ -70,6 +84,7 @@ class PageVendeurController extends Controller
                 'messagesNonLus' => $messagesNonLus,
                 'commandesRecentes' => $commandesQuery->orderBy('DateCommande', 'desc')->take(5)->get(),
                 'messagesRecents' => $messagesRecents,
+                'counts' => $counts,
             ]);
         }
 
@@ -80,6 +95,7 @@ class PageVendeurController extends Controller
             'messagesNonLus' => $messagesNonLus,
             'commandesRecentes' => $commandesQuery->orderBy('DateCommande', 'desc')->take(5)->get(),
             'messagesRecents' => $messagesRecents,
+            'counts' => $counts,
         ]);
     }
 }

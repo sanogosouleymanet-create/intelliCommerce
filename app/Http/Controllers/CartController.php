@@ -48,14 +48,19 @@ class CartController extends Controller
 
         $key = $this->cartKey($request);
         $cart = session($key, []);
-        if (isset($cart[$id])) $cart[$id] += $qty; else $cart[$id] = $qty;
+        // Si le produit existe déjà, on incrémente la quantité, sinon on l'ajoute
+        if (isset($cart[$id])) {
+            $cart[$id] += $qty;
+        } else {
+            $cart[$id] = $qty;
+        }
         session([$key => $cart]);
 
         // persist for authenticated users
         $this->persistCartIfAuthenticated($request, $cart);
 
         // compute summary
-        $count = array_sum($cart);
+        $distinctCount = count($cart); // nombre de références distinctes
         $total = 0;
         foreach ($cart as $pid => $q) {
             $p = Produit::where('idProduit', $pid)->first();
@@ -63,7 +68,7 @@ class CartController extends Controller
             $total += ($p->Prix ?? 0) * $q;
         }
 
-        return response()->json(['success' => true, 'count' => $count, 'total' => $total]);
+        return response()->json(['success' => true, 'count' => $distinctCount, 'total' => $total, 'cart' => $cart]);
     }
 
     public function remove(Request $request)

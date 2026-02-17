@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // delegated clicks for add-to-cart buttons
         document.addEventListener('click', function(e){
-            var btn = e.target.closest && e.target.closest('.add-to-cart, .add-to-cart-similar, .add-to-cart-fragment');
+            var btn = e.target.closest && (e.target.closest('.add-to-cart, .add-to-cart-similar, .add-to-cart-fragment, [data-add-cart="1"]'));
             if(!btn) return;
             e.preventDefault();
             var id = btn.dataset.id || btn.getAttribute('data-id');

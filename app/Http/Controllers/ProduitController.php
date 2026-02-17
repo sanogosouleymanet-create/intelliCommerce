@@ -141,14 +141,8 @@ class ProduitController extends Controller
                 ->get();
         }
         
-    // If this is an AJAX request, return the full show_public template so it can be injected in-page
-    if (request()->ajax() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
-        return view('produits.show_public', compact('produit', 'vendeur', 'produitsSimilaires'));
-    }
-
-        // For non-AJAX public requests, redirect to the homepage with a query parameter
-        // so the main page can load the fragment via AJAX and display the detail inline.
-        return redirect()->to(url('/') . '?produit=' . $produit->idProduit);
+    // Toujours retourner la vue detail, même pour les requêtes non-AJAX
+    return view('produits.show_public', compact('produit', 'vendeur', 'produitsSimilaires'));
     }
 
     // Update product (POST form with _method=PUT or direct POST)
