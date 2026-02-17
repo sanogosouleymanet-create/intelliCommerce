@@ -17,16 +17,29 @@
         @else
             <ul id="conversations-list" style="list-style:none;padding:0;">
                 @foreach($conversations as $key => $conv)
-                    <li class="conversation-item" data-type="{{ $conv['senderType'] }}" data-id="{{ $conv['senderType'] === 'client' ? $conv['sender']->idClient : $conv['sender']->idAdmi }}" data-name="{{ $conv['senderType'] === 'admin' ? 'Administrateur' : ($conv['sender']->Nom . ' ' . $conv['sender']->Prenom) }}" data-blocked="{{ ($conv['isBlocked'] ?? false) ? 'true' : 'false' }}" style="padding:8px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
+                        @php
+                            $sender = $conv['sender'] ?? null;
+                            $senderId = null;
+                            $senderName = 'Utilisateur supprimé';
+                            if($sender) {
+                                $senderId = ($conv['senderType'] === 'client') ? ($sender->idClient ?? null) : ($sender->idAdmi ?? ($sender->idVendeur ?? null));
+                                if(!empty($sender->Nom) || !empty($sender->Prenom)) {
+                                    $senderName = trim(($sender->Nom ?? '') . ' ' . ($sender->Prenom ?? '')) ?: $senderName;
+                                } elseif(!empty($sender->email)) {
+                                    $senderName = $sender->email;
+                                }
+                            }
+                        @endphp
+                        <li class="conversation-item" data-type="{{ $conv['senderType'] }}" data-id="{{ $senderId }}" data-name="{{ $conv['senderType'] === 'admin' ? 'Administrateur' : $senderName }}" data-blocked="{{ ($conv['isBlocked'] ?? false) ? 'true' : 'false' }}" style="padding:8px;border-bottom:1px solid #f0f0f0;cursor:pointer;">
                         <div style="display:flex;justify-content:space-between;align-items:center;">
                             <div>
                                 <strong>
-                                    @if($conv['isBlocked'] ?? false)
-                                        <i class="fas fa-ban" style="color:red;margin-right:4px;"></i>
-                                    @endif
-                                    {{ $conv['sender']->Nom }} {{ $conv['sender']->Prenom }}
+                                        @if($conv['isBlocked'] ?? false)
+                                            <i class="fas fa-ban" style="color:red;margin-right:4px;"></i>
+                                        @endif
+                                        {{ $senderName }}
                                 </strong>
-                                <div><small style="color:#6b7280;">{{ \Carbon\Carbon::parse($conv['lastMessageDate'])->format('d/m H:i') }}</small></div>
+                                    <div><small style="color:#6b7280;">{{ \Carbon\Carbon::parse($conv['lastMessageDate'])->format('d/m H:i') }}</small></div>
                             </div>
                             <div style="display:flex;align-items:center;gap:8px">
                                 <div style="color:#6b7280;font-size:0.9rem;">{{ Str::limit($conv['lastMessage']->Contenu ?? '', 50) }}</div>

@@ -423,13 +423,6 @@
                     if(history.state && history.state.produitId) history.back(); else restoreMain();
                     return;
                 }
-                const addBtn = e.target.closest('.add-to-cart, .add-to-cart-similar, .add-to-cart-fragment');
-                if(addBtn){
-                    e.preventDefault();
-                    const id = addBtn.dataset.id;
-                    document.dispatchEvent(new CustomEvent('product-added-to-cart', { detail: { id } }));
-                    return;
-                }
             });
         })();
     </script>

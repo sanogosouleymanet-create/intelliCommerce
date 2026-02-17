@@ -36,6 +36,7 @@ class MessageController extends Controller
             'Contenu' => 'required|string',
             'Client_idClient' => 'nullable|integer',
             'Vendeur_idVendeur' => 'nullable|integer',
+            'VendeurDestinataire_idVendeur' => 'nullable|integer',
         ]);
 
         $message = Message::create([
@@ -44,6 +45,7 @@ class MessageController extends Controller
             'Statut' => 'non lu',
             'Client_idClient' => $validated['Client_idClient'] ?? null,
             'Vendeur_idVendeur' => $validated['Vendeur_idVendeur'] ?? Auth::guard('vendeur')->id(),
+            'VendeurDestinataire_idVendeur' => $validated['VendeurDestinataire_idVendeur'] ?? null,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Message envoyé', 'id' => $message->idMessage]);

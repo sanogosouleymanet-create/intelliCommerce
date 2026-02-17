@@ -18,6 +18,7 @@ class Message extends Model
         'Statut',
         'Client_idClient',
         'Vendeur_idVendeur',
+        'VendeurDestinataire_idVendeur',
         'Administrateur_idAdministrateur',
         'sender_type',
     ];
@@ -85,6 +86,14 @@ class Message extends Model
     public function vendeur()
     {
         return $this->belongsTo(Vendeur::class, 'Vendeur_idVendeur');
+    }
+
+    /**
+     * Relationship to the recipient vendeur for seller-to-seller messages.
+     */
+    public function vendeurDestinataire()
+    {
+        return $this->belongsTo(Vendeur::class, 'VendeurDestinataire_idVendeur');
     }
 
     public function administrateur()

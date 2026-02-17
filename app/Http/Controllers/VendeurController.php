@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\Vendeur;
 use App\Models\Message;
 use App\Models\Client;
@@ -129,8 +130,12 @@ class VendeurController extends Controller
         }
 
         // Récupérer tous les messages avec relations
-        $messages = Message::with(['client','vendeur','administrateur'])
-            ->where('Vendeur_idVendeur', $vendeur->idVendeur)
+        $messages = Message::with(['client','vendeur','administrateur','vendeurDestinataire'])
+            ->where(function($q) use ($vendeur) {
+                // Messages where the current vendeur is sender or recipient
+                $q->where('Vendeur_idVendeur', $vendeur->idVendeur)
+                  ->orWhere('VendeurDestinataire_idVendeur', $vendeur->idVendeur);
+            })
             ->orderBy('DateEnvoi', 'desc')
             ->get();
 
@@ -139,7 +144,17 @@ class VendeurController extends Controller
         foreach ($messages as $message) {
             $key = '';
             $sender = null;
-            if ($message->client) {
+            if (!empty($message->Vendeur_idVendeur) && $message->Vendeur_idVendeur != $vendeur->idVendeur) {
+                // Another vendeur sent a message to current vendeur
+                $key = 'vendeur_' . $message->Vendeur_idVendeur;
+                $sender = $message->vendeur;
+                $senderType = 'vendeur';
+            } elseif (!empty($message->VendeurDestinataire_idVendeur) && $message->VendeurDestinataire_idVendeur != $vendeur->idVendeur && $message->vendeurDestinataire) {
+                // Current vendeur sent to another vendeur — treat other vendeur as conversation partner
+                $key = 'vendeur_' . $message->VendeurDestinataire_idVendeur;
+                $sender = $message->vendeurDestinataire;
+                $senderType = 'vendeur';
+            } elseif ($message->client) {
                 $key = 'client_' . $message->client->idClient;
                 $sender = $message->client;
                 $senderType = 'client';
@@ -168,13 +183,37 @@ class VendeurController extends Controller
 
         // Calculer le nombre de messages non lus pour chaque conversation
         foreach ($conversations as $key => &$conv) {
-            $query = Message::where('Vendeur_idVendeur', $vendeur->idVendeur);
+            $query = Message::where(function($q) use ($vendeur) {
+                $q->where('Vendeur_idVendeur', $vendeur->idVendeur)
+                  ->orWhere('VendeurDestinataire_idVendeur', $vendeur->idVendeur);
+            });
             if ($conv['senderType'] === 'client') {
                 $query->where('Client_idClient', $conv['sender']->idClient);
             } elseif ($conv['senderType'] === 'admin') {
                 $query->where('Administrateur_idAdministrateur', $conv['sender']->idAdmi);
+            } elseif ($conv['senderType'] === 'vendeur') {
+                // messages between the two vendeurs
+                $otherId = $conv['sender']->idVendeur;
+                $query->where(function($q2) use ($vendeur, $otherId) {
+                    $q2->where(function($q3) use ($vendeur, $otherId) {
+                        $q3->where('Vendeur_idVendeur', $otherId)
+                           ->where('VendeurDestinataire_idVendeur', $vendeur->idVendeur);
+                    })->orWhere(function($q3) use ($vendeur, $otherId) {
+                        $q3->where('Vendeur_idVendeur', $vendeur->idVendeur)
+                           ->where('VendeurDestinataire_idVendeur', $otherId);
+                    });
+                });
             }
-            $conv['unreadCount'] = $query->where('sender_type', '!=', 'vendeur')->unread()->count();
+            // For vendeur<->vendeur conversations, count messages sent by the other vendeur
+            if ($conv['senderType'] === 'vendeur') {
+                $otherId = $conv['sender']->idVendeur;
+                $conv['unreadCount'] = Message::where('VendeurDestinataire_idVendeur', $vendeur->idVendeur)
+                    ->where('Vendeur_idVendeur', $otherId)
+                    ->unread()
+                    ->count();
+            } else {
+                $conv['unreadCount'] = $query->where('sender_type', '!=', 'vendeur')->unread()->count();
+            }
         }
 
         // Trier les conversations par date du dernier message
@@ -215,41 +254,93 @@ class VendeurController extends Controller
     {
         $vendeur = Auth::guard('vendeur')->user();
         if (!$vendeur) return response()->json(['error' => 'Non authentifié'], 401);
-
         if ($type === 'client') {
             $target_id = $id;
             $target_column = 'Client_idClient';
+
+            $messages = Message::with(['client', 'administrateur'])
+                ->where('Vendeur_idVendeur', $vendeur->idVendeur)
+                ->where($target_column, $target_id)
+                ->orderBy('DateEnvoi', 'asc')
+                ->get();
+
+            // Marquer comme lus uniquement pour les messages entrants non lus
+            foreach ($messages as $message) {
+                $isFromOther = (isset($message->sender_type) && $message->sender_type !== 'vendeur')
+                    || (!isset($message->sender_type) && ($message->Client_idClient ?? null) !== null);
+
+                if ($isFromOther && $message->isUnread()) {
+                    $message->markAsRead();
+                }
+            }
+
         } elseif ($type === 'admin') {
             $target_id = $id;
             $target_column = 'Administrateur_idAdministrateur';
+
+            $messages = Message::with(['client', 'administrateur'])
+                ->where('Vendeur_idVendeur', $vendeur->idVendeur)
+                ->where($target_column, $target_id)
+                ->orderBy('DateEnvoi', 'asc')
+                ->get();
+
+            foreach ($messages as $message) {
+                $isFromOther = (isset($message->sender_type) && $message->sender_type !== 'vendeur')
+                    || (!isset($message->sender_type) && ($message->Client_idClient ?? null) !== null);
+
+                if ($isFromOther && $message->isUnread()) {
+                    $message->markAsRead();
+                }
+            }
+
+        } elseif ($type === 'vendeur') {
+            // Conversation between two vendeurs: include messages where either is sender or recipient
+            $otherId = $id;
+            $messages = Message::with(['vendeur', 'vendeurDestinataire'])
+                ->where(function($q) use ($vendeur, $otherId) {
+                    $q->where(function($q2) use ($vendeur, $otherId) {
+                        $q2->where('Vendeur_idVendeur', $vendeur->idVendeur)
+                           ->where('VendeurDestinataire_idVendeur', $otherId);
+                    })->orWhere(function($q2) use ($vendeur, $otherId) {
+                        $q2->where('Vendeur_idVendeur', $otherId)
+                           ->where('VendeurDestinataire_idVendeur', $vendeur->idVendeur);
+                    });
+                })
+                ->orderBy('DateEnvoi', 'asc')
+                ->get();
+
+            // Mark incoming messages (those not sent by current vendeur) as read
+            foreach ($messages as $message) {
+                if (($message->Vendeur_idVendeur ?? null) != $vendeur->idVendeur && $message->isUnread()) {
+                    $message->markAsRead();
+                }
+            }
+
         } else {
             return response()->json(['error' => 'Type invalide'], 400);
         }
 
-        $messages = Message::with(['client', 'administrateur'])
-            ->where('Vendeur_idVendeur', $vendeur->idVendeur)
-            ->where($target_column, $target_id)
-            ->orderBy('DateEnvoi', 'asc')
-            ->get();
-
-        // Marquer comme lus uniquement pour les messages entrants non lus
-        foreach ($messages as $message) {
-            $isFromOther = (isset($message->sender_type) && $message->sender_type !== 'vendeur')
-                || (!isset($message->sender_type) && ($message->Client_idClient ?? null) !== null);
-
-            if ($isFromOther && $message->isUnread()) {
-                $message->markAsRead();
-            }
-        }
-
-        return response()->json($messages->map(function($m) use ($vendeur) {
+        $payload = $messages->map(function($m) use ($vendeur) {
             return [
                 'id' => $m->idMessage,
                 'content' => $m->Contenu,
                 'date' => $m->DateEnvoi->format('d/m/Y H:i'),
-                'isOutgoing' => $m->sender_type === 'vendeur',
+                'Vendeur_idVendeur' => $m->Vendeur_idVendeur ?? null,
+                'VendeurDestinataire_idVendeur' => $m->VendeurDestinataire_idVendeur ?? null,
+                'sender_type' => $m->sender_type ?? null,
+                'isOutgoing' => (($m->Vendeur_idVendeur ?? null) == $vendeur->idVendeur) || ($m->sender_type === 'vendeur' && ($m->Vendeur_idVendeur ?? null) == $vendeur->idVendeur),
             ];
-        }));
+        });
+
+        try {
+            Log::info('Vendeur getConversation: returning payload', ['type' => $type, 'id' => $id, 'payload' => $payload->toArray()]);
+        } catch (\Exception $e) {
+            try { Log::error('Vendeur getConversation: logging failed: ' . $e->getMessage()); } catch (\Exception $_) {}
+        }
+
+        return response()->json($payload);
+
+        // Note: unreachable but keep for future
     }
 
     /**
@@ -282,6 +373,10 @@ class VendeurController extends Controller
                 $targetUser = Administrateur::find($id);
                 $targetType = 'admin';
                 $targetId = $id;
+            } elseif ($type === 'vendeur') {
+                $targetUser = Vendeur::find($id);
+                $targetType = 'vendeur';
+                $targetId = $id;
             } else {
                 return response()->json(['success' => false, 'message' => 'Type de destinataire invalide.'], 400);
             }
@@ -292,17 +387,27 @@ class VendeurController extends Controller
                 return response()->json(['success' => false, 'message' => 'Vous ne pouvez pas envoyer de message à ce client.'], 422);
             }
         } else {
-            // Assume it's an email for new message
-            $client = Client::where('email', $recipient)->first();
-            if (!$client) {
-                return response()->json(['success' => false, 'message' => 'Client introuvable avec cet email.'], 404);
+            // Assume it's an email for new message: prefer Vendeur by email, fallback to Client
+            $vend = Vendeur::where('email', $recipient)->first();
+            if ($vend) {
+                if (!empty($vend->Bloque)) {
+                    return response()->json(['success' => false, 'message' => 'Vous ne pouvez pas envoyer de message à ce vendeur.'], 422);
+                }
+                $targetUser = $vend;
+                $targetType = 'vendeur';
+                $targetId = $vend->idVendeur;
+            } else {
+                $client = Client::where('email', $recipient)->first();
+                if (!$client) {
+                    return response()->json(['success' => false, 'message' => 'Client introuvable avec cet email.'], 404);
+                }
+                if (!empty($client->Bloque)) {
+                    return response()->json(['success' => false, 'message' => 'Vous ne pouvez pas envoyer de message à ce client.'], 422);
+                }
+                $targetUser = $client;
+                $targetType = 'client';
+                $targetId = $client->idClient;
             }
-            if (!empty($client->Bloque)) {
-                return response()->json(['success' => false, 'message' => 'Vous ne pouvez pas envoyer de message à ce client.'], 422);
-            }
-            $targetUser = $client;
-            $targetType = 'client';
-            $targetId = $client->idClient;
         }
 
         $m = new Message();
@@ -315,9 +420,20 @@ class VendeurController extends Controller
             $m->Client_idClient = $targetId;
         } elseif ($targetType === 'admin') {
             $m->Administrateur_idAdministrateur = $targetId;
+        } elseif ($targetType === 'vendeur') {
+            // set recipient vendeur
+            $m->VendeurDestinataire_idVendeur = $targetId;
         }
         $m->sender_type = 'vendeur';
         $m->save();
+
+        // Temporary debug log to inspect saved message fields
+        try {
+            Log::info('Vendeur sendMessage: saved message', $m->toArray());
+        } catch (\Exception $e) {
+            // avoid breaking flow if logging fails
+            try { Log::error('Vendeur sendMessage: logging failed: ' . $e->getMessage()); } catch (\Exception $_) {}
+        }
 
         return response()->json(['success' => true, 'message' => 'Message envoyé.']);
     }
