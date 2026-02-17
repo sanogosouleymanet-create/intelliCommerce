@@ -1,5 +1,4 @@
-
-
+<div class="main-content">
 <div class="card" style="display:flex;height:80vh;overflow:hidden; width:100%; margin-top:10px;">
     <!-- Sidebar for conversations -->
     <div id="conversations-sidebar" style="width:30%;border-right:1px solid #eee;padding:12px;height:100%;overflow-y:auto;">
@@ -389,4 +388,6 @@
         });
     }
 })();
+
 </script>
+</div>

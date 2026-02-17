@@ -33,7 +33,7 @@
 </head>
 <body>
     
-        <a href="{{ route('admin.dashboard') }}" style="color: black;"><- Retour</a>
+        <a href="{{ url('/admin') }}" style="color: black;"><- Retour</a>
     
     <div class="container">
         <h1>Alertes IA</h1>

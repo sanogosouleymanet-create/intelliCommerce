@@ -1,3 +1,4 @@
+<div class="main-content">
 <div class="card">
     <h2>Mes Commandes</h2>
 
@@ -226,3 +227,4 @@ window.onclick = function(event) {
 .produit-line{display:flex;align-items:flex-start;gap:10px}
 .produit-meta{font-size:0.95em}
 </style>
+</div>

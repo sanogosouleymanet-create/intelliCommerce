@@ -54,7 +54,7 @@
                                         $user = $admin ?? $vendeur ?? $client;
                                         $displayName = trim($user->Nom . ' ' . ($user->Prenom ?? ''));
                                         if($admin) {
-                                            $profileUrl = route('admin.dashboard');
+                                            $profileUrl = url('/admin');
                                         } elseif($vendeur) {
                                             $profileUrl = route('PageVendeur');
                                         } else {

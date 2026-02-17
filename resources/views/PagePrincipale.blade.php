@@ -95,7 +95,7 @@
                                         $user = $admin ?? $vendeur ?? $client;
                                         $displayName = trim($user->Nom . ' ' . ($user->Prenom ?? ''));
                                         if($admin) {
-                                            $profileUrl = route('admin.dashboard');
+                                            $profileUrl = route('PageAdmin');
                                         } elseif($vendeur) {
                                             $profileUrl = route('PageVendeur');
                                         } else {
@@ -369,10 +369,19 @@
                     <div class="right">
                         <ul class="flexitem second-links">
                             @if($admin || $vendeur || $client)
-                            <li><a href="{{ $messagesUrl }}">
-                                <div class="icon-large"><i class="ri-mail-unread-line"></i></div>
-                                    <div class="fly-item"><span class="message-number">{{ $messageUnreadCount }}</span></div>
-                            </a></li>
+                            <li>
+                                @if($admin)
+                                    <a href="{{ $messagesUrl }}">
+                                        <div class="icon-large"><i class="ri-mail-unread-line"></i></div>
+                                        <div class="fly-item"><span class="message-number">{{ $messageUnreadCount }}</span></div>
+                                    </a>
+                                @else
+                                    <a href="{{ $messagesUrl }}">
+                                        <div class="icon-large"><i class="ri-mail-unread-line"></i></div>
+                                        <div class="fly-item"><span class="message-number">{{ $messageUnreadCount }}</span></div>
+                                    </a>
+                                @endif
+                            </li>
                             @endif
 
                             <li><a href="#" class="iscart">
