@@ -596,7 +596,7 @@ window.adminFetchAndInject = async function(url, opts){
             const newMain = doc.querySelector('.main-content') || doc.querySelector('main');
             if(newMain) main.innerHTML = newMain.innerHTML; else { const body = doc.querySelector('body'); main.innerHTML = body ? body.innerHTML : text; }
 
-            // Execute scripts from fetched document so injected views initialize correctly
+            // Execute scripts from fetched document so injected views initialize correctly (e.g. inbox with __admin_prefill)
             try{
                 const fetchedScripts = doc.querySelectorAll('script');
                 fetchedScripts.forEach(function(s){
@@ -607,12 +607,11 @@ window.adminFetchAndInject = async function(url, opts){
                             ns.async = false;
                             try{ document.body.appendChild(ns); }catch(err){ console.warn('Skipping external script append', err); }
                         } else {
-                            // Skip inline scripts from fetched pages to avoid parse/execution errors.
-                            // Partials should initialize via `window.adminInitPartials` and global helpers.
-                            try{
-                                const snippet = (s.textContent || s.innerHTML || '').slice(0,200);
-                                if(snippet && snippet.length) console.info('Skipping inline script snippet from fetched page:', snippet);
-                            }catch(e){ /* ignore */ }
+                            const txt = (s.textContent || s.innerHTML || '').trim();
+                            if(txt){
+                                const ns = document.createElement('script');
+                                try{ ns.appendChild(document.createTextNode(txt)); document.body.appendChild(ns); ns.remove(); }catch(err){ console.warn('Skipping inline script', err); }
+                            }
                         }
                     }catch(err){ console.warn('Skipping fetched script', err); }
                 });

@@ -33,6 +33,40 @@
             position: relative;
         }
         
+        .product-detail-badge-promo {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+        .product-detail-badge-promo span:first-child {
+            background: #ffc107;
+            color: #000;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .product-detail-badge-promo span:last-child {
+            background: #e65100;
+            color: #fff;
+            padding: 6px 8px;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+        .product-price-old-detail {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-right: 10px;
+        }
+        
         .product-main-image {
             width: 100%;
             height: 400px;
@@ -372,6 +406,12 @@
         <!-- Product Main Section -->
         <div class="product-main">
             <div class="product-image-container">
+                @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0)
+                    <span class="product-detail-badge-promo">
+                        <span>Promotion</span>
+                        <span>-{{ $produit->Reduction }}%</span>
+                    </span>
+                @endif
                 <img src="{{ $produit->Image ? asset('storage/' . $produit->Image) : asset('images/placeholder.png') }}" 
                      alt="{{ $produit->Nom }}" 
                      class="product-main-image">
@@ -381,6 +421,9 @@
                 <h1 class="product-title">{{ $produit->Nom }}</h1>
                 <p class="product-description">{{ $produit->Description }}</p>
                 <div class="product-price">
+                    @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0 && isset($produit->PrixOriginal) && $produit->PrixOriginal > $produit->Prix)
+                        <span class="product-price-old-detail">{{ number_format($produit->PrixOriginal, 0, ',', ' ') }} FCFA</span>
+                    @endif
                     {{ number_format($produit->Prix, 0, ',', ' ') }} <span>FCFA</span>
                 </div>
                 <div class="product-meta">

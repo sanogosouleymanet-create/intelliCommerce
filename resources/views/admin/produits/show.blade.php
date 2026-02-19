@@ -3,7 +3,11 @@
         .admin-product-card{max-width:980px;margin:28px auto;padding:22px;background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.08);}
         .admin-product-row{display:flex;gap:24px;align-items:flex-start}
         .admin-product-image{flex:0 0 360px;background:#fafafa;padding:12px;border-radius:8px;border:1px solid #f0f0f0}
+        .admin-product-image{position:relative}
         .admin-product-image img{width:100%;height:auto;object-fit:cover;border-radius:6px}
+        .admin-product-badge-promo{position:absolute;top:10px;left:10px;display:inline-flex;border-radius:4px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.2);z-index:2}
+        .admin-product-badge-promo span:first-child{background:#ffc107;color:#000;padding:4px 8px;font-size:0.7rem;font-weight:700}
+        .admin-product-badge-promo span:last-child{background:#e65100;color:#fff;padding:4px 6px;font-size:0.7rem;font-weight:800}
         .admin-product-info{flex:1;padding:6px 2px}
         .admin-product-info h3{margin:0 0 8px;font-size:22px}
         .admin-product-info p{margin:6px 0;color:#333}
@@ -32,13 +36,27 @@
     <h2 style="margin-top:0;margin-bottom:12px;color:#222">Détails du produit</h2>
     <div class="admin-product-row">
         <div class="admin-product-image">
+            @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0)
+                <span class="admin-product-badge-promo">
+                    <span>Promotion</span>
+                    <span>-{{ $produit->Reduction }}%</span>
+                </span>
+            @endif
             <img src="{{ $produit->Image ? asset('storage/' . $produit->Image) : asset('images/placeholder.png') }}" alt="Image du produit" />
         </div>
         <div class="admin-product-info">
             <h3>{{ $produit->Nom }}</h3>
+            @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0)
+                <p style="margin:4px 0 8px;"><span style="background:#ffc107;color:#000;padding:2px 6px;border-radius:4px;font-size:0.8rem;font-weight:600;">En promotion</span> <span style="background:#e65100;color:#fff;padding:2px 5px;border-radius:4px;font-size:0.8rem;font-weight:700;">-{{ $produit->Reduction }}%</span></p>
+            @endif
             <p>{{ $produit->Description }}</p>
             <div class="admin-product-meta">
-                <div><strong>Prix:</strong> <span id="p-prix">{{ number_format($produit->Prix,0,',',' ') }} FCFA</span></div>
+                <div><strong>Prix:</strong>
+                    @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0 && isset($produit->PrixOriginal) && $produit->PrixOriginal > $produit->Prix)
+                        <span style="text-decoration:line-through;color:#999;margin-right:6px;">{{ number_format($produit->PrixOriginal,0,',',' ') }} FCFA</span>
+                    @endif
+                    <span id="p-prix">{{ number_format($produit->Prix,0,',',' ') }} FCFA</span>
+                </div>
                 <div><strong>Stock:</strong> {{ $produit->Stock }}</div>
                 <div><strong>Catégorie:</strong> {{ $produit->Categorie }}</div>
                 @if($vendeur)
