@@ -70,6 +70,19 @@ class CommandeController extends Controller
             return response()->json(['success' => false, 'message' => 'Veuillez vous connecter pour passer commande'], 401);
         }
 
+        // Vérifier si le client est bloqué
+        if ($client && !empty($client->Bloque)) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Votre compte est limité. Cette action n\'est pas autorisée.',
+                    'error' => 'Compte bloqué',
+                ], 403);
+            }
+            return redirect()->route('PageClient')
+                ->with('error', 'Votre compte est limité par l\'administrateur. Certaines actions sont désactivées.');
+        }
+
         // If it's a seller or admin, find or create their corresponding client account
         if (($vendeur || $admin) && !$client) {
             $user = $vendeur ?: $admin;

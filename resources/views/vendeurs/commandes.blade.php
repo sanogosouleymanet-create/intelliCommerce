@@ -66,8 +66,10 @@
                                 <td><span class="badge bg-secondary statut">{{ $commande->Statut ?? '—' }}</span></td>
                                 <td class="text-end">
                                     <button class="btn btn-sm btn-outline-primary btn-view" data-id="{{ $commande->idCommande }}">Voir</button>
-                                    <button class="btn btn-sm btn-outline-success btn-mark" data-id="{{ $commande->idCommande }}">Marquer livrée</button>
-                                    <button class="btn btn-sm btn-outline-danger btn-delete" data-id="{{ $commande->idCommande }}">Supprimer</button>
+                                    @if(empty($vendeur->Bloque))
+                                        <button class="btn btn-sm btn-outline-success btn-mark" data-id="{{ $commande->idCommande }}">Marquer livrée</button>
+                                        <button class="btn btn-sm btn-outline-danger btn-delete" data-id="{{ $commande->idCommande }}">Supprimer</button>
+                                    @endif
                                 </td>
                             </tr>
                             <tr class="order-details d-none" data-details-for="{{ $commande->idCommande }}">

@@ -156,9 +156,16 @@
             container.innerHTML = '';
             messages.forEach(msg => {
                 const msgDiv = document.createElement('div');
-                const isAdmin = msg.isOutgoing;
-                msgDiv.style.cssText = `margin-bottom:12px;padding:8px;border-radius:8px;max-width:70%;word-wrap:break-word;${isAdmin ? 'margin-left:auto;background:#007bff;color:white;' : 'margin-right:auto;background:#f1f1f1;'}`;
-                msgDiv.innerHTML = `<div style="white-space:pre-wrap;">${msg.content || ''}</div><small style="color:${isAdmin ? '#e0e0e0' : '#666'};">${msg.date || ''}</small><button class="btn btn-sm delete-msg" data-id="${msg.id}" style="margin-left:8px;color:red;" title="Supprimer">&times;</button>`;
+                const isOutgoing = !!msg.isOutgoing;
+                msgDiv.style.cssText =
+                    'margin-bottom:12px;padding:8px;border-radius:8px;max-width:70%;word-wrap:break-word;' +
+                    (isOutgoing
+                        ? 'margin-left:auto;background:#007bff;color:white;'
+                        : 'margin-right:auto;background:#f1f1f1;color:#333;');
+                msgDiv.innerHTML =
+                    `<div style="white-space:pre-wrap;">${msg.content || ''}</div>` +
+                    `<small style="display:block;margin-top:4px;color:${isOutgoing ? '#e0e0e0' : '#666'};">${msg.date || ''}</small>` +
+                    `<button class="btn btn-sm delete-msg" data-id="${msg.id}" style="margin-left:8px;color:red;background:transparent;border:none;" title="Supprimer">&times;</button>`;
                 container.appendChild(msgDiv);
             });
             container.scrollTop = container.scrollHeight;

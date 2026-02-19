@@ -42,9 +42,13 @@
             @endif
         </div>
         <div class="d-flex gap-2 justify-content-end">
-            <button type="submit" class="btn btn-primary">Enregistrer</button>
-            <button type="button" class="btn btn-outline-secondary" id="cancelEditBtn">Annuler</button>
-            <button type="button" class="btn btn-danger" id="deleteProduitBtn">Supprimer</button>
+            @if(empty($vendeur->Bloque))
+                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                <button type="button" class="btn btn-outline-secondary" id="cancelEditBtn">Annuler</button>
+                <button type="button" class="btn btn-danger" id="deleteProduitBtn">Supprimer</button>
+            @else
+                <p class="text-muted small mb-0"><i class="fas fa-lock"></i> Modification désactivée pour votre compte.</p>
+            @endif
         </div>
     </form>
 </div>
@@ -74,10 +78,19 @@
         }
     });
     document.getElementById('cancelEditBtn')?.addEventListener('click', function(){
-        // if within SPA, close partial by reloading products list
+        // Si on est dans le dashboard vendeur en mode SPA, revenir à la liste via la fonction globale
+        if (typeof window.vendeurFetchAndInject === 'function') {
+            window.vendeurFetchAndInject('/vendeur/produits', false);
+            return;
+        }
+        // Sinon, fallback : si un filtre est présent, on recharge la liste des produits
         const filter = document.getElementById('filterForm');
-        if(filter) filter.dispatchEvent(new Event('submit', {cancelable:true}));
-        else window.history.back();
+        if (filter) {
+            filter.dispatchEvent(new Event('submit', { cancelable: true }));
+        } else {
+            // Dernier recours : revenir en arrière dans l'historique
+            window.history.back();
+        }
     });
 
     // Delete handler with confirmation and AJAX fallback

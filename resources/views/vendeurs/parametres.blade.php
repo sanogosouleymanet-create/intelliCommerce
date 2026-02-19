@@ -78,8 +78,12 @@
                 </div>
             </div>
             <div class="text-end mt-3">
-                <button type="button" id="btnEditParam" class="btn btn-outline-primary me-2">Modifier</button>
-                <button id="btnSaveParam" class="btn btn-primary" type="submit" disabled>Enregistrer</button>
+                @if(empty($vendeur->Bloque))
+                    <button type="button" id="btnEditParam" class="btn btn-outline-primary me-2">Modifier</button>
+                    <button id="btnSaveParam" class="btn btn-primary" type="submit" disabled>Enregistrer</button>
+                @else
+                    <p class="text-muted small mb-0"><i class="fas fa-lock"></i> La modification des paramètres est désactivée pour votre compte.</p>
+                @endif
             </div>
         </form>
     </div>

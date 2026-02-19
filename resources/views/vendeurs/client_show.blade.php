@@ -18,7 +18,9 @@
 			<div>{{ $client->TelClient ?? '—' }}</div>
 			<div style="color:#94a3b8;font-size:0.9rem">Inscrit le {{ \Carbon\Carbon::parse($client->DateCreation ?? now())->format('d/m/Y') }}</div>
 			<div class="vendeur-client-actions">
-				<button type="button" id="btn-message" class="btn btn-primary" onclick="vendeurComposeToClient({{ $client->{$client->getKeyName()} }})">Envoyer un message</button>
+				@if(empty($vendeur->Bloque))
+					<button type="button" id="btn-message" class="btn btn-primary" onclick="vendeurComposeToClient({{ $client->{$client->getKeyName()} }})">Envoyer un message</button>
+				@endif
 				<button type="button" id="btn-back" class="btn btn-outline-secondary" onclick="history.back()">Retour à la liste</button>
 			</div>
 		</div>

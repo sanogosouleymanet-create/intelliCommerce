@@ -484,6 +484,10 @@ header li > a {
 .product-meta { 
     font-size:0.82rem; 
     color:#666; 
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
 }
 @media (max-width:767px) { .product-card { width:100% !important; } .product-grid { gap:16px; } }
 /* Ensure header departments inner menu is hidden when collapsed */
@@ -837,6 +841,10 @@ nav .fly.item {
 }
 .dpt-menu .has-child li a:hover {
     text-decoration: underline;
+}
+/* Couleur blanche pour les liens des sous-listes dans dpt-menu */
+.dpt-menu .has-child > ul li a {
+    color: #ffffff !important;
 }
 
 
@@ -1301,6 +1309,10 @@ off-canvas {
     .dpt-menu .has-child > ul li {
         white-space: nowrap; /* évite le retour à la ligne */
         padding: 0 1.25em;
+    }
+    /* Couleur blanche pour les liens des sous-listes dans dpt-menu */
+    .dpt-menu .has-child > ul li a {
+        color: #ffffff !important;
     }
 }
 

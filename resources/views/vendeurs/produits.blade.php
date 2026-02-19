@@ -103,7 +103,9 @@
                                             <div class="product-price fw-bold">{{ number_format($produit->Prix ?? 0, 0, ',', ' ') }} FCFA</div>
                                             <div class="d-flex gap-2">
                                                 <button type="button" class="btn btn-sm btn-outline-secondary product-open" data-id="{{ $produit->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" data-vendor-name="{{ $vendorName }}" data-vendor-address="{{ $vendorAddress }}" data-stock="{{ $produit->Stock ?? 0 }}" data-category="{{ $produit->Categorie ?? '' }}" data-similar='{{ $dataSimilar }} ' style="color: black !important;">Voir</button>
-                                                <a href="/produits/{{ $produit->idProduit ?? $produit->id }}/edit" class="btn btn-sm btn-outline-primary" style="color: black !important;">Modifier</a>
+                                                @if(empty($vendeur->Bloque))
+                                                    <a href="/produits/{{ $produit->idProduit ?? $produit->id }}/edit" class="btn btn-sm btn-outline-primary" style="color: black !important;">Modifier</a>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -120,9 +122,12 @@
     </div>
 </section>
 
+@if(empty($vendeur->Bloque))
 <!-- Floating add button -->
 <a href="#openAdd" id="fabAdd" class="fab-add btn btn-primary" style="color: white !important;">+ Ajouter un produit</a>
+@endif
 
+@if(empty($vendeur->Bloque))
 <!-- Modal d'ajout (simple) -->
 <div id="addModal" class="modal" aria-hidden="true" style="display:none;position:fixed;left:0;top:0;width:100%;height:100%;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);z-index:9999;">
     <div class="modal-content card p-3" style="width:100%;max-width:640px;">
@@ -168,6 +173,7 @@
         </form>
     </div>
 </div>
+@endif
 
 <script>
 (function(){

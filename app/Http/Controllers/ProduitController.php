@@ -107,6 +107,12 @@ class ProduitController extends Controller
     public function edit(Request $request, $id)
     {
         $vendeur = Auth::guard('vendeur')->user();
+        if (!empty($vendeur->Bloque)) {
+            if ($request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json(['error' => 'Compte limité'], 403);
+            }
+            return redirect()->route('PageVendeur')->with('error', 'Votre compte est limité. La modification des produits est désactivée.');
+        }
         $produit = Produit::where('idProduit', $id)->where('Vendeur_idVendeur', $vendeur->idVendeur)->firstOrFail();
         if ($request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             return view('vendeurs.produits.edit', compact('produit', 'vendeur'))->render();
