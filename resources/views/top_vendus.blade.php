@@ -225,8 +225,14 @@
                             @if(isset($items) && $items->count())
                                 <div class="product-grid" style="margin-top:12px;">
                                     @foreach($items as $produit)
-                                        <div class="product-card card">
+                                        <div class="product-card card @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0) product-card-promo @endif">
                                             <div class="position-relative">
+                                                @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0)
+                                                    <span class="badge-promo" style="border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+                                                        <span style="background:#ffc107;color:#000;padding:3px 6px;font-size:0.7rem;font-weight:600;">En promotion</span>
+                                                        <span style="background:#e65100;color:#fff;padding:3px 5px;font-size:0.7rem;font-weight:700;">-{{ $produit->Reduction }}%</span>
+                                                    </span>
+                                                @endif
                                                 @php
                                                     $imgUrl = 'https://via.placeholder.com/400x300?text=No+Image';
                                                     $img = trim((string)($produit->Image ?? ''));
@@ -283,7 +289,14 @@
                                                 <h6 class="product-title"><a href="#" class="product-open" data-id="{{ $produit->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" data-vendor-name="{{ $vendorName }}" data-vendor-address="{{ $vendorAddress }}" data-stock="{{ $produit->Stock ?? 0 }}" data-category="{{ $produit->Categorie ?? '' }}" data-similar='@json($similar)'>{{ $produit->Nom }}</a></h6>
                                                 <p class="product-meta mb-2">{{ \Illuminate\Support\Str::limit($produit->Description, 60) }}</p>
                                                 <div class="mt-auto d-flex justify-content-between align-items-center">
-                                                    <div class="product-price">{{ number_format($produit->Prix, 0, ',', ' ') }} FCFA</div>
+                                                    @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0 && isset($produit->PrixOriginal) && $produit->PrixOriginal > $produit->Prix)
+                                                        <div class="product-price" style="display:flex;flex-direction:column;align-items:flex-start;">
+                                                            <span style="color:#e53935;text-decoration:line-through;font-size:0.9em;">{{ number_format($produit->PrixOriginal, 0, ',', ' ') }} FCFA</span>
+                                                            <span style="color:#1e88e5;font-weight:700;font-size:1.1em;">{{ number_format($produit->Prix, 0, ',', ' ') }} FCFA</span>
+                                                        </div>
+                                                    @else
+                                                        <div class="product-price">{{ number_format($produit->Prix ?? 0, 0, ',', ' ') }} FCFA</div>
+                                                    @endif
                                                     <button type="button" class="btn btn-sm btn-outline-secondary product-open" data-id="{{ $produit->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" data-vendor-name="{{ $vendorName }}" data-vendor-address="{{ $vendorAddress }}" data-stock="{{ $produit->Stock ?? 0 }}" data-category="{{ $produit->Categorie ?? '' }}" data-similar='@json($similar)'>Voir</button>
                                                 </div>
                                             </div>

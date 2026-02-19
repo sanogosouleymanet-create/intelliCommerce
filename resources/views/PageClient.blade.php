@@ -245,8 +245,14 @@
                                     @if($reco->count())
                                         <div class="product-grid">
                                             @foreach($reco as $produit)
-                                                <div class="product-card card">
+                                                <div class="product-card card @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0) product-card-promo @endif">
                                                     <div class="position-relative">
+                                                        @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0)
+                                                            <span class="badge-promo position-absolute" style="top:8px;left:8px;z-index:2;display:inline-flex;border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+                                                                <span style="background:#ffc107;color:#000;padding:4px 8px;font-size:0.75rem;font-weight:600;">En promotion</span>
+                                                                <span style="background:#e65100;color:#fff;padding:4px 6px;font-size:0.75rem;font-weight:700;">-{{ $produit->Reduction }}%</span>
+                                                            </span>
+                                                        @endif
                                                         @php
                                                             $imgUrl = 'https://via.placeholder.com/400x300?text=No+Image';
                                                             $img = trim((string)($produit->Image ?? ''));
@@ -268,7 +274,14 @@
                                                         <h6 class="product-title">{{ $produit->Nom }}</h6>
                                                         <p class="product-meta mb-2">{{ \Illuminate\Support\Str::limit($produit->Description, 60) }}</p>
                                                         <div class="mt-auto d-flex justify-content-between align-items-center">
-                                                            <div class="product-price">{{ number_format($produit->Prix, 0, ',', ' ') }} FCFA</div>
+                                                            @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0 && isset($produit->PrixOriginal) && $produit->PrixOriginal > $produit->Prix)
+                                                                <div class="product-price" style="display:flex;flex-direction:column;align-items:flex-start;">
+                                                                    <span style="color:#e53935;text-decoration:line-through;font-size:0.9em;">{{ number_format($produit->PrixOriginal, 0, ',', ' ') }} FCFA</span>
+                                                                    <span style="color:#1e88e5;font-weight:700;font-size:1.1em;">{{ number_format($produit->Prix, 0, ',', ' ') }} FCFA</span>
+                                                                </div>
+                                                            @else
+                                                                <div class="product-price">{{ number_format($produit->Prix ?? 0, 0, ',', ' ') }} FCFA</div>
+                                                            @endif
                                                             <a href="/produit/{{ $produit->idProduit }}" class="btn btn-sm btn-outline-secondary">Voir</a>
                                                         </div>
                                                     </div>

@@ -19,6 +19,9 @@ class Produit extends Model
         'DateAjout',
         'Image',
         'Vendeur_idVendeur',
+        'Promotion',
+        'PrixOriginal',
+        'Reduction',
     ];
     protected $table = 'produits';
     protected $primaryKey = 'idProduit';

@@ -443,18 +443,42 @@ header li > a {
     overflow:hidden; 
     background:#fff; 
     margin-bottom:18px; 
+    border: 1px solid transparent;
+}
+.product-card.product-card-promo {
+    border: 2px solid #ffc107;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+.product-card .position-relative {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
 }
 .product-card .card-img-top { 
     width:100%; 
     height:180px; 
     object-fit:cover; 
     display:block; 
+    margin:0;
+    padding:0;
 }
 .product-card .card-body { 
     padding:8px 10px; 
-    height:140px; 
+    min-height:140px; 
     display:flex; 
     flex-direction:column; 
+}
+.badge-promo { 
+    position: absolute !important;
+    top: 6px !important;
+    left: 6px !important;
+    z-index: 10 !important;
+    display: inline-flex !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    pointer-events: none;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 .product-title { 
     font-size:0.9rem; 
@@ -489,6 +513,93 @@ header li > a {
     -webkit-box-orient:vertical;
     overflow:hidden;
 }
+
+/* Section Offres du jour - mini cartes (affichage comme les autres mais plus compact) */
+.offres-du-jour-title { color: #fff !important; }
+.offres-du-jour-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+.offres-du-jour-card {
+    width: 140px;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #ffc107;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: #222;
+    display: flex;
+    flex-direction: column;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.offres-du-jour-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.offres-du-jour-card-img-wrap {
+    position: relative;
+    width: 100%;
+    height: 100px;
+    background: #f5f5f5;
+    overflow: hidden;
+}
+.offres-du-jour-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.offres-du-jour-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    z-index: 2;
+    display: inline-flex !important;
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.offres-du-jour-card-body {
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.offres-du-jour-card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: #1a1a2e;
+}
+.offres-du-jour-card-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+}
+.offres-du-jour-price-current {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1e88e5;
+}
+.offres-du-jour-price-old {
+    font-size: 0.75rem;
+    color: #e53935;
+    text-decoration: line-through;
+}
+@media (max-width: 767px) {
+    .offres-du-jour-card { width: 120px; }
+    .offres-du-jour-card-img-wrap { height: 88px; }
+}
+
 @media (max-width:767px) { .product-card { width:100% !important; } .product-grid { gap:16px; } }
 /* Ensure header departments inner menu is hidden when collapsed */
 .header-dpt.collapsed .dpt-menu { display: none !important; }
@@ -647,8 +758,9 @@ a.menu-active, a.menu-active:hover { background:#0b66d1; color:#fff !important; 
 /* Product card adjustments */
 .product-grid{ display:flex; flex-wrap:wrap; gap:28px; }
 .product-card{ width:220px; border-radius:6px; overflow:hidden; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.06); margin-bottom:18px; }
-.product-card .position-relative{ position:relative; display:flex; align-items:center; justify-content:center; height:180px; background:#fff; }
-.product-card .card-img-top{ max-width:100%; height:100%; object-fit:cover; display:block; margin:0 auto; }
+.product-card .position-relative{ position:relative; width:100%; height:180px; background:#fff; overflow:hidden; }
+.product-card .position-relative > *:not(.badge-promo):not(.add-to-cart) { width:100%; height:100%; }
+.product-card .card-img-top{ max-width:100%; width:100%; height:100%; object-fit:cover; display:block; margin:0; padding:0; }
 .product-card .card-body{ padding:8px 10px; display:flex; flex-direction:column; min-height:120px; }
 
 /* Add-to-cart small circular button */

@@ -59,9 +59,16 @@
     overflow:hidden; 
     background: transparent; 
 }
+.product-card.product-card-promo {
+    border: 2px solid #ffc107;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
 .product-card:hover { 
     transform: translateY(-6px); 
     box-shadow: 0 18px 40px rgba(2,6,23,.07); 
+}
+.product-card.product-card-promo:hover {
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
 }
 .product-card .card-body { 
     display: flex; 
