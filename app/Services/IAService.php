@@ -62,7 +62,7 @@ class IAService
             $dateCommande = Carbon::parse($derniereCommande->DateCommande);
 
             // Calcule la différence en jours avec aujourd’hui
-            if ($dateCommande->diffInDays(Carbon::now()) > 30) {
+            if ($dateCommande->diffInDays(Carbon::now()) > 14) {
 
                 $this->creerAlerte(
                     'Vente',

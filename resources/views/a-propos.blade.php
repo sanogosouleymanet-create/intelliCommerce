@@ -40,13 +40,35 @@
                                         }
                                         $cart = session($cartKey, []);
                                         if(is_array($cart) && !empty($cart)){
-                                            $cartCount = array_sum($cart);
+                                            $cartCount = count($cart); // nombre de produits distincts
                                             $prodIds = array_keys($cart);
                                             $prods = \App\Models\Produit::whereIn('idProduit', $prodIds)->get()->keyBy('idProduit');
                                             foreach($cart as $pid => $q){
                                                 $p = $prods->get($pid);
                                                 if($p) $cartTotal += ($p->Prix ?? 0) * $q;
                                             }
+                                        }
+
+                                        $messageUnreadCount = 0;
+                                        $messagesUrl = '#';
+                                        if(auth()->guard('client')->check()){
+                                            $messageUnreadCount = \App\Models\Message::where('Client_idClient', auth()->guard('client')->id())
+                                                ->whereIn('Statut', ['non lu','envoye'])
+                                                ->whereIn('sender_type', ['vendeur', 'administrateur'])
+                                                ->count();
+                                            $messagesUrl = '/messages';
+                                        } elseif(auth()->guard('vendeur')->check()){
+                                            $messageUnreadCount = \App\Models\Message::where('Vendeur_idVendeur', auth()->guard('vendeur')->id())
+                                                ->whereIn('Statut', ['non lu','envoye'])
+                                                ->whereIn('sender_type', ['client', 'administrateur'])
+                                                ->count();
+                                            $messagesUrl = '/vendeur/messages';
+                                        } elseif(auth()->guard('administrateur')->check()){
+                                            $messageUnreadCount = \App\Models\Message::where('Administrateur_idAdministrateur', auth()->guard('administrateur')->id())
+                                                ->whereIn('Statut', ['non lu','envoye'])
+                                                ->whereIn('sender_type', ['client', 'vendeur'])
+                                                ->count();
+                                            $messagesUrl = route('admin.dashboard') . '#messages';
                                         }
                                     @endphp
                                 @if($admin || $vendeur || $client)
@@ -91,6 +113,14 @@
                         </div>
                         <div class="right">
                             <ul class="flexitem second-links">
+                                @if($admin || $vendeur || $client)
+                                <li>
+                                    <a href="{{ $messagesUrl }}">
+                                        <div class="icon-large"><i class="ri-mail-unread-line"></i></div>
+                                        <div class="fly-item"><span class="message-number">{{ $messageUnreadCount }}</span></div>
+                                    </a>
+                                </li>
+                                @endif
                                 <li><a href="#" class="iscart">
                                     <div class="icon-large"><i class="ri-shopping-cart-line"></i></div>
                                     <div class="fly-item"><span class="item-number">{{ $cartCount }}</span></div>
@@ -138,11 +168,11 @@
             </div>
         </main>
 
-        <footer>
+        <footer style="text-align:center;">
             <div class="container py-4">
                 <div class="row">
                     <div class="col-12 text-center">
-                        <p>&copy; 2026 Intelli-Commerce. Tous droits réservés.</p>
+                        <p>&copy; 2026 Intelli-Commerce.</p>
                     </div>
                 </div>
             </div>
