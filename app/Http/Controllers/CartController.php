@@ -27,9 +27,29 @@ class CartController extends Controller
         return view('cart.index', compact('items', 'total'));
     }
 
+    /**
+     * Vérifier si le client authentifié est bloqué.
+     */
+    protected function checkClientBlocked()
+    {
+        $client = Auth::guard('client')->user();
+        if ($client && !empty($client->Bloque)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Votre compte est limité. Cette action n\'est pas autorisée.',
+                'error' => 'Compte bloqué',
+            ], 403);
+        }
+        return null;
+    }
+
     // add item (AJAX)
     public function add(Request $request)
     {
+        // Vérifier si le client est bloqué
+        $blockedCheck = $this->checkClientBlocked();
+        if ($blockedCheck) return $blockedCheck;
+
         $id = $request->input('id');
         $qty = max(1, (int) $request->input('qty', 1));
         $produit = Produit::where('idProduit', $id)->first();
@@ -73,6 +93,10 @@ class CartController extends Controller
 
     public function remove(Request $request)
     {
+        // Vérifier si le client est bloqué
+        $blockedCheck = $this->checkClientBlocked();
+        if ($blockedCheck) return $blockedCheck;
+
         $id = $request->input('id');
         $key = $this->cartKey($request);
         $cart = session($key, []);
@@ -86,6 +110,10 @@ class CartController extends Controller
 
     public function update(Request $request)
     {
+        // Vérifier si le client est bloqué
+        $blockedCheck = $this->checkClientBlocked();
+        if ($blockedCheck) return $blockedCheck;
+
         $id = $request->input('id');
         $qty = max(0, (int) $request->input('qty', 0));
         $key = $this->cartKey($request);

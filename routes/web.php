@@ -99,9 +99,9 @@ Route::middleware(['auth:vendeur'])->group(function () {
             ]);
         }
     });
-    Route::post('/vendeur/commandes/{id}/mark-delivered', [VendeurController::class, 'markDelivered']);
-    Route::delete('/vendeur/commandes/{id}', [VendeurController::class, 'deleteCommande']);
-    Route::delete('/vendeur/mes-commandes/{id}', [VendeurController::class, 'deleteMesCommande'])->name('vendeur.mes-commandes.destroy');
+    Route::post('/vendeur/commandes/{id}/mark-delivered', [VendeurController::class, 'markDelivered'])->middleware('vendeur.not.blocked');
+    Route::delete('/vendeur/commandes/{id}', [VendeurController::class, 'deleteCommande'])->middleware('vendeur.not.blocked');
+    Route::delete('/vendeur/mes-commandes/{id}', [VendeurController::class, 'deleteMesCommande'])->name('vendeur.mes-commandes.destroy')->middleware('vendeur.not.blocked');
     Route::post('/passer-commande', [CommandeController::class, 'store']);
     Route::get('/vendeur/clients', function(Request $request) {
         $vendeur = Auth::guard('vendeur')->user();
@@ -144,7 +144,7 @@ Route::middleware(['auth:vendeur'])->group(function () {
     Route::post('/vendeur/messages/block/{type}/{id}', [VendeurController::class, 'blockUser']);
     Route::post('/vendeur/messages/unblock/{type}/{id}', [VendeurController::class, 'unblockUser']);
     // Send message (named route used by the view)
-    Route::post('/vendeur/messages/send', [VendeurController::class, 'sendMessage'])->name('vendeur.messages.send');
+    Route::post('/vendeur/messages/send', [VendeurController::class, 'sendMessage'])->name('vendeur.messages.send')->middleware('vendeur.not.blocked');
     Route::get('/vendeur/parametres', function(Request $request) {
         $vendeur = Auth::guard('vendeur')->user();
         if ($request->ajax()) {
@@ -160,7 +160,7 @@ Route::middleware(['auth:vendeur'])->group(function () {
 
     // Vendeur message routes
     Route::get('/messages/conversation/{type}/{id}', [VendeurController::class, 'getConversation'])->name('vendeur.messages.conversation');
-    Route::post('/messages/send', [VendeurController::class, 'sendMessage'])->name('vendeur.messages.send');
+    Route::post('/messages/send', [VendeurController::class, 'sendMessage'])->name('vendeur.messages.send')->middleware('vendeur.not.blocked');
     Route::delete('/messages/{id}', [VendeurController::class, 'deleteMessage'])->name('vendeur.messages.delete');
     Route::delete('/messages/conversation/{type}/{id}', [VendeurController::class, 'deleteConversation'])->name('vendeur.messages.conversation.delete');
     Route::post('/messages/block/{type}/{id}', [VendeurController::class, 'blockUser'])->name('vendeur.messages.block');
@@ -170,11 +170,10 @@ Route::middleware(['auth:vendeur'])->group(function () {
 Route::middleware(['auth:vendeur'])->group(function () {
     Route::get ('/produits', [ProduitController::class, 'index']);
     Route::get('/produits/{id}/edit', [ProduitController::class, 'edit'])->name('produits.edit');
-    Route::post('/produits', [ProduitController::class, 'AjouterProduit'])->name('produits.AjouterProduit');
+    Route::post('/produits', [ProduitController::class, 'AjouterProduit'])->name('produits.AjouterProduit')->middleware('vendeur.not.blocked');
     Route::get('/produits/{id}', [ProduitController::class, 'show'])->name('produits.show');
-    // Accept both POST (legacy) and PUT for updates
-    Route::match(['post','put'], '/produits/{id}', [ProduitController::class, 'update'])->name('produits.update');
-    Route::post('/produits/{id}/delete', [ProduitController::class, 'destroy'])->name('produits.destroy');
+    Route::match(['post','put'], '/produits/{id}', [ProduitController::class, 'update'])->name('produits.update')->middleware('vendeur.not.blocked');
+    Route::post('/produits/{id}/delete', [ProduitController::class, 'destroy'])->name('produits.destroy')->middleware('vendeur.not.blocked');
 });
 Route::get ('/commandes', [CommandeController::class, 'index']);
 Route::post('/passer-commande', [CommandeController::class, 'store'])->name('passer.commande');
@@ -345,7 +344,7 @@ Route::middleware(['auth:client'])->group(function () {
     });
 
     Route::get('/commandes/{id}', [ClientController::class, 'showCommande'])->name('client.commande.show');
-    Route::delete('/commandes/{id}', [CommandeController::class, 'destroy'])->name('client.commande.destroy');
+    Route::delete('/commandes/{id}', [CommandeController::class, 'destroy'])->name('client.commande.destroy')->middleware('client.not.blocked');
 
     Route::get('/messages', function(Request $request){
         $client = Auth::guard('client')->user();
@@ -404,8 +403,8 @@ Route::middleware(['auth:client'])->group(function () {
 
     // Client message routes
     Route::get('/messages/conversation/{type}/{id}', [ClientController::class, 'getConversation'])->name('client.messages.conversation');
-    Route::post('/messages/send', [ClientController::class, 'sendMessage'])->name('client.messages.send');
-    Route::delete('/messages/{id}', [ClientController::class, 'deleteMessage'])->name('client.messages.delete');
+    Route::post('/messages/send', [ClientController::class, 'sendMessage'])->name('client.messages.send')->middleware('client.not.blocked');
+    Route::delete('/messages/{id}', [ClientController::class, 'deleteMessage'])->name('client.messages.delete')->middleware('client.not.blocked');
     Route::post('/messages/block/{type}/{id}', [ClientController::class, 'blockUser'])->name('client.messages.block');
     Route::post('/messages/unblock/{type}/{id}', [ClientController::class, 'unblockUser'])->name('client.messages.unblock');
 
@@ -564,7 +563,7 @@ Route::get('/produit/{id}', [ProduitController::class, 'publicShow'])->name('pro
 Route::get('/analyses', [AnalysesController::class, 'index']);
 
 Route::get('/vendeur/parametres', [VendeurController::class, 'parametres'])->middleware('auth:vendeur');
-Route::post('/vendeur/parametres', [VendeurController::class, 'updateSettings'])->middleware('auth:vendeur');
+Route::post('/vendeur/parametres', [VendeurController::class, 'updateSettings'])->middleware(['auth:vendeur', 'vendeur.not.blocked']);
 
 // Note: message routes for clients and vendeurs are defined in their respective middleware groups above.
 

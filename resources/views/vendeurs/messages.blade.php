@@ -9,7 +9,11 @@
     <div id="conversations-sidebar" style="width:40%;border-right:1px solid #eee;padding:12px;height:100%;overflow-y:auto;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
             <h4>Conversations</h4>
-            <button id="btn-compose" class="btn btn-sm btn-primary">Nouveau Message</button>
+            @if(empty($vendeur->Bloque))
+                <button id="btn-compose" class="btn btn-sm btn-primary">Nouveau Message</button>
+            @else
+                <span class="text-muted small"><i class="fas fa-lock"></i> Envoi désactivé</span>
+            @endif
         </div>
         <input type="text" id="search-conversations" placeholder="Rechercher une conversation..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;margin-bottom:12px;">
         @if(empty($conversations))
@@ -72,11 +76,15 @@
         <div id="messages-container" style="flex:1;padding:12px;display:none;overflow-y:auto;flex-direction:column;">
             <!-- Messages will be loaded here -->
         </div>
-        <div id="reply-area" style="padding:12px;border-top:1px solid #eee;display:none;flex-shrink:0;">
-            <div style="display:flex;gap:8px;">
-                <textarea id="reply-input" placeholder="Tapez votre message..." style="flex:1;padding:4px;border:1px solid #ddd;border-radius:4px;resize:none;" rows="1"></textarea>
-                <button id="btn-send-reply" class="btn btn-sm btn-primary">Envoyer</button>
-            </div>
+        <div id="reply-area" style="padding:12px;border-top:1px solid #eee;display:none;flex-shrink:0;" data-vendeur-blocked="{{ !empty($vendeur->Bloque) ? '1' : '0' }}">
+            @if(empty($vendeur->Bloque))
+                <div style="display:flex;gap:8px;">
+                    <textarea id="reply-input" placeholder="Tapez votre message..." style="flex:1;padding:4px;border:1px solid #ddd;border-radius:4px;resize:none;" rows="1"></textarea>
+                    <button id="btn-send-reply" class="btn btn-sm btn-primary">Envoyer</button>
+                </div>
+            @else
+                <p class="text-muted small mb-0"><i class="fas fa-lock"></i> L'envoi de messages est désactivé pour votre compte.</p>
+            @endif
         </div>
     </div>
 </div>

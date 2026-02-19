@@ -706,6 +706,108 @@ window.adminInitPartials = function(){
     document.addEventListener('click', function(e){
         const target = e.target;
         if(!target) return;
+        // Block / unblock vendeur from vendor detail partial
+        try{
+            const blockBtn = target.closest && target.closest('#btn-block-vendeur');
+            if(blockBtn){
+                e.preventDefault();
+                const id = blockBtn.getAttribute('data-id');
+                if(!id) return;
+                const blocked = (blockBtn.getAttribute('data-blocked') === '1');
+                const url = blocked
+                    ? ('/admin/messages/unblock/vendeur/' + encodeURIComponent(id))
+                    : ('/admin/messages/block/vendeur/' + encodeURIComponent(id));
+
+                blockBtn.disabled = true;
+                const headers = { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' };
+                const token = getCsrf();
+                if(token) headers['X-CSRF-TOKEN'] = token;
+
+                fetch(url, { method: 'POST', headers: headers, credentials: 'same-origin' })
+                    .then(function(r){ return r.json().catch(function(){ return {}; }); })
+                    .then(function(data){
+                        if(data && (data.success === true || (data.success !== false && !data.error))){
+                            // Toggle UI state
+                            const newBlocked = !blocked;
+                            blockBtn.setAttribute('data-blocked', newBlocked ? '1' : '0');
+                            blockBtn.textContent = newBlocked ? 'Débloquer' : 'Bloquer';
+                            blockBtn.className = 'btn ' + (newBlocked ? 'btn-success' : 'btn-danger');
+
+                            const alertEl = document.querySelector('.admin-vendeur-detail .alert-warning');
+                            if(newBlocked){
+                                if(!alertEl){
+                                    const meta = document.querySelector('.admin-vendeur-meta');
+                                    if(meta){
+                                        const div = document.createElement('div');
+                                        div.className = 'alert alert-warning py-2 mb-2';
+                                        div.style.fontSize = '0.9rem';
+                                        div.textContent = 'Ce compte est bloqué. Certaines actions sont limitées.';
+                                        meta.insertBefore(div, meta.firstElementChild ? meta.firstElementChild.nextElementSibling : meta.firstChild);
+                                    }
+                                }
+                            } else {
+                                if(alertEl) alertEl.remove();
+                            }
+                        } else {
+                            alert((data && (data.message || data.error)) ? (data.message || data.error) : 'Erreur lors de l’opération.');
+                        }
+                    })
+                    .catch(function(){ alert('Erreur réseau.'); })
+                    .finally(function(){ blockBtn.disabled = false; });
+                return;
+            }
+        }catch(err){ console.warn('block vendeur handler failed', err); }
+        // Block / unblock client from client detail partial
+        try{
+            const blockBtn = target.closest && target.closest('#btn-block-client');
+            if(blockBtn){
+                e.preventDefault();
+                const id = blockBtn.getAttribute('data-id');
+                if(!id) return;
+                const blocked = (blockBtn.getAttribute('data-blocked') === '1');
+                const url = blocked
+                    ? ('/admin/messages/unblock/client/' + encodeURIComponent(id))
+                    : ('/admin/messages/block/client/' + encodeURIComponent(id));
+
+                blockBtn.disabled = true;
+                const headers = { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' };
+                const token = getCsrf();
+                if(token) headers['X-CSRF-TOKEN'] = token;
+
+                fetch(url, { method: 'POST', headers: headers, credentials: 'same-origin' })
+                    .then(function(r){ return r.json().catch(function(){ return {}; }); })
+                    .then(function(data){
+                        if(data && (data.success === true || (data.success !== false && !data.error))){
+                            // Toggle UI state
+                            const newBlocked = !blocked;
+                            blockBtn.setAttribute('data-blocked', newBlocked ? '1' : '0');
+                            blockBtn.textContent = newBlocked ? 'Débloquer' : 'Bloquer';
+                            blockBtn.className = 'btn ' + (newBlocked ? 'btn-success' : 'btn-danger');
+
+                            const alertEl = document.querySelector('.admin-client-detail .alert-warning');
+                            if(newBlocked){
+                                if(!alertEl){
+                                    const meta = document.querySelector('.admin-client-meta');
+                                    if(meta){
+                                        const div = document.createElement('div');
+                                        div.className = 'alert alert-warning py-2 mb-2';
+                                        div.style.fontSize = '0.9rem';
+                                        div.textContent = 'Ce compte est bloqué. Certaines actions sont limitées.';
+                                        meta.insertBefore(div, meta.firstElementChild ? meta.firstElementChild.nextElementSibling : meta.firstChild);
+                                    }
+                                }
+                            } else {
+                                if(alertEl) alertEl.remove();
+                            }
+                        } else {
+                            alert((data && (data.message || data.error)) ? (data.message || data.error) : 'Erreur lors de l\'opération.');
+                        }
+                    })
+                    .catch(function(){ alert('Erreur réseau.'); })
+                    .finally(function(){ blockBtn.disabled = false; });
+                return;
+            }
+        }catch(err){ console.warn('block client handler failed', err); }
         // View product
         if(target.classList && target.classList.contains('btn-view-produit')){
             const tr = target.closest('tr'); if(!tr) return;

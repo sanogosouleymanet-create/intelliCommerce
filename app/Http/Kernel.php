@@ -65,5 +65,9 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         // Ajout pour permettre auth:administrateur
         'auth.administrateur' => \App\Http\Middleware\AuthenticateAdministrateur::class,
+        // Vendeur bloqué : interdire les actions d'écriture
+        'vendeur.not.blocked' => \App\Http\Middleware\EnsureVendeurNotBlocked::class,
+        // Client bloqué : interdire les actions d'écriture
+        'client.not.blocked' => \App\Http\Middleware\EnsureClientNotBlocked::class,
     ];
 }

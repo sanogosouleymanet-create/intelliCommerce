@@ -179,6 +179,16 @@
 
         <main>
             <div class="container py-4 vendeur-dashboard">
+                @if(session('error') || !empty($vendeur->Bloque))
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        @if(session('error'))
+                            {{ session('error') }}
+                        @elseif(!empty($vendeur->Bloque))
+                            <i class="fas fa-lock me-1"></i> Votre compte est limité. Certaines actions sont désactivées.
+                        @endif
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                    </div>
+                @endif
                 <div class="row">
                     <aside class="col-md-3">
                         <div class="profile-card text-center">
