@@ -620,14 +620,63 @@
                             @endphp
 
                             <div id="mainContent">
-                            <div class="pre-products" style="display:flex;gap:18px;align-items:flex-start;margin:12px 6px;">
-                                <div class="hero" style="flex:1;background:#0b66d1;color:#fff;border-radius:8px;padding:20px;min-height:140px;display:flex;flex-direction:column;justify-content:center;">
-                                    <h2 style="margin:0 0 8px 0">Offres du jour</h2>
-                                    <p style="margin:0 0 12px 0;opacity:0.95">Profitez des meilleures offres et réductions sur une sélection de produits populaires.</p>
-                                    <a href="{{ url('/') }}?categorie={{ urlencode('Meilleures ventes') }}" class="btn btn-light" style="width:170px">Voir les offres</a>
+                            <div class="pre-products" style="display:flex;gap:18px;align-items:flex-start;margin:12px 6px;flex-wrap:wrap;">
+                                <div class="hero offres-du-jour-hero" style="flex:1;background:#0b66d1;color:#fff;border-radius:8px;padding:20px;min-height:140px;display:flex;flex-direction:column;justify-content:center;">
+                                    <h3 class="offres-du-jour-title" style="margin:0 0 10px 0;font-size:1.15rem;font-weight:700;">Offres du jour</h3>
+                                    @php
+                                        // Récupérer les produits en promotion (Promotion=1 et Reduction non nul)
+                                        $produitsPromo = \App\Models\Produit::where('Promotion', 1)
+                                            ->whereNotNull('Reduction')
+                                            ->where('Reduction', '>', 0)
+                                            ->orderByDesc('DateAjout')
+                                            ->limit(5)
+                                            ->get();
+                                    @endphp
+                                    @if($produitsPromo->isEmpty())
+                                        <p style="margin:0 0 12px 0;opacity:0.95">Profitez des meilleures offres et réductions sur une sélection de produits populaires mis en promotion par nos vendeurs.</p>
+                                        <div class="text-muted">Aucune offre promotionnelle en cours.</div>
+                                    @else
+                                        <div class="offres-du-jour-grid">
+                                            @foreach($produitsPromo as $promo)
+                                                @php
+                                                    $img = trim((string)($promo->Image ?? ''));
+                                                    $imgUrl = 'https://via.placeholder.com/160x120?text=No+Image';
+                                                    if($img !== ''){
+                                                        if(preg_match('/^https?:\/\//i', $img)) { $imgUrl = $img; }
+                                                        elseif(\Illuminate\Support\Facades\Storage::exists('public/'.$img)) { $imgUrl = asset('storage/'.$img); }
+                                                        elseif(file_exists(public_path($img))) { $imgUrl = asset($img); }
+                                                        elseif(file_exists(public_path('images/'.basename($img)))) { $imgUrl = asset('images/'.basename($img)); }
+                                                    }
+                                                    $prixReduit = $promo->Prix ?? 0;
+                                                    $prixOriginal = $promo->PrixOriginal ?? $promo->Prix ?? 0;
+                                                @endphp
+                                                <a href="{{ url('/produit/'.$promo->idProduit) }}" class="offres-du-jour-card product-card-promo">
+                                                    <div class="offres-du-jour-card-img-wrap">
+                                                        <span class="badge-promo offres-du-jour-badge">
+                                                            <span style="background:#ffc107;color:#000;padding:2px 5px;font-size:0.65rem;font-weight:600;">Promo</span>
+                                                            <span style="background:#e65100;color:#fff;padding:2px 4px;font-size:0.65rem;font-weight:700;">-{{ $promo->Reduction }}%</span>
+                                                        </span>
+                                                        <img src="{{ $imgUrl }}" alt="{{ $promo->Nom }}" class="offres-du-jour-card-img">
+                                                    </div>
+                                                    <div class="offres-du-jour-card-body">
+                                                        <h6 class="offres-du-jour-card-title">{{ $promo->Nom }}</h6>
+                                                        <div class="offres-du-jour-card-price">
+                                                            @if($prixOriginal > $prixReduit)
+                                                                <span class="offres-du-jour-price-current">{{ number_format($prixReduit, 0, ',', ' ') }} FCFA</span>
+                                                                <span class="offres-du-jour-price-old">{{ number_format($prixOriginal, 0, ',', ' ') }} FCFA</span>
+                                                            @else
+                                                                <span class="offres-du-jour-price-current">{{ number_format($prixReduit, 0, ',', ' ') }} FCFA</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    <a href="{{ route('promotions') }}" class="btn btn-light" style="width:170px;margin-top:12px">Voir toutes les offres</a>
                                 </div>
 
-                                <div style="width:340px;display:flex;flex-direction:column;gap:12px;">
+                                <div style="width:340px;min-width:0;max-width:100%;flex:0 1 340px;display:flex;flex-direction:column;gap:12px;">
                                     <div class="top-list" style="background:#fff;padding:12px;border-radius:8px;">
                                         <h5 style="margin:0 0 8px 0">Les plus recherchés</h5>
                                         @if($topRecherches->isEmpty())
@@ -685,8 +734,14 @@
 
                                 <div class="product-grid">
                                 @foreach($produits as $produit)
-                                    <div class="product-card card">
+                                    <div class="product-card card @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0) product-card-promo @endif">
                                         <div class="position-relative">
+                                            @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0)
+                                                <span class="badge-promo" style="border-radius:4px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.2);">
+                                                    <span style="background:#ffc107;color:#000;padding:3px 6px;font-size:0.7rem;font-weight:600;">En promotion</span>
+                                                    <span style="background:#e65100;color:#fff;padding:3px 5px;font-size:0.7rem;font-weight:700;">-{{ $produit->Reduction }}%</span>
+                                                </span>
+                                            @endif
                                             @php
                                                 $imgUrl = 'https://via.placeholder.com/400x300?text=No+Image';
                                                 $img = trim((string)($produit->Image ?? ''));
@@ -749,7 +804,14 @@
                                             <h6 class="product-title"><a href="#" class="product-open" data-id="{{ $produit->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" data-vendor-name="{{ $vendorName }}" data-vendor-address="{{ $vendorAddress }}" data-stock="{{ $produit->Stock ?? 0 }}" data-category="{{ $produit->Categorie ?? '' }}" data-similar='@json($similar)'>{{ $produit->Nom }}</a></h6>
                                             <p class="product-meta mb-2">{{ \Illuminate\Support\Str::limit($produit->Description, 60) }}</p>
                                             <div class="mt-auto d-flex justify-content-between align-items-center">
-                                                <div class="product-price">{{ number_format($produit->Prix, 0, ',', ' ') }} FCFA</div>
+                                                @if($produit->Promotion && isset($produit->Reduction) && $produit->Reduction > 0 && isset($produit->PrixOriginal) && $produit->PrixOriginal > $produit->Prix)
+                                                    <div class="product-price" style="display:flex;flex-direction:column;align-items:flex-start;">
+                                                        <span style="color:#e53935;text-decoration:line-through;font-size:0.9em;">{{ number_format($produit->PrixOriginal, 0, ',', ' ') }} FCFA</span>
+                                                        <span style="color:#1e88e5;font-weight:700;font-size:1.1em;">{{ number_format($produit->Prix, 0, ',', ' ') }} FCFA</span>
+                                                    </div>
+                                                @else
+                                                    <div class="product-price">{{ number_format($produit->Prix ?? 0, 0, ',', ' ') }} FCFA</div>
+                                                @endif
                                                 <button type="button" class="btn btn-sm btn-outline-secondary product-open" data-id="{{ $produit->idProduit }}" data-name="{{ $dataName }}" data-desc="{{ $dataDesc }}" data-price="{{ $dataPrice }}" data-img="{{ $dataImg }}" data-vendor-name="{{ $vendorName }}" data-vendor-address="{{ $vendorAddress }}" data-stock="{{ $produit->Stock ?? 0 }}" data-category="{{ $produit->Categorie ?? '' }}" data-similar='@json($similar)'>Voir</button>
                                             </div>
                                         </div>

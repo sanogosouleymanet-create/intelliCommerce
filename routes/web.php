@@ -1,5 +1,4 @@
-
-
+    
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -23,6 +22,37 @@ use App\Models\Message;
 
 // Routes SPA pour PageVendeur (injection partielle)
 Route::middleware(['auth:vendeur'])->group(function () {
+    Route::post('/vendeur/produits/promotion', function(Request $request) {
+        $vendeur = Auth::guard('vendeur')->user();
+        $ids = $request->input('produits', []);
+        $reduction = (int) $request->input('reduction', 0);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'Aucun produit sélectionné.']);
+        }
+        if ($reduction < 1 || $reduction > 100) {
+            return response()->json(['success' => false, 'message' => 'Réduction invalide.']);
+        }
+        $produits = \App\Models\Produit::whereIn('idProduit', $ids)
+            ->where('Vendeur_idVendeur', $vendeur->idVendeur)
+            ->get();
+        $updated = 0;
+        foreach ($produits as $produit) {
+            if (!$produit->PrixOriginal) {
+                $produit->PrixOriginal = $produit->Prix;
+            }
+            $nouveauPrix = round($produit->PrixOriginal * (1 - $reduction / 100));
+            $produit->Prix = $nouveauPrix;
+            $produit->Promotion = 1;
+            $produit->Reduction = $reduction;
+            $produit->save();
+            $updated++;
+        }
+        if ($updated > 0) {
+            return response()->json(['success' => true]);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Aucune mise à jour effectuée.']);
+        }
+    });
     Route::get('/vendeur/produits', function(Request $request) {
         $vendeur = Auth::guard('vendeur')->user();
         // Build query from the seller's produits relation so we can apply filters
@@ -218,6 +248,52 @@ Route::get('/a-propos', function () {
 Route::get('/contact', function () {
     return view('contact');
 });
+
+// Page listant tous les produits en promotion
+Route::get('/promotions', function (Request $request) {
+    $query = Produit::where('Promotion', 1)
+        ->whereNotNull('Reduction')
+        ->where('Reduction', '>', 0);
+
+    // Filtre par recherche (nom, description, catégorie)
+    if ($request->filled('recherche')) {
+        $term = trim($request->recherche);
+        $query->where(function ($q) use ($term) {
+            $q->where('Nom', 'like', '%' . $term . '%')
+                ->orWhere('Description', 'like', '%' . $term . '%')
+                ->orWhere('Categorie', 'like', '%' . $term . '%');
+        });
+    }
+
+    // Filtre par catégorie
+    if ($request->filled('categorie')) {
+        $query->where('Categorie', $request->categorie);
+    }
+
+    // Tri
+    if ($request->filled('tri_prix')) {
+        if ($request->tri_prix === 'asc') {
+            $query->orderBy('Prix', 'asc');
+        } elseif ($request->tri_prix === 'desc') {
+            $query->orderBy('Prix', 'desc');
+        } elseif ($request->tri_prix === 'recente') {
+            $query->orderBy('DateAjout', 'desc');
+        } else {
+            $query->orderBy('DateAjout', 'desc');
+        }
+    } elseif ($request->filled('tri_reduction')) {
+        if ($request->tri_reduction === 'desc') {
+            $query->orderBy('Reduction', 'desc');
+        } else {
+            $query->orderBy('Reduction', 'asc');
+        }
+    } else {
+        $query->orderBy('DateAjout', 'desc');
+    }
+
+    $produits = $query->get();
+    return view('promotions', compact('produits'));
+})->name('promotions');
 
 // Page listant tous les produits les plus vendus
 Route::get('/top-vendus', function(Request $request){
@@ -570,3 +646,31 @@ Route::post('/vendeur/parametres', [VendeurController::class, 'updateSettings'])
 
 // AJAX helper: mark message as read for authenticated vendeur
 Route::post('/vendeur/messages/{id}/lire', [App\Http\Controllers\MessageController::class, 'markAsRead'])->middleware('auth:vendeur');
+
+    Route::post('/vendeur/produits/promotion/remove', function(Request $request) {
+        $vendeur = Auth::guard('vendeur')->user();
+        $ids = $request->input('produits', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'Aucun produit sélectionné.']);
+        }
+        $produits = \App\Models\Produit::whereIn('idProduit', $ids)
+            ->where('Vendeur_idVendeur', $vendeur->idVendeur)
+            ->get();
+        $updated = 0;
+        foreach ($produits as $produit) {
+            if ($produit->PrixOriginal) {
+                $produit->Prix = $produit->PrixOriginal;
+                $produit->PrixOriginal = null;
+            }
+            $produit->Promotion = 0;
+            $produit->Reduction = null;
+            $produit->save();
+            $updated++;
+        }
+        if ($updated > 0) {
+            return response()->json(['success' => true]);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Aucune mise à jour effectuée.']);
+        }
+    });
+
