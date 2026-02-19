@@ -71,23 +71,27 @@
                                         $messageUnreadCount = 0;
                                         $messagesUrl = '#';
                                         if(auth()->guard('client')->check()){
+                                            // Uniquement les messages reçus (envoyés par vendeur ou admin)
                                             $messageUnreadCount = \App\Models\Message::where('Client_idClient', auth()->guard('client')->id())
                                                 ->whereIn('Statut', ['non lu','envoye'])
-                                                ->where(function($q){ $q->where('sender_type', '!=', 'client')->orWhereNull('sender_type'); })
+                                                ->whereIn('sender_type', ['vendeur', 'administrateur'])
                                                 ->count();
                                             $messagesUrl = '/messages';
                                         } elseif(auth()->guard('vendeur')->check()){
+                                            // Uniquement les messages reçus (envoyés par client ou admin)
                                             $messageUnreadCount = \App\Models\Message::where('Vendeur_idVendeur', auth()->guard('vendeur')->id())
                                                 ->whereIn('Statut', ['non lu','envoye'])
-                                                ->where(function($q){ $q->where('sender_type', '!=', 'vendeur')->orWhereNull('sender_type'); })
+                                                ->whereIn('sender_type', ['client', 'administrateur'])
                                                 ->count();
                                             $messagesUrl = '/vendeur/messages';
                                         } elseif(auth()->guard('administrateur')->check()){
+                                            // Uniquement les messages reçus (envoyés par des interlocuteurs : client ou vendeur)
                                             $messageUnreadCount = \App\Models\Message::where('Administrateur_idAdministrateur', auth()->guard('administrateur')->id())
                                                 ->whereIn('Statut', ['non lu','envoye'])
-                                                ->where(function($q){ $q->where('sender_type', '!=', 'administrateur')->orWhereNull('sender_type'); })
+                                                ->whereIn('sender_type', ['client', 'vendeur'])
                                                 ->count();
-                                            $messagesUrl = '/admin/messages';
+                                            // Ouvrir la messagerie dans le layout admin (vue partielle) via #messages
+                                            $messagesUrl = route('admin.dashboard') . '#messages';
                                         }
                                     @endphp
                                 @if($admin || $vendeur || $client)

@@ -315,42 +315,15 @@ class AdministrateurController extends Controller
     }
 
     /**
-     * Affiche les détails d'une commande pour l'administrateur.
+     * Affiche les détails d'une commande pour l'administrateur (vue partielle injectée dans le contenu principal).
      */
     public function showCommande($id)
     {
         $commande = \App\Models\Commande::with(['client', 'produitcommandes.produit.vendeur'])->find($id);
         if (!$commande) {
-            return response()->json(['error' => 'Commande introuvable'], 404);
+            abort(404, 'Commande introuvable');
         }
-
-        // Format the response to avoid null reference errors
-        $formattedCommande = [
-            'idCommande' => $commande->idCommande,
-            'DateCommande' => $commande->DateCommande ? $commande->DateCommande->toISOString() : null,
-            'montant_total' => $commande->montant_total,
-            'Statut' => $commande->Statut,
-            'client' => $commande->client ? [
-                'Nom' => $commande->client->Nom,
-                'Prenom' => $commande->client->Prenom,
-                'email' => $commande->client->email,
-                'TelClient' => $commande->client->TelClient,
-                'Adresse' => $commande->client->Adresse,
-            ] : null,
-            'produitcommandes' => $commande->produitcommandes->map(function($pc) {
-                return [
-                    'Quantite' => $pc->Quantite,
-                    'PrixUnitaire' => $pc->PrixUnitaire,
-                    'produit' => $pc->produit ? [
-                        'idProduit' => $pc->produit->idProduit ?? null,
-                        'Nom' => $pc->produit->Nom ?? null,
-                        'Image' => ($pc->produit->Image) ? Storage::url($pc->produit->Image) : null,
-                    ] : null,
-                ];
-            })->toArray(),
-        ];
-
-        return response()->json($formattedCommande);
+        return view('admin.commandes.show', compact('commande'));
     }
 
     /**
