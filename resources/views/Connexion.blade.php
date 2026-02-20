@@ -11,8 +11,9 @@
     @include('Header')
     </header>
 
-        <form action="{{ url('/Connexion') }}" method="post">
+        <form action="{{ route('connexion.post') }}" method="post">
             @csrf
+            <input type="hidden" name="redirect" value="{{ isset($redirect) ? $redirect : request()->query('redirect') }}">
             <fieldset>
         <div>
                 <label>EMAIL :</label>

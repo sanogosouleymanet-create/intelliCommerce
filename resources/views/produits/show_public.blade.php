@@ -253,6 +253,34 @@
             transform: translateY(0);
         }
         
+        .btn-contact-vendor {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+            text-decoration: none;
+        }
+        
+        .btn-contact-vendor:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-contact-vendor:active {
+            transform: translateY(0);
+        }
+        
         /* Similar Products Section */
         .similar-products-section {
             margin-top: 50px;
@@ -394,7 +422,7 @@
                 flex-direction: column;
                 gap: 10px;
             }
-            .btn-add-cart, .btn-back {
+            .btn-add-cart, .btn-back, .btn-contact-vendor {
                 width: 100%;
                 justify-content: center;
             }
@@ -453,6 +481,21 @@
                         <h4>{{ $vendeur->NomBoutique ?? trim(($vendeur->Nom ?? '') . ' ' . ($vendeur->Prenom ?? '')) ?: 'Boutique' }}</h4>
                         <p>Vendeur vérifié</p>
                     </div>
+                </div>
+                @endif
+                @if($vendeur && auth()->guard('client')->check())
+                <div style="margin-top: 15px;">
+                    <a href="/messages?vendeur={{ $vendeur->idVendeur }}" class="btn-contact-vendor" id="btn-contact-vendor">
+                        <i class="fas fa-comments"></i>
+                        Contacter le vendeur
+                    </a>
+                </div>
+                @elseif($vendeur)
+                <div style="margin-top: 15px;">
+                    <a href="{{ route('connexion', ['redirect' => '/messages?vendeur=' . $vendeur->idVendeur]) }}" class="btn-contact-vendor">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Se connecter pour contacter le vendeur
+                    </a>
                 </div>
                 @endif
                 <div class="product-actions">

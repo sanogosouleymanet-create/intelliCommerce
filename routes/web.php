@@ -575,10 +575,20 @@ Route::middleware(['auth:client'])->group(function () {
 
         $conversations = collect($conversations)->values();
 
-        if ($request->ajax()) {
-            return view('clients.messages', compact('client', 'conversations'));
+        // Récupérer l'email du vendeur si le paramètre vendeur est présent dans l'URL
+        $vendeurEmail = null;
+        $vendeurId = $request->query('vendeur');
+        if ($vendeurId) {
+            $vendeur = Vendeur::find($vendeurId);
+            if ($vendeur) {
+                $vendeurEmail = $vendeur->email;
+            }
         }
-        return view('PageClient', ['partial' => 'clients.messages', 'client' => $client, 'conversations' => $conversations]);
+
+        if ($request->ajax()) {
+            return view('clients.messages', compact('client', 'conversations', 'vendeurEmail', 'vendeurId'));
+        }
+        return view('PageClient', ['partial' => 'clients.messages', 'client' => $client, 'conversations' => $conversations, 'vendeurEmail' => $vendeurEmail, 'vendeurId' => $vendeurId]);
     });
 
     // Client message routes
