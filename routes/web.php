@@ -705,6 +705,7 @@ Route::prefix('admin')->middleware('auth.administrateur')->group(function () {
     Route::get('/ia-alertes', [AdministrateurController::class, 'iaAlerts'])->name('admin.ia_alertes');
     Route::get('/ia-alertes/{id}', [AdministrateurController::class, 'showAlerte'])->name('admin.ia_alertes.show');
     Route::post('/ia-alertes/delete-multiple', [AdministrateurController::class, 'deleteAlerts'])->name('admin.ia_alertes.delete');
+    Route::post('/ia-alertes/markread', [AdministrateurController::class, 'markAlertsRead'])->name('admin.ia_alertes.markread');
     Route::get('/cart', [AdministrateurController::class, 'cart'])->name('admin.cart');
     Route::post('/cart/add', [AdministrateurController::class, 'addToCart'])->name('admin.cart.add');
     Route::post('/cart/remove', [AdministrateurController::class, 'removeFromCart'])->name('admin.cart.remove');
