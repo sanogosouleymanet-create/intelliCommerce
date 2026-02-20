@@ -221,10 +221,12 @@ Route::post('/AjouterProduit', [ProduitController::class, 'AjouterProduit']);
 
 Route::get('/', function (Request $request) {
     $query = Produit::query();
+    
     // Filtrer par catégorie si fourni
     if ($request->filled('categorie')) {
         $query->where('Categorie', $request->categorie);
     }
+    
     // Filtrer par recherche rapide (nom, description ou catégorie du produit)
     if ($request->filled('recherche')) {
         $term = trim($request->recherche);
@@ -234,8 +236,77 @@ Route::get('/', function (Request $request) {
               ->orWhere('Categorie', 'like', '%' . $term . '%');
         });
     }
+    
+    // Filtre par prix minimum
+    if ($request->filled('prix_min')) {
+        $prixMin = (float) $request->prix_min;
+        if ($prixMin > 0) {
+            $query->where('Prix', '>=', $prixMin);
+        }
+    }
+    
+    // Filtre par prix maximum
+    if ($request->filled('prix_max')) {
+        $prixMax = (float) $request->prix_max;
+        if ($prixMax > 0) {
+            $query->where('Prix', '<=', $prixMax);
+        }
+    }
+    
+    // Filtre par promotion
+    if ($request->filled('promotion')) {
+        if ($request->promotion === '1' || $request->promotion === 'oui') {
+            $query->where('Promotion', 1)
+                  ->whereNotNull('Reduction')
+                  ->where('Reduction', '>', 0);
+        } elseif ($request->promotion === '0' || $request->promotion === 'non') {
+            $query->where(function($q) {
+                $q->where('Promotion', '!=', 1)
+                  ->orWhereNull('Promotion')
+                  ->orWhereNull('Reduction')
+                  ->orWhere('Reduction', '<=', 0);
+            });
+        }
+    }
+    
+    // Filtre par stock/disponibilité
+    if ($request->filled('stock')) {
+        if ($request->stock === 'disponible') {
+            $query->where('Stock', '>', 0);
+        } elseif ($request->stock === 'epuise') {
+            $query->where(function($q) {
+                $q->where('Stock', '<=', 0)
+                  ->orWhereNull('Stock');
+            });
+        }
+    }
+    
+    // Tri
+    if ($request->filled('tri_prix')) {
+        if ($request->tri_prix === 'asc') {
+            $query->orderBy('Prix', 'asc');
+        } elseif ($request->tri_prix === 'desc') {
+            $query->orderBy('Prix', 'desc');
+        } elseif ($request->tri_prix === 'recente') {
+            $query->orderBy('DateAjout', 'desc');
+        } elseif ($request->tri_prix === 'populaire') {
+            // Tri par popularité (basé sur les commandes si la table existe)
+            if (\Illuminate\Support\Facades\Schema::hasTable('Produitcommande')) {
+                $query->leftJoin('Produitcommande', 'produits.idProduit', '=', 'Produitcommande.Produit_idProduit')
+                      ->select('produits.*', \Illuminate\Support\Facades\DB::raw('COALESCE(SUM(Produitcommande.Quantite), 0) as total_vendu'))
+                      ->groupBy('produits.idProduit')
+                      ->orderByDesc('total_vendu');
+            } else {
+                $query->orderBy('DateAjout', 'desc');
+            }
+        } else {
+            $query->orderBy('DateAjout', 'desc');
+        }
+    } else {
+        $query->orderBy('DateAjout', 'desc');
+    }
 
-    $produits = $query->orderBy('DateAjout', 'desc')->get();
+    $produits = $query->get();
     return view('PagePrincipale', compact('produits'));
 });
 
@@ -294,47 +365,80 @@ Route::get('/promotions', function (Request $request) {
     return view('promotions', compact('produits'));
 })->name('promotions');
 
-// Page listant tous les produits les plus vendus
+// Page listant tous les produits les plus vendus (redirige vers top-recherches)
 Route::get('/top-vendus', function(Request $request){
-    // Redirect to the recherches fragment (AJAX fragment endpoint)
-    return redirect('/top-recherches/fragment');
+    return redirect('/top-recherches' . ($request->getQueryString() ? '?' . $request->getQueryString() : ''));
 });
 
-// New route explicitly for top searches
+// Page "Les plus recherchés" avec filtres (recherche, catégorie, tri)
 Route::get('/top-recherches', function(Request $request){
-    // Redirect to the recherches fragment (AJAX fragment endpoint)
-    return redirect('/top-recherches/fragment');
-});
-
-// AJAX fragment for top recherches (product grid only)
-Route::get('/top-recherches/fragment', function(Request $request){
-    $topRecherchesIds = [];
+    $topIds = [];
     if(\Illuminate\Support\Facades\Schema::hasTable('recherches')){
-        $topRecherchesIds = \Illuminate\Support\Facades\DB::table('recherches')
+        $topIds = \Illuminate\Support\Facades\DB::table('recherches')
             ->select('produit_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
             ->groupBy('produit_id')
             ->orderByDesc('total')
             ->pluck('produit_id')
             ->toArray();
     }
-    $topRecherches = collect([]);
-    if(!empty($topRecherchesIds)){
-        $prodMap = \App\Models\Produit::whereIn('idProduit', $topRecherchesIds)->get()->keyBy('idProduit');
-        $topRecherches = collect($topRecherchesIds)->map(function($id) use($prodMap){ return $prodMap->get($id); })->filter();
-    }
-    if($topRecherches->isEmpty() && \Illuminate\Support\Facades\Schema::hasTable('Produitcommande')){
-        $topVendusIds = \Illuminate\Support\Facades\DB::table('Produitcommande')
+    if(empty($topIds) && \Illuminate\Support\Facades\Schema::hasTable('Produitcommande')){
+        $topIds = \Illuminate\Support\Facades\DB::table('Produitcommande')
             ->select('Produit_idProduit', \Illuminate\Support\Facades\DB::raw('SUM(Quantite) as total'))
             ->groupBy('Produit_idProduit')
             ->orderByDesc('total')
             ->pluck('Produit_idProduit')
             ->toArray();
-        if(!empty($topVendusIds)){
-            $prodMap = \App\Models\Produit::whereIn('idProduit', $topVendusIds)->get()->keyBy('idProduit');
-            $topRecherches = collect($topVendusIds)->map(function($id) use($prodMap){ return $prodMap->get($id); })->filter();
-        }
     }
-    return view('partials.top_list', ['items' => $topRecherches]);
+    $query = \App\Models\Produit::whereIn('idProduit', $topIds);
+
+    if($request->filled('recherche')){
+        $term = trim($request->recherche);
+        $query->where(function($q) use($term){
+            $q->where('Nom', 'like', '%' . $term . '%')
+              ->orWhere('Description', 'like', '%' . $term . '%')
+              ->orWhere('Categorie', 'like', '%' . $term . '%');
+        });
+    }
+    if($request->filled('categorie')){
+        $query->where('Categorie', $request->categorie);
+    }
+    if($request->filled('tri_prix')){
+        if($request->tri_prix === 'asc') $query->orderBy('Prix', 'asc');
+        elseif($request->tri_prix === 'desc') $query->orderBy('Prix', 'desc');
+        else $query->orderBy('DateAjout', 'desc');
+    } else {
+        $query->orderBy('DateAjout', 'desc');
+    }
+
+    $produits = $query->get();
+    return view('top_recherches', compact('produits'));
+})->name('top-recherches');
+
+// Fragment pour chargement AJAX (ex: depuis PagePrincipale "Voir plus" si on garde le comportement actuel)
+Route::get('/top-recherches/fragment', function(Request $request){
+    $topIds = [];
+    if(\Illuminate\Support\Facades\Schema::hasTable('recherches')){
+        $topIds = \Illuminate\Support\Facades\DB::table('recherches')
+            ->select('produit_id', \Illuminate\Support\Facades\DB::raw('COUNT(*) as total'))
+            ->groupBy('produit_id')
+            ->orderByDesc('total')
+            ->pluck('produit_id')
+            ->toArray();
+    }
+    if(empty($topIds) && \Illuminate\Support\Facades\Schema::hasTable('Produitcommande')){
+        $topIds = \Illuminate\Support\Facades\DB::table('Produitcommande')
+            ->select('Produit_idProduit', \Illuminate\Support\Facades\DB::raw('SUM(Quantite) as total'))
+            ->groupBy('Produit_idProduit')
+            ->orderByDesc('total')
+            ->pluck('Produit_idProduit')
+            ->toArray();
+    }
+    $items = collect([]);
+    if(!empty($topIds)){
+        $prodMap = \App\Models\Produit::whereIn('idProduit', $topIds)->get()->keyBy('idProduit');
+        $items = collect($topIds)->map(function($id) use($prodMap){ return $prodMap->get($id); })->filter();
+    }
+    return view('partials.top_list', ['items' => $items]);
 });
 
 // Keep legacy top-vendus fragment route too

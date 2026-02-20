@@ -170,21 +170,21 @@
                                         if(auth()->guard('client')->check()){
                                             $messageUnreadCount = \App\Models\Message::where('Client_idClient', auth()->guard('client')->id())
                                                 ->whereIn('Statut', ['non lu','envoye'])
-                                                ->where(function($q){ $q->where('sender_type', '!=', 'client')->orWhereNull('sender_type'); })
+                                                ->whereIn('sender_type', ['vendeur', 'administrateur'])
                                                 ->count();
                                             $messagesUrl = '/messages';
                                         } elseif(auth()->guard('vendeur')->check()){
                                             $messageUnreadCount = \App\Models\Message::where('Vendeur_idVendeur', auth()->guard('vendeur')->id())
                                                 ->whereIn('Statut', ['non lu','envoye'])
-                                                ->where(function($q){ $q->where('sender_type', '!=', 'vendeur')->orWhereNull('sender_type'); })
+                                                ->whereIn('sender_type', ['client', 'administrateur'])
                                                 ->count();
                                             $messagesUrl = '/vendeur/messages';
                                         } elseif(auth()->guard('administrateur')->check()){
                                             $messageUnreadCount = \App\Models\Message::where('Administrateur_idAdministrateur', auth()->guard('administrateur')->id())
                                                 ->whereIn('Statut', ['non lu','envoye'])
-                                                ->where(function($q){ $q->where('sender_type', '!=', 'administrateur')->orWhereNull('sender_type'); })
+                                                ->whereIn('sender_type', ['client', 'vendeur'])
                                                 ->count();
-                                            $messagesUrl = '/admin/messages';
+                                            $messagesUrl = route('admin.dashboard') . '#messages';
                                         }
                                     @endphp
                                 @if($admin || $vendeur || $client)
@@ -516,6 +516,11 @@
                     e.preventDefault();
                     if(history.state && history.state.produitId) history.back(); else restoreMain();
                     return;
+                }
+            });
+            window.addEventListener('popstate', function(e){
+                if(e.state && e.state.produitId){
+                    restoreMain();
                 }
             });
         })();

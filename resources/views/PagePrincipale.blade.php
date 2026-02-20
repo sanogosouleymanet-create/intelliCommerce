@@ -10,6 +10,31 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ENjdO4Dr2bkBIFxQpeoA6VZ6bQZ6Y9o2e2Z1ZlFZC+0h5Y5n3/tf6Yb6Y1Y3pXx+" crossorigin="anonymous">
     <!-- Styles moved to public/css/StylePagePrincipale.css -->
+    <style>
+        /* Bouton filtres */
+        #openFiltersBtn:hover {
+            background: #0b66d1 !important;
+            color: #fff !important;
+        }
+        
+        /* Modal de filtres */
+        #filtersModal .form-control:focus,
+        #filtersModal .form-select:focus {
+            border-color: #0b66d1;
+            box-shadow: 0 0 0 3px rgba(11, 102, 209, 0.15);
+            outline: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .search-box {
+                flex-direction: column;
+            }
+            #openFiltersBtn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
     <title>Site Intelli-Commerce</title>
 </head>
 <body>
@@ -551,12 +576,19 @@
                         </div>
                     </div>
                     <div class="right">
-                        <div class="search-box">
-                            <form action="/" method="GET" class="search">
+                        <div class="search-box" style="display:flex;align-items:center;gap:8px;">
+                            <form action="/" method="GET" class="search" style="flex:1;">
                                 <span class="icon-large"><i class="ri-search-line"></i></span>
                                 <input type="search" name="recherche" value="{{ request('recherche') }}" placeholder="Rechercher produits..." />
                                 <button type="submit">Rechercher</button>
                             </form>
+                            <button id="openFiltersBtn" type="button" class="btn btn-outline-primary" style="border-radius:8px;padding:10px 16px;white-space:nowrap;display:flex;align-items:center;gap:6px;border:1px solid #0b66d1;color:#0b66d1;background:#fff;cursor:pointer;font-weight:600;" title="Filtres">
+                                <i class="ri-filter-3-line" style="font-size:1.1rem;"></i>
+                                <span class="mobile-hide">Filtres</span>
+                                @if(request()->hasAny(['categorie','prix_min','prix_max','promotion','stock','tri_prix']))
+                                    <span class="badge bg-danger" style="margin-left:4px;font-size:0.7rem;">{{ request()->only(['categorie','prix_min','prix_max','promotion','stock','tri_prix']) ? count(array_filter(request()->only(['categorie','prix_min','prix_max','promotion','stock','tri_prix']))) : 0 }}</span>
+                                @endif
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -567,21 +599,8 @@
             <div class="container py-4">
                 <div class="row">
                     <section class="col-12">
-                        <!--<div class="d-flex justify-content-between align-items-center mb-3">
-                                <h2 class="m-0">Nos produits</h2>
-                            </div>
-                        </div>
-                        <div class="search-info">
-                            @if(request('categorie'))
-                                <span class="badge">Catégorie: {{ request('categorie') }}</span>
-                            @endif
-                            @if(request('recherche'))
-                                <span class="badge">Recherche: « {{ request('recherche') }} »</span>
-                            @endif
-                            <span class="count">{{ isset($produits) ? $produits->count() : 0 }} résultat(s)</span>
-                        </div>-->
-
                         @if(isset($produits) && $produits->count())
+                            
                             {{-- Section avant la liste des produits : bannière + listes "Les plus vendus" / "Les plus recherchés" --}}
                             @php
                                 // Top 5 produits les plus vendus via la table pivot Produitcommande
@@ -721,12 +740,12 @@
                                             <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
                                                 <div style="color:#666;font-size:0.9rem">+{{ $topRecherches->count() - 2 }} autres</div>
                                                 <div style="text-align:right">
-                                                    <a href="#" class="btn btn-sm btn-primary js-load-top" data-url="/top-recherches/fragment" data-page="/top-recherches">Voir plus</a>
+                                                    <a href="{{ url('/top-recherches') }}" class="btn btn-sm btn-primary">Voir plus</a>
                                                 </div>
                                             </div>
                                         @else
                                             <div style="text-align:right;margin-top:8px">
-                                                <a href="#" class="btn btn-sm btn-primary js-load-top" data-url="/top-recherches/fragment" data-page="/top-recherches">Voir plus</a>
+                                                <a href="{{ url('/top-recherches') }}" class="btn btn-sm btn-primary">Voir plus</a>
                                             </div>
                                         @endif
                                         @if(!empty($searchFallback) && $searchFallback)
@@ -993,8 +1012,129 @@
             });
         })();
     </script>
-</body>
+    <script>
+        // Gestion du modal de filtres - exécuté après le chargement complet
+        window.addEventListener('load', function(){
+            const modal = document.getElementById('filtersModal');
+            const openBtn = document.getElementById('openFiltersBtn');
+            const closeBtn = document.getElementById('closeFiltersBtn');
+            
+            if(!modal || !openBtn) {
+                console.error('Filters modal elements not found', {modal: !!modal, openBtn: !!openBtn});
+                return;
+            }
+
+            function openModal(e){
+                if(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeModal(e){
+                if(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+
+            openBtn.addEventListener('click', openModal);
+            if(closeBtn) closeBtn.addEventListener('click', closeModal);
+            
+            // Fermer en cliquant sur le fond
+            modal.addEventListener('click', function(e){
+                if(e.target === modal) closeModal(e);
+            });
+
+            // Fermer avec la touche Escape
+            document.addEventListener('keydown', function(e){
+                if(e.key === 'Escape' && modal.style.display === 'flex'){
+                    closeModal();
+                }
+            });
+        });
+    </script>
+    
     <div id="toast-container" style="position:fixed;right:16px;bottom:16px;z-index:2000;display:flex;flex-direction:column;gap:8px"></div>
+    
+    <!-- Modal de filtres -->
+    <div id="filtersModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:3000;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:#fff;border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:20px;border-bottom:1px solid #e9ecef;position:sticky;top:0;background:#fff;z-index:10;">
+                <h3 style="margin:0;font-size:1.5rem;font-weight:700;color:#1a1a2e;">Filtres</h3>
+                <button id="closeFiltersBtn" type="button" style="border:0;background:transparent;font-size:24px;cursor:pointer;color:#666;padding:4px 8px;line-height:1;">&times;</button>
+            </div>
+            <form id="mainFilterForm" method="GET" action="{{ url('/') }}" style="padding:24px;">
+                <input type="hidden" name="recherche" value="{{ request('recherche') }}">
+                
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;margin-bottom:8px;font-weight:600;color:#495057;">Catégorie</label>
+                    <select name="categorie" class="form-select main-filter-trigger" style="width:100%;border-radius:8px;border:1px solid #dee2e6;padding:10px 14px;font-size:0.95rem;">
+                        <option value="">Toutes les catégories</option>
+                        <option value="Électronique" {{ request('categorie') == 'Électronique' ? 'selected' : '' }}>Électronique</option>
+                        <option value="Mode-Femme" {{ request('categorie') == 'Mode-Femme' ? 'selected' : '' }}>Mode Femme</option>
+                        <option value="Mode-Homme" {{ request('categorie') == 'Mode-Homme' ? 'selected' : '' }}>Mode Homme</option>
+                        <option value="Mode-Fille" {{ request('categorie') == 'Mode-Fille' ? 'selected' : '' }}>Mode Fille</option>
+                        <option value="Mode-garçon" {{ request('categorie') == 'Mode-garçon' ? 'selected' : '' }}>Mode Garçon</option>
+                        <option value="Beauté" {{ request('categorie') == 'Beauté' ? 'selected' : '' }}>Beauté</option>
+                        <option value="Cuisine&Maison" {{ request('categorie') == 'Cuisine&Maison' ? 'selected' : '' }}>Cuisine & Maison</option>
+                        <option value="Sports" {{ request('categorie') == 'Sports' ? 'selected' : '' }}>Sports</option>
+                        <option value="Meilleures ventes" {{ request('categorie') == 'Meilleures ventes' ? 'selected' : '' }}>Meilleures ventes</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;margin-bottom:8px;font-weight:600;color:#495057;">Prix</label>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <input type="number" name="prix_min" value="{{ request('prix_min') }}" class="form-control main-filter-trigger" placeholder="Prix min" min="0" step="100" style="flex:1;border-radius:8px;border:1px solid #dee2e6;padding:10px 14px;font-size:0.95rem;">
+                        <span style="color:#666;font-weight:600;">-</span>
+                        <input type="number" name="prix_max" value="{{ request('prix_max') }}" class="form-control main-filter-trigger" placeholder="Prix max" min="0" step="100" style="flex:1;border-radius:8px;border:1px solid #dee2e6;padding:10px 14px;font-size:0.95rem;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;margin-bottom:8px;font-weight:600;color:#495057;">Promotion</label>
+                    <select name="promotion" class="form-select main-filter-trigger" style="width:100%;border-radius:8px;border:1px solid #dee2e6;padding:10px 14px;font-size:0.95rem;">
+                        <option value="">Tous les produits</option>
+                        <option value="1" {{ request('promotion') == '1' ? 'selected' : '' }}>En promotion</option>
+                        <option value="0" {{ request('promotion') == '0' ? 'selected' : '' }}>Sans promotion</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;margin-bottom:8px;font-weight:600;color:#495057;">Stock</label>
+                    <select name="stock" class="form-select main-filter-trigger" style="width:100%;border-radius:8px;border:1px solid #dee2e6;padding:10px 14px;font-size:0.95rem;">
+                        <option value="">Tous</option>
+                        <option value="disponible" {{ request('stock') == 'disponible' ? 'selected' : '' }}>En stock</option>
+                        <option value="epuise" {{ request('stock') == 'epuise' ? 'selected' : '' }}>Épuisé</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom:24px;">
+                    <label style="display:block;margin-bottom:8px;font-weight:600;color:#495057;">Trier par</label>
+                    <select name="tri_prix" class="form-select main-filter-trigger" style="width:100%;border-radius:8px;border:1px solid #dee2e6;padding:10px 14px;font-size:0.95rem;">
+                        <option value="">Par défaut</option>
+                        <option value="recente" {{ request('tri_prix') == 'recente' ? 'selected' : '' }}>Plus récents</option>
+                        <option value="populaire" {{ request('tri_prix') == 'populaire' ? 'selected' : '' }}>Plus populaires</option>
+                        <option value="asc" {{ request('tri_prix') == 'asc' ? 'selected' : '' }}>Prix croissant</option>
+                        <option value="desc" {{ request('tri_prix') == 'desc' ? 'selected' : '' }}>Prix décroissant</option>
+                    </select>
+                </div>
+
+                <div style="display:flex;gap:12px;justify-content:flex-end;border-top:1px solid #e9ecef;padding-top:20px;">
+                    @if(request()->hasAny(['categorie','prix_min','prix_max','promotion','stock','tri_prix']))
+                        <a href="{{ url('/') }}{{ request('recherche') ? '?recherche=' . urlencode(request('recherche')) : '' }}" class="btn btn-outline-secondary" style="border-radius:8px;padding:10px 20px;font-weight:600;">Réinitialiser</a>
+                    @endif
+                    <button type="submit" class="btn btn-primary" style="border-radius:8px;padding:10px 24px;font-weight:600;background:#0b66d1;border:none;">Appliquer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Mini-cart modal -->
     <div id="mini-cart-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:2000;align-items:center;justify-content:flex-end;padding:24px;">
         <div id="mini-cart-modal" style="width:720px;max-width:96%;max-height:92vh;overflow:auto;background:#fff;border-radius:12px;margin-left:8px;box-shadow:0 12px 40px rgba(0,0,0,0.35);border:1px solid rgba(0,0,0,0.05);">
@@ -1017,6 +1157,8 @@
             </div>
         </div>
     </div>
+    
+</body>
 </html>
 <script>
     (function(){
