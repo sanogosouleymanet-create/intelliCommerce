@@ -14,7 +14,8 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
-        return view('Connexion');
+        $redirect = request()->query('redirect');
+        return view('Connexion', compact('redirect'));
     }
 
     public function login(Request $request)
@@ -23,6 +24,12 @@ class AuthController extends Controller
             'email' => 'required|email',
             'motdepasse' => 'required|string',
         ]);
+
+        $redirect = $request->input('redirect');
+        $redirect = is_string($redirect) ? trim($redirect) : null;
+        $safeRedirect = (is_string($redirect) && $redirect !== '' && str_starts_with($redirect, '/') && !str_starts_with($redirect, '//'))
+            ? $redirect
+            : null;
 
         $email = trim(strtolower($request->email));
         $password = $request->motdepasse;
@@ -50,7 +57,7 @@ class AuthController extends Controller
                     session([$key => $current]);
                     SavedCart::updateOrCreate(['guard' => 'administrateur', 'user_id' => (string)$admin->getAuthIdentifier()], ['cart' => $current]);
                 }
-                return redirect('/PagePrincipale');
+                return $safeRedirect ? redirect($safeRedirect) : redirect('/PagePrincipale');
             }
         }
 
@@ -76,7 +83,7 @@ class AuthController extends Controller
                     session([$key => $current]);
                     SavedCart::updateOrCreate(['guard' => 'vendeur', 'user_id' => (string)$vendeur->getAuthIdentifier()], ['cart' => $current]);
                 }
-                return redirect('/PagePrincipale');
+                return $safeRedirect ? redirect($safeRedirect) : redirect('/PagePrincipale');
             }
         }
 
@@ -102,7 +109,7 @@ class AuthController extends Controller
                     session([$key => $current]);
                     SavedCart::updateOrCreate(['guard' => 'client', 'user_id' => (string)$client->getAuthIdentifier()], ['cart' => $current]);
                 }
-                return redirect('/PagePrincipale');
+                return $safeRedirect ? redirect($safeRedirect) : redirect('/PagePrincipale');
             }
         }
 

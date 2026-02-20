@@ -81,7 +81,7 @@
             <h3>Composer un message</h3>
             <div style="margin-top:8px">
                             <div style="margin-bottom:8px">
-                                <input id="compose-recipient" type="email" placeholder="Email du destinataire" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px" />
+                                <input id="compose-recipient" type="text" placeholder="Email du vendeur ou format vendeur:id" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px" />
                             </div>
               <input id="compose-subject" placeholder="Sujet" style="width:100%;padding:8px;margin-bottom:8px;border:1px solid #ddd;border-radius:4px" />
               <textarea id="compose-body" placeholder="Message" style="width:100%;height:140px;padding:8px;border:1px solid #ddd;border-radius:4px"></textarea>
@@ -100,21 +100,18 @@
 
         function applyPrefill(pref) {
             if(!pref) return;
-            if(pref.recipient_type) rt.value = pref.recipient_type;
             if(pref.recipient) rr.value = pref.recipient;
             if(pref.subject) subj.value = pref.subject;
             if(pref.body) body.value = pref.body;
-            // disable recipient select if not single
-            rr.disabled = (rt.value !== 'single');
         }
 
         container.querySelector('#compose-cancel').addEventListener('click', () => container.remove());
         container.querySelector('#compose-send').addEventListener('click', async function(){
-            const recipient = rr.value;
-            const subject = subj.value;
-            const bodyVal = body.value;
+            const recipient = rr.value.trim();
+            const subject = subj.value.trim();
+            const bodyVal = body.value.trim();
             if(!bodyVal){ alert('Saisissez un message'); return; }
-            if(!recipient){ alert('Sélectionnez un vendeur'); return; }
+            if(!recipient){ alert('Saisissez l\'email du vendeur ou utilisez le format vendeur:id'); return; }
             this.disabled = true;
             try{
                 const payload = { recipient, subject, body: bodyVal };
@@ -133,7 +130,15 @@
         // No need for recipient type change since only vendeurs
 
         // apply prefill if provided
-        try{ if(window.__admin_prefill){ applyPrefill(window.__admin_prefill); delete window.__admin_prefill; } }catch(e){}
+        try{ 
+            if(window.__admin_prefill){ 
+                applyPrefill(window.__admin_prefill); 
+                delete window.__admin_prefill; 
+            } else if(prefill) {
+                // Apply prefill passed as parameter
+                applyPrefill(prefill);
+            }
+        }catch(e){}
     }
 
     function loadConversation(type, id, name, blocked) {
@@ -352,6 +357,45 @@
 
     // If a prefill object was set before fetching this view, open compose automatically
     try{ if(window.__admin_prefill){ openCompose(window.__admin_prefill); delete window.__admin_prefill; } }catch(e){}
+
+    // Auto-open conversation with vendeur if parameter is present in URL
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const vendeurId = urlParams.get('vendeur');
+        @if(isset($vendeurEmail) && $vendeurEmail)
+        const vendeurEmail = '{{ $vendeurEmail }}';
+        @else
+        const vendeurEmail = null;
+        @endif
+        
+        if (vendeurId) {
+            // Wait for conversations to be loaded
+            setTimeout(function() {
+                // Find the conversation item for this vendeur
+                const conversationItem = document.querySelector(`.conversation-item[data-type="vendeur"][data-id="${vendeurId}"]`);
+                if (conversationItem) {
+                    // Conversation exists, open it
+                    const type = conversationItem.dataset.type;
+                    const id = conversationItem.dataset.id;
+                    const name = conversationItem.dataset.name;
+                    const blocked = conversationItem.dataset.blocked === 'true';
+                    loadConversation(type, id, name, blocked);
+                } else {
+                    // No existing conversation, open compose modal with vendeur pre-filled
+                    // Use the email if available, otherwise use the ID format
+                    const recipient = vendeurEmail || `vendeur:${vendeurId}`;
+                    openCompose({
+                        recipient: recipient,
+                        subject: 'Question sur le produit',
+                        body: ''
+                    });
+                }
+                // Remove the parameter from URL to avoid reopening on refresh
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, '', newUrl);
+            }, 300);
+        }
+    })();
 
     // Search conversations
     const searchInput = document.getElementById('search-conversations');

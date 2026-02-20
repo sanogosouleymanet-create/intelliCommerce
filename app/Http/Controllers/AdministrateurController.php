@@ -20,7 +20,7 @@ class AdministrateurController extends Controller
 {
     public function showLogin()
     {
-        return view('admin.login');
+        return view('Connexion');
     }
 
     public function login(Request $request)
