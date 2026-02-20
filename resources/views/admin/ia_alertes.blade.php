@@ -48,37 +48,90 @@
     <a href="{{ url('/admin') }}" class="back"><i class="fa fa-arrow-left"></i> Retour</a>
     <div class="container">
         <h1><i class="fa-solid fa-robot"></i> Alertes IA</h1>
-        @if($alerts->isEmpty())
+
+        <div style="background:#eaf6fa;padding:18px;border-radius:8px;margin-bottom:24px;">
+            <h2 style="font-size:1.3rem;margin-bottom:12px;color:#0b3546"><i class="fa fa-chart-line"></i> Résumé hebdomadaire IA</h2>
+            <ul style="font-size:1.07rem;line-height:1.7;margin-left:18px">
+                <li><strong>Messages envoyés :</strong> {{ $resumeIA['messages'] ?? 0 }}</li>
+                <li><strong>Produits ajoutés :</strong> {{ $resumeIA['produits_ajoutes'] ?? 0 }}</li>
+                <li><strong>Vendeurs actifs :</strong> {{ $resumeIA['vendeurs_actifs'] ?? 0 }}</li>
+                <li><strong>Anomalies détectées :</strong>
+                    <ul style="margin-left:18px">
+                        <li>Prix anormal : {{ $resumeIA['anomalies']['prix_anormal'] ?? 0 }}</li>
+                        <li>Description suspecte : {{ $resumeIA['anomalies']['description_suspecte'] ?? 0 }}</li>
+                        <li>Vendeurs inactifs : {{ $resumeIA['anomalies']['vendeurs_inactifs'] ?? 0 }}</li>
+                        <li>Pics d'activité : {{ $resumeIA['anomalies']['pics_activite'] ?? 0 }}</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        @if($alertsGrouped->isEmpty())
             <div style="background:#fff;padding:18px;border-radius:8px;">Aucune alerte pour le moment.</div>
         @else
-            <form method="POST" action="{{ route('admin.ia_alertes.delete') }}" id="delete-form" style="text-align:right;margin-bottom:12px">
-                @csrf
-                <button type="submit" class="btn danger" id="delete-btn" disabled><i class="fa fa-trash"></i> Supprimer la sélection</button>
-            </form>
-            @foreach($alerts as $a)
-                <div class="alert-card" data-id="{{ $a->idAlerte }}">
-                    <div class="left-col">
-                        <input type="checkbox" data-id="{{ $a->idAlerte }}" class="alert-checkbox" onchange="updateDeleteButton()" onclick="event.stopPropagation();">
-                    </div>
-                    @php
-                        $lvlRaw = $a->NiveauGravité ?? '';
-                        $lvl = strtolower((string)$lvlRaw);
-                        $isCritical = str_contains($lvl, 'crit') || str_contains($lvl, 'danger') || str_contains($lvl, 'high') || (is_numeric($lvlRaw) && intval($lvlRaw) >= 3);
-                        $badgeClass = $isCritical ? 'critical' : (str_contains($lvl,'warn') || str_contains($lvl,'grave') ? 'warning' : 'info');
-                        $badgeText = $isCritical ? 'CRITIQUE' : (str_contains($lvl,'warn') || str_contains($lvl,'grave') ? 'ALERTE' : strtoupper($lvlRaw ?: 'INFO'));
-                        $icon = $isCritical ? 'fa-skull-crossbones' : (str_contains($lvl,'warn') || str_contains($lvl,'grave') ? 'fa-triangle-exclamation' : 'fa-circle-info');
-                    @endphp
-                    <a href="{{ route('admin.ia_alertes.show', ['id' => $a->idAlerte]) }}" class="card-link">
-                        <div class="title-wrap">
-                            <span class="badge {{ $badgeClass }}"><i class="fa-solid {{ $icon }}"></i> {{ $badgeText }}</span>
-                            <span class="title">{{ $a->TypeAlerte ?? 'Message' }}</span>
-                            <div class="desc">{{ \Illuminate\Support\Str::limit($a->Description ?? '', 160) }}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div>
+                    <label style="font-weight:500;cursor:pointer;"><input type="checkbox" id="select-all-alerts" style="margin-right:6px;vertical-align:middle">Tout sélectionner</label>
+                </div>
+                <form method="POST" action="{{ route('admin.ia_alertes.delete') }}" id="delete-form" style="display:inline-block">
+                    @csrf
+                    <button type="submit" class="btn danger" id="delete-btn" disabled><i class="fa fa-trash"></i> Supprimer la sélection</button>
+                </form>
+                <form method="POST" action="{{ route('admin.ia_alertes.markread') }}" id="markread-form" style="display:inline-block;margin-left:10px">
+                    @csrf
+                    <input type="hidden" name="ids" id="markread-ids">
+                    <button type="button" class="btn" id="markread-btn" disabled><i class="fa fa-eye"></i> Tout marquer lu</button>
+                </form>
+            </div>
+            <style>
+                .category-toggle { cursor:pointer; user-select:none; font-size:1.15rem; display:flex; align-items:center; gap:8px; margin:32px 0 12px 0; color:#0b3546; }
+                .category-toggle .fa-chevron-down { transition:transform .2s; }
+                .category-toggle.collapsed .fa-chevron-down { transform:rotate(-90deg); }
+                .category-list { display:block; }
+                .category-list.collapsed { display:none; }
+            </style>
+            <script>
+                function toggleCategory(cat) {
+                    const btn = document.getElementById('toggle-'+cat);
+                    const list = document.getElementById('list-'+cat);
+                    if(btn && list) {
+                        btn.classList.toggle('collapsed');
+                        list.classList.toggle('collapsed');
+                    }
+                }
+            </script>
+            @foreach($alertsGrouped as $type => $group)
+                @php $catId = preg_replace('/[^a-z0-9]/i','_',strtolower($type)); @endphp
+                <div class="category-toggle" id="toggle-{{ $catId }}" onclick="toggleCategory('{{ $catId }}')">
+                    <i class="fa fa-chevron-down"></i> {{ $type }}
+                </div>
+                <div class="category-list" id="list-{{ $catId }}">
+                @foreach($group as $a)
+                    <div class="alert-card" data-id="{{ $a->idAlerte }}">
+                        <div class="left-col">
+                            <input type="checkbox" data-id="{{ $a->idAlerte }}" class="alert-checkbox" onchange="updateDeleteButton()" onclick="event.stopPropagation();">
                         </div>
-                        <div class="meta">{{ $a->DateCreation }}</div>
-                    </a>
-                    <div class="quick-actions">
-                        <i class="fa fa-eye" title="Voir le détail" onclick="window.location='{{ route('admin.ia_alertes.show', ['id' => $a->idAlerte]) }}';event.stopPropagation();"></i>
+                        @php
+                            $lvlRaw = $a->NiveauGravité ?? '';
+                            $lvl = strtolower((string)$lvlRaw);
+                            $isCritical = str_contains($lvl, 'crit') || str_contains($lvl, 'danger') || str_contains($lvl, 'high') || (is_numeric($lvlRaw) && intval($lvlRaw) >= 3);
+                            $badgeClass = $isCritical ? 'critical' : (str_contains($lvl,'warn') || str_contains($lvl,'grave') ? 'warning' : 'info');
+                            $badgeText = $isCritical ? 'CRITIQUE' : (str_contains($lvl,'warn') || str_contains($lvl,'grave') ? 'ALERTE' : strtoupper($lvlRaw ?: 'INFO'));
+                            $icon = $isCritical ? 'fa-skull-crossbones' : (str_contains($lvl,'warn') || str_contains($lvl,'grave') ? 'fa-triangle-exclamation' : 'fa-circle-info');
+                        @endphp
+                        <a href="{{ route('admin.ia_alertes.show', ['id' => $a->idAlerte]) }}" class="card-link">
+                            <div class="title-wrap">
+                                <span class="badge {{ $badgeClass }}"><i class="fa-solid {{ $icon }}"></i> {{ $badgeText }}</span>
+                                <span class="title">{{ $a->TypeAlerte ?? 'Message' }}</span>
+                                <div class="desc">{{ \Illuminate\Support\Str::limit($a->Description ?? '', 160) }}</div>
+                            </div>
+                            <div class="meta">{{ $a->DateCreation }}</div>
+                        </a>
+                        <div class="quick-actions">
+                            <i class="fa fa-eye" title="Voir le détail" onclick="window.location='{{ route('admin.ia_alertes.show', ['id' => $a->idAlerte]) }}';event.stopPropagation();"></i>
+                        </div>
                     </div>
+                @endforeach
                 </div>
             @endforeach
         @endif
@@ -87,8 +140,19 @@
     function updateDeleteButton() {
         const checkboxes = document.querySelectorAll('.alert-checkbox:checked');
         const deleteBtn = document.getElementById('delete-btn');
+        const markReadBtn = document.getElementById('markread-btn');
         if (deleteBtn) deleteBtn.disabled = checkboxes.length === 0;
+        if (markReadBtn) markReadBtn.disabled = checkboxes.length === 0;
     }
+
+    // Tout sélectionner
+    document.getElementById('select-all-alerts')?.addEventListener('change', function(e){
+        const checked = e.target.checked;
+        document.querySelectorAll('.alert-checkbox').forEach(cb => { cb.checked = checked; });
+        updateDeleteButton();
+    });
+
+    // Gestion suppression
     document.getElementById('delete-form')?.addEventListener('submit', function(e){
         if (e.submitter && e.submitter.closest('form') && e.submitter.closest('form') !== this) return;
         e.preventDefault();
@@ -101,6 +165,15 @@
         });
         this.submit();
     });
+
+    // Tout marquer comme lu
+    document.getElementById('markread-btn')?.addEventListener('click', function(e){
+        const checked = Array.from(document.querySelectorAll('.alert-checkbox')).filter(cb => cb.checked).map(cb => cb.getAttribute('data-id'));
+        if (!checked.length) { alert('Aucune alerte sélectionnée.'); return; }
+        document.getElementById('markread-ids').value = checked.join(',');
+        document.getElementById('markread-form').submit();
+    });
+
     // UX: double-clic sur une carte = voir détail
     document.querySelectorAll('.alert-card').forEach(card => {
         card.addEventListener('dblclick', function(){

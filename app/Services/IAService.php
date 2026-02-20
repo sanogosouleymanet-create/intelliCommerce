@@ -176,5 +176,186 @@ class IAService
     );
 }
 
+        // Analyse automatique des données de la plateforme
+        public function analyserPlateforme()
+        {
+            $anomalies = [];
+            $anomalies['produits'] = $this->analyseProduits();
+            $anomalies['messages'] = $this->analyseMessages();
+            $anomalies['vendeurs'] = $this->analyseVendeurs();
+            $anomalies['activite'] = $this->analyseActivite();
+            return $anomalies;
+        }
+
+
+        // Tableau de bord des anomalies détectées
+        public function getTableauDeBord()
+        {
+            return $this->analyserPlateforme();
+        }
+
+        // Résumés intelligents de l’activité quotidienne ou hebdomadaire
+        public function getResumeActivite($periode = 'jour')
+        {
+        $resume = [];
+        // Définir la période
+        $dateDebut = null;
+        if ($periode === 'jour') {
+            $dateDebut = Carbon::now()->subDay();
+        } elseif ($periode === 'semaine') {
+            $dateDebut = Carbon::now()->subWeek();
+        } else {
+            $dateDebut = Carbon::now()->subDay();
+        }
+
+        // Résumé des messages
+        $nbMessages = Message::where('DateEnvoi', '>=', $dateDebut)->count();
+        $resume['messages'] = $nbMessages;
+
+        // Résumé des produits ajoutés
+        $nbProduits = Produit::where('DateAjout', '>=', $dateDebut)->count();
+        $resume['produits_ajoutes'] = $nbProduits;
+
+        // Résumé des vendeurs actifs
+        $vendeursActifs = \App\Models\Vendeur::whereHas('produits', function($q) use ($dateDebut) {
+            $q->where('DateAjout', '>=', $dateDebut);
+        })->orWhereHas('messages', function($q) use ($dateDebut) {
+            $q->where('DateCreation', '>=', $dateDebut);
+        })->count();
+        $resume['vendeurs_actifs'] = $vendeursActifs;
+
+        // Résumé des anomalies détectées
+        $resume['anomalies'] = [
+            'prix_anormal' => count(array_filter($this->analyseProduits(), function($a) { return $a['type'] === 'PrixAnormal'; })),
+            'description_suspecte' => count(array_filter($this->analyseProduits(), function($a) { return $a['type'] === 'DescriptionSuspecte'; })),
+            'vendeurs_inactifs' => count($this->analyseVendeurs()),
+            'pics_activite' => count($this->analyseActivite()),
+        ];
+
+        return $resume;
+        }
+
+        // Analyse des produits (prix, description)
+        private function analyseProduits()
+        {
+        $anomalies = [];
+        $produits = Produit::all();
+        foreach ($produits as $produit) {
+            // Recherche des produits similaires (même Nom et Categorie)
+            $similaires = Produit::where('Nom', $produit->Nom)
+                ->where('Categorie', $produit->Categorie)
+                ->where('idProduit', '!=', $produit->idProduit)
+                ->get();
+            if ($similaires->count() > 0) {
+                $prixSimilaires = $similaires->pluck('Prix');
+                $prixMoyen = $prixSimilaires->avg();
+                $seuilBas = $prixMoyen * 0.7;
+                $seuilHaut = $prixMoyen * 1.3;
+                if ($produit->Prix < $seuilBas || $produit->Prix > $seuilHaut) {
+                    $anomalies[] = [
+                        'type' => 'PrixAnormal',
+                        'produit' => $produit,
+                        'prixMoyen' => $prixMoyen,
+                        'seuilBas' => $seuilBas,
+                        'seuilHaut' => $seuilHaut,
+                    ];
+                }
+            }
+            // Vérification description suspecte (ex: trop courte)
+            if (strlen($produit->Description) < 10) {
+                $anomalies[] = [
+                    'type' => 'DescriptionSuspecte',
+                    'produit' => $produit,
+                ];
+            }
+        }
+        return $anomalies;
+        }
+
+
+        // Analyse des vendeurs (inactivité)
+        private function analyseVendeurs()
+        {
+        $anomalies = [];
+        $vendeurs = \App\Models\Vendeur::all();
+        $seuilJours = 30;
+        foreach ($vendeurs as $vendeur) {
+            // Recherche du dernier produit ajouté
+            $dernierProduit = $vendeur->produits()->orderBy('DateAjout', 'desc')->first();
+            // Recherche du dernier message envoyé
+            $dernierMessage = $vendeur->messages()->orderBy('DateEnvoi', 'desc')->first();
+            $dernierDate = null;
+            if ($dernierProduit && $dernierMessage) {
+                $dateProduit = \Carbon\Carbon::parse($dernierProduit->DateAjout);
+                $dateMessage = \Carbon\Carbon::parse($dernierMessage->DateCreation);
+                $dernierDate = $dateProduit->greaterThan($dateMessage) ? $dateProduit : $dateMessage;
+            } elseif ($dernierProduit) {
+                $dernierDate = \Carbon\Carbon::parse($dernierProduit->DateAjout);
+            } elseif ($dernierMessage) {
+                $dernierDate = \Carbon\Carbon::parse($dernierMessage->DateCreation);
+            }
+            // Si aucune activité ou dernière activité > seuil
+            if (!$dernierDate || $dernierDate->diffInDays(\Carbon\Carbon::now()) > $seuilJours) {
+                $anomalies[] = [
+                    'type' => 'VendeurInactif',
+                    'vendeur' => $vendeur,
+                    'dernierDate' => $dernierDate ? $dernierDate->toDateString() : null,
+                ];
+            }
+        }
+        return $anomalies;
+        }
+
+        // Analyse de l’activité (pics anormaux)
+        private function analyseActivite()
+        {
+        $anomalies = [];
+        // Analyse des pics de messages
+        $messagesParJour = \App\Models\Message::selectRaw('DATE(DateEnvoi) as jour, COUNT(*) as total')
+            ->groupBy('jour')
+            ->orderBy('jour', 'desc')
+            ->limit(30)
+            ->get();
+        $totaux = $messagesParJour->pluck('total');
+        if ($totaux->count() > 0) {
+            $moyenne = $totaux->avg();
+            $ecartType = sqrt($totaux->map(function($v) use ($moyenne) { return pow($v - $moyenne, 2); })->avg());
+            foreach ($messagesParJour as $jour) {
+                // Pic anormal si > moyenne + 2*écart-type
+                if ($jour->total > $moyenne + 2 * $ecartType) {
+                    $anomalies[] = [
+                        'type' => 'PicMessages',
+                        'jour' => $jour->jour,
+                        'total' => $jour->total,
+                        'moyenne' => $moyenne,
+                        'ecartType' => $ecartType,
+                    ];
+                }
+            }
+        }
+        // Analyse des pics de publications (produits ajoutés)
+        $produitsParJour = \App\Models\Produit::selectRaw('DATE(DateAjout) as jour, COUNT(*) as total')
+            ->groupBy('jour')
+            ->orderBy('jour', 'desc')
+            ->limit(30)
+            ->get();
+        $totauxProd = $produitsParJour->pluck('total');
+        if ($totauxProd->count() > 0) {
+            $moyenneProd = $totauxProd->avg();
+            $ecartTypeProd = sqrt($totauxProd->map(function($v) use ($moyenneProd) { return pow($v - $moyenneProd, 2); })->avg());
+            foreach ($produitsParJour as $jour) {
+                if ($jour->total > $moyenneProd + 2 * $ecartTypeProd) {
+                    $anomalies[] = [
+                        'type' => 'PicProduits',
+                        'jour' => $jour->jour,
+                        'total' => $jour->total,
+                        'moyenne' => $moyenneProd,
+                        'ecartType' => $ecartTypeProd,
+                    ];
+                }
+            }
+        }
+        return $anomalies;
+        }
 
 }

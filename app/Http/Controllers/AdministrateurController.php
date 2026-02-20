@@ -18,6 +18,30 @@ use Illuminate\Support\Facades\Storage;
 
 class AdministrateurController extends Controller
 {
+    /**
+     * Marque plusieurs alertes IA comme lues.
+     */
+    public function markAlertsRead(Request $request)
+    {
+        $ids = $request->input('ids', '');
+        $ids = is_array($ids) ? $ids : explode(',', $ids);
+        $ids = array_filter(array_map('intval', $ids));
+        if (empty($ids)) {
+            return back()->withErrors(['message' => 'Aucune alerte sélectionnée.']);
+        }
+        // Gère les deux colonnes (Statut - nouvelle, lu - ancienne) pour rétrocompatibilité
+        $hasStatut = \Illuminate\Support\Facades\Schema::hasColumn('ia_alertes', 'Statut');
+        if ($hasStatut) {
+            // Nouvelle colonne Statut
+            \App\Models\Ia_alerte::whereIn('idAlerte', $ids)
+                ->update(['Statut' => 'lu']);
+        } else {
+            // Ancienne colonne lu (boolean)
+            \App\Models\Ia_alerte::whereIn('idAlerte', $ids)
+                ->update(['lu' => true]);
+        }
+        return back()->with('status', 'Alertes marquées comme lues.');
+    }
     public function showLogin()
     {
         return view('Connexion');
@@ -69,10 +93,11 @@ class AdministrateurController extends Controller
             'vendeurs' => Vendeur::count(),
             'clients' => Client::count(),
             'administrateurs' => Administrateur::count(),
+            // Compte seulement les alertes non lues pour l'icône de notification
             'ia_alertes' => Ia_alerte::where(function($q) {
                 $q->where('destinataire_type', '!=', 'vendeur')
                   ->orWhereNull('destinataire_type');
-            })->count(),
+            })->unread()->count(),
         ];
         try {
             $messagesUnread = Message::where('Administrateur_idAdministrateur', $admin->idAdministrateur)
@@ -99,11 +124,21 @@ class AdministrateurController extends Controller
     {
         // Only show alerts not targeted at vendeurs (i.e. admin/global alerts)
         // Eager-load source and destinataire to show message details when available
-        $alerts = Ia_alerte::with(['source', 'destinataire'])->where(function($q) {
-            $q->where('destinataire_type', '!=', 'vendeur')
-              ->orWhereNull('destinataire_type');
-        })->orderBy('DateCreation', 'desc')->get();
-        return view('admin.ia_alertes', compact('alerts'));
+                $alerts = Ia_alerte::with(['source', 'destinataire'])->where(function($q) {
+                        $q->where('destinataire_type', '!=', 'vendeur')
+                            ->orWhereNull('destinataire_type');
+                })->orderBy('DateCreation', 'desc')->get();
+
+                // Résumé hebdomadaire IA
+                $resumeIA = app(\App\Services\IAService::class)->getResumeActivite('semaine');
+
+                // Regrouper les alertes par catégorie (TypeAlerte)
+                $alertsGrouped = $alerts->groupBy('TypeAlerte');
+                return view('admin.ia_alertes', [
+                    'alerts' => $alerts,
+                    'alertsGrouped' => $alertsGrouped,
+                    'resumeIA' => $resumeIA
+                ]);
     }
 
     /**
