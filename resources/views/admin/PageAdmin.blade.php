@@ -114,6 +114,16 @@ document.addEventListener('DOMContentLoaded', function() {
             <div style="font-size:24px;margin-top:8px">{{ $counts['administrateurs'] }}</div>
         </div>
     </div>
+    
+    <script>
+    function adminComposeToVendeur(id) {
+        if(!id){ alert('Saisissez un ID vendeur'); return; }
+        try {
+            window.__admin_prefill = { recipient_type: 'single', recipient: 'vendeur:' + id };
+            window.adminFetchAndInject('{{ route('admin.messages') }}');
+        } catch(e) { alert('Erreur JS: '+e); }
+    }
+    </script>
 
     <!-- Recent Orders Section -->
     <div class="card">
