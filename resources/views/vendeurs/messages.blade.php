@@ -150,8 +150,16 @@
 
         // No need for recipient type change since only clients
 
-        // apply prefill if provided
-        try{ if(window.__vendeur_prefill){ applyPrefill(window.__vendeur_prefill); delete window.__vendeur_prefill; } }catch(e){}
+        // apply prefill if provided (explicit param has priority, then global helper)
+        try{
+            const toApply = prefill || (window.__vendeur_prefill || null);
+            if(toApply){
+                applyPrefill(toApply);
+            }
+            if(window.__vendeur_prefill){
+                delete window.__vendeur_prefill;
+            }
+        }catch(e){}
     }
 
     function loadConversation(type, id, name, blocked) {
@@ -377,7 +385,38 @@
     }
 
     // If a prefill object was set before fetching this view, open compose automatically
-    try{ if(window.__vendeur_prefill){ openCompose(window.__vendeur_prefill); delete window.__vendeur_prefill; } }catch(e){}
+    try{ if(window.__vendeur_prefill){ openCompose(); } }catch(e){}
+
+    // Auto-open conversation or compose when ?vendeur=ID is present in URL
+    (function() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const vendeurId = urlParams.get('vendeur');
+            if (!vendeurId) return;
+
+            setTimeout(function() {
+                const selector = `.conversation-item[data-type="vendeur"][data-id="${vendeurId}"]`;
+                const item = document.querySelector(selector);
+                if (item) {
+                    const type = item.dataset.type;
+                    const id = item.dataset.id;
+                    const name = item.dataset.name;
+                    const blocked = item.dataset.blocked === 'true';
+                    loadConversation(type, id, name, blocked);
+                } else {
+                    openCompose({
+                        recipient: `vendeur:${vendeurId}`,
+                        subject: 'Question sur le produit',
+                        body: ''
+                    });
+                }
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, '', newUrl);
+            }, 300);
+        } catch (e) {
+            console.error('Erreur auto-ouverture messagerie vendeur:', e);
+        }
+    })();
 
     // Search conversations
     const searchInput = document.getElementById('search-conversations');

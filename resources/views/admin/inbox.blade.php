@@ -158,8 +158,16 @@
 
         rt.addEventListener('change', function(){ rr.disabled = (this.value !== 'single'); });
 
-        // apply prefill if provided
-        try{ if(window.__admin_prefill){ applyPrefill(window.__admin_prefill); delete window.__admin_prefill; } }catch(e){}
+        // apply prefill if provided (argument prioritaire, puis helper global)
+        try{
+            const toApply = prefill || (window.__admin_prefill || null);
+            if (toApply) {
+                applyPrefill(toApply);
+            }
+            if (window.__admin_prefill) {
+                delete window.__admin_prefill;
+            }
+        }catch(e){}
     }
 
     function loadConversation(type, id, name, blocked) {
@@ -376,6 +384,38 @@
 
     // If a prefill object was set before fetching this view, open compose automatically
     try{ if(window.__admin_prefill){ openCompose(window.__admin_prefill); delete window.__admin_prefill; } }catch(e){}
+
+    // Auto-open conversation or compose when ?vendeur=ID is present in URL
+    (function() {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const vendeurId = urlParams.get('vendeur');
+            if (!vendeurId) return;
+
+            setTimeout(function() {
+                const selector = `.conversation-item[data-type="vendeur"][data-id="${vendeurId}"]`;
+                const item = document.querySelector(selector);
+                if (item) {
+                    const type = item.dataset.type;
+                    const id = item.dataset.id;
+                    const name = item.dataset.name;
+                    const blocked = item.dataset.blocked === 'true';
+                    loadConversation(type, id, name, blocked);
+                } else {
+                    openCompose({
+                        recipient_type: 'single',
+                        recipient: `vendeur:${vendeurId}`,
+                        subject: 'Question sur le produit',
+                        body: ''
+                    });
+                }
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, '', newUrl);
+            }, 300);
+        } catch (e) {
+            console.error('Erreur auto-ouverture messagerie admin:', e);
+        }
+    })();
 
     // Search conversations
     const searchInput = document.getElementById('search-conversations');

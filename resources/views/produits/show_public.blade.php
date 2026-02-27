@@ -483,20 +483,47 @@
                     </div>
                 </div>
                 @endif
-                @if($vendeur && auth()->guard('client')->check())
-                <div style="margin-top: 15px;">
-                    <a href="/messages?vendeur={{ $vendeur->idVendeur }}" class="btn-contact-vendor" id="btn-contact-vendor">
-                        <i class="fas fa-comments"></i>
-                        Contacter le vendeur
-                    </a>
-                </div>
-                @elseif($vendeur)
-                <div style="margin-top: 15px;">
-                    <a href="{{ route('connexion', ['redirect' => '/messages?vendeur=' . $vendeur->idVendeur]) }}" class="btn-contact-vendor">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Se connecter pour contacter le vendeur
-                    </a>
-                </div>
+
+                @if($vendeur)
+                    @php
+                        $currentVendor = auth()->guard('vendeur')->user();
+                        $clientAuth = auth()->guard('client')->check();
+                        $vendorAuth = (bool) $currentVendor;
+                        $adminAuth = auth()->guard('administrateur')->check();
+                        $isOwner = $currentVendor && $currentVendor->idVendeur === $vendeur->idVendeur;
+                        $isAuthenticated = $clientAuth || $vendorAuth || $adminAuth;
+                    @endphp
+
+                    @if(!$isOwner)
+                        @if($isAuthenticated)
+                            @php
+                                if ($clientAuth) {
+                                    $contactUrl = '/messages?vendeur=' . $vendeur->idVendeur;
+                                } elseif ($vendorAuth) {
+                                    $contactUrl = route('vendeur.messages', ['vendeur' => $vendeur->idVendeur]);
+                                } elseif ($adminAuth) {
+                                    $contactUrl = route('admin.messages', ['vendeur' => $vendeur->idVendeur]);
+                                } else {
+                                    $contactUrl = null;
+                                }
+                            @endphp
+                            @if($contactUrl)
+                            <div style="margin-top: 15px;">
+                                <a href="{{ $contactUrl }}" class="btn-contact-vendor" id="btn-contact-vendor">
+                                    <i class="fas fa-comments"></i>
+                                    Contacter le vendeur
+                                </a>
+                            </div>
+                            @endif
+                        @else
+                        <div style="margin-top: 15px;">
+                            <a href="{{ route('connexion', ['redirect' => '/messages?vendeur=' . $vendeur->idVendeur]) }}" class="btn-contact-vendor">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Se connecter pour contacter le vendeur
+                            </a>
+                        </div>
+                        @endif
+                    @endif
                 @endif
                 <div class="product-actions">
                     <a href="/" class="btn-back">
